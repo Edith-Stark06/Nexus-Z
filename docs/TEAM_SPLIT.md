@@ -8,12 +8,12 @@ Each workstream owns its own folder, so nobody edits the same files. Streams mee
 
 | # | Owner | Workstream | Owns (folder) |
 |---|---|---|---|
-| A | Tushar Biswas | Data and evaluation | `data/`, `eval/` |
-| B | Giridharan R E | Graph, features and models | `ml/` |
-| C | Ramana Sree K V (leader) | Platform, API and integration | `api/`, `infra/` |
-| D | Verona Ann | Dashboard, victim warning and pitch | `dashboard/`, `pitch/` |
+| A | Verona Ann | Data and evaluation | `data/`, `eval/` |
+| B | Ramana Sree K V (leader) | Graph, features and models | `ml/` |
+| C | Giridharan R E | Platform, API and integration | `api/`, `infra/` |
+| D | Tushar Biswas | Dashboard, victim warning and pitch | `dashboard/`, `pitch/` |
 
-### A. Data and evaluation: Tushar
+### A. Data and evaluation: Verona
 - Synthetic pig-butchering ring generator: victim fan-in, collectors, mule chains, cash-out. Vary ring size, shape and timing.
 - Hard negatives: merchants, payroll, landlords, charities that look like hubs.
 - Load the public background data (IBM AML, Elliptic) after confirming availability and license. Fall back to purely synthetic background if needed.
@@ -21,7 +21,7 @@ Each workstream owns its own folder, so nobody edits the same files. Streams mee
 - Metrics code: precision, recall, F1, PR-AUC, ring recovery, purity, time-to-detection, hard-negative false-positive rate.
 - Ablation table: transaction-only features vs graph features. This is our strongest evidence, so own it end to end.
 
-### B. Graph, features and models: Giridharan
+### B. Graph, features and models: Ramana
 - Graph build (accounts as nodes, timed weighted transfers as edges).
 - Structural, behavioral and community features. Compute them only from edges available at scoring time, to avoid leakage.
 - Baseline XGBoost (transaction-only) and graph-feature XGBoost, with class weighting.
@@ -29,14 +29,15 @@ Each workstream owns its own folder, so nobody edits the same files. Streams mee
 - SHAP per account and ring-level summaries.
 - Saves the trained model and exposes plain Python functions: `score_account`, `get_ring`, `explain`.
 
-### C. Platform, API and integration: Ramana
+### C. Platform, API and integration: Giridharan
 - First 3 hours: L1CC (LinuxONE Community Cloud) access, repo, and an s390x check that XGBoost, SHAP, numpy and the graph library install. Pin working versions and tell the team immediately if anything fails.
 - Docker setup on LinuxONE.
 - FastAPI service: `POST /transactions`, `GET /accounts/{id}`, `GET /rings`, `GET /rings/{id}`, `GET /alerts`.
 - Streaming simulator, incremental graph updates, and **measured** latency (no placeholder numbers).
-- Merges everyone's work, keeps `main` working, and does final testing and the Hack2Skill submission.
+- Integration: wires B's model functions into the API, runs end-to-end tests, and prepares the demo scenario.
+- Starting point: a working sample API already exists in `api/` (stub backend, tests, example JSON). Replace the stub with the real backend.
 
-### D. Dashboard, victim warning and pitch: Verona
+### D. Dashboard, victim warning and pitch: Tushar
 - React + D3 dashboard from the existing design: force graph, alert queue, SHAP panel, time slider replay.
 - Victim warning preview ("Check before you send") and the protection screen.
 - Builds against mock JSON first, then switches to the real API.
@@ -66,7 +67,8 @@ Each workstream owns its own folder, so nobody edits the same files. Streams mee
 **API (C to D):** JSON shapes for `/rings`, `/rings/{id}`, `/accounts/{id}`, `/alerts`. C posts example responses in the first 3 hours so D can build against them.
 
 ## 4. Working rules
-- One branch per workstream (`data`, `ml`, `api`, `dashboard`). Merge to `main` through Ramana, small and often.
+- One branch per person, named after them. PRs go into `main`, small and often.
+- Team lead (Ramana) merges PRs, keeps `main` working, and makes the final Hack2Skill submission.
 - No real personal data anywhere. Report only measured results.
 - Scope stays: one typology (pig-butchering), one model family (XGBoost). GNN and consortium mode are future scope.
 - Open questions to settle early: judging criteria, submission deadline, and whether the datathon supplies a dataset (decides how much of A can be skipped).
