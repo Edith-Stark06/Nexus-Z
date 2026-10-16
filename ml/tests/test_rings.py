@@ -24,6 +24,7 @@ def test_connected_group_becomes_one_ring_and_pairs_are_dropped():
 
 
 def test_recovery_and_purity():
+    pytest.importorskip("sklearn")  # ring scoring metric needs scikit-learn, which is an evaluation-only dependency
     scores, tx = sample()
     rings = detect_rings(scores, tx, top_fraction=0.84, min_size=3)
     ts = pd.Timestamp("2022-09-02")

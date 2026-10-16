@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from xgboost import XGBClassifier
+import xgboost as xgb
 
 from api.schemas import AccountScore, Alert, Ring, RingSummary
 from ml.bundle import ALL_COLS, Bundle
@@ -34,7 +34,8 @@ def scorer():
     med = {"US Dollar": 100.0}
     X = build_features(tx, med)
     y = X.index.str.match(r"^(V|C|M|O)").astype(int)
-    model = XGBClassifier(n_estimators=30, max_depth=3, tree_method="hist", random_state=0).fit(X[ALL_COLS], y)
+    model = xgb.train({"objective": "binary:logistic", "max_depth": 3, "tree_method": "hist", "seed": 0},
+                      xgb.DMatrix(X[ALL_COLS], label=y), num_boost_round=30)
     bundle = Bundle(model, ALL_COLS, 0.5, 0.2, med, {}, calibration=(1.0, -2.0))
     return Scorer(bundle, X, tx, tx["ts"].max())
 

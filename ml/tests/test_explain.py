@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from xgboost import XGBClassifier
+import xgboost as xgb
 
 from ml.explain import label, shap_values, top_reasons
 
@@ -11,7 +11,9 @@ def fitted():
     X = pd.DataFrame(rng.normal(size=(300, 6)), columns=list("abcdef"))
     X.loc[::7, "c"] = np.nan  # XGBoost handles missing values, so the explanation must too
     y = ((X["a"] + 0.5 * X["b"].fillna(0)) > 0.3).astype(int)
-    return XGBClassifier(n_estimators=25, max_depth=3, tree_method="hist", random_state=0).fit(X, y), X
+    booster = xgb.train({"objective": "binary:logistic", "max_depth": 3, "tree_method": "hist", "seed": 0},
+                        xgb.DMatrix(X, label=y), num_boost_round=25)
+    return booster, X
 
 
 def test_native_treeshap_matches_the_shap_package():
@@ -20,13 +22,13 @@ def test_native_treeshap_matches_the_shap_package():
     explainer = shap.TreeExplainer(model)
     ours = shap_values(model, X)
     assert np.allclose(ours, explainer.shap_values(X), atol=1e-4)
-    margin = model.predict(X, output_margin=True)
+    margin = model.predict(xgb.DMatrix(X), output_margin=True)
     assert np.allclose(ours.sum(axis=1) + explainer.expected_value, margin, atol=1e-4)
 
 
 def test_contributions_sum_to_the_model_margin_up_to_a_constant():
     model, X = fitted()
-    offset = model.predict(X, output_margin=True) - shap_values(model, X).sum(axis=1)
+    offset = model.predict(xgb.DMatrix(X), output_margin=True) - shap_values(model, X).sum(axis=1)
     assert np.allclose(offset, offset[0], atol=1e-4)
 
 
