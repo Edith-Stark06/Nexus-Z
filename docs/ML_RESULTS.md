@@ -2,7 +2,7 @@
 
 Everything here was measured by running the code in `ml/`. Nothing is projected. Where a number is weak, it is shown anyway.
 
-All pig-butchering claims are **not yet tested**: the datasets below hold general laundering patterns, and the injected pig-butchering rings (data workstream) were not available when these runs were made.
+Sections 1 to 4 use general laundering data (IBM AML, Elliptic). Pig-butchering rings are only tested in section 5, on **stand-in rings written by the modelling side**, because the data workstream's generator was not available. Treat section 5 with the circularity caution given there.
 
 ## What was built
 
@@ -28,10 +28,23 @@ IBM AML data, test window, PR-AUC (higher is better). Random guessing scores the
 | + graph (neighbors, PageRank, 2-hop) | 0.142 | 0.135 | 0.054 |
 | + k-core, clustering, components | 0.150 | 0.160 | 0.055 |
 
-- **Graph features give a consistent gain of about 20 to 30%** over transaction-only, and it reproduced on a second machine. Over 5 training seeds the HI-Small graph model scored 0.141 ± 0.006 and transaction-only 0.113 ± 0.001, so the gain is larger than training noise.
+- **Graph features give a consistent gain of about 20 to 30%** over transaction-only, and it reproduced on a second machine and at 6 times the size (below). Over 5 training seeds the HI-Small graph model scored 0.141 ± 0.006 and transaction-only 0.113 ± 0.001, so the gain is larger than training noise.
 - **The k-core, clustering and component features are not reliably useful.** They helped by 0.008 on the laptop and 0.025 on Kaggle, which is inside run-to-run variation.
 - **Behavioral features add little** on this data. This may change with pig-butchering rings, where pass-through timing is the signature. That is untested.
 - **Absolute accuracy is low.** On HI-Small the best model has about 30% precision at about 20% recall. On the lower-fraud LI-Small it has about 5% precision. Do not describe this as a high-accuracy detector.
+
+### At 6 times the size: HI-Medium
+
+32M transactions and 2M accounts, run on a Kaggle CPU notebook (about 30 minutes for the ablation, 20 minutes for the ring evaluation, 4 vCPUs). Test window: 9,253 positive accounts.
+
+| Features | PR-AUC |
+|---|---|
+| Transaction-only | 0.122 |
+| + behavioral | 0.114 |
+| + graph | **0.158** |
+| + k-core, clustering, components | 0.152 |
+
+The graph gain holds at scale (+30%). Ring level at 1% flagged: 24.2% of groups recovered by the graph model against 11.0% for transaction-only, with 31.6% of detected rings real against 19.9%. The learned ring score added nothing at this scale (average precision 0.381 against 0.381 for the graph model).
 
 ### A real graph that does not agree: Elliptic
 
@@ -102,10 +115,29 @@ Measured on the datathon VM: RHEL 9.8, s390x (big-endian), 3 vCPUs, 7.5 GB RAM. 
 
 A rolling protocol rebuilds features from only the last 48 hours (`ml/rolling.py`). Feature build took 4 s on average (8.5 s at most) on the laptop. Account-level PR-AUC was 0.249 (transaction-only), 0.273 (+ behavioral) and 0.291 (+ graph), measured on different test snapshots, so it is not directly comparable to section 1. Ring recovery was lower: 11% against 10% for transaction-only, with higher purity (65% against 50%). Use it if rebuild cost becomes a problem; it is not what the saved model uses.
 
+## 5. Pig-butchering-shaped rings (stand-in data, read with care)
+
+`ml/standin_rings.py` injects 90 pig-butchering rings and 90 legitimate look-alikes into the HI-Small transactions. Rings come in four shapes (fan-in, dispersed, slow, chain); victims are real background accounts; fraud accounts are new accounts. The look-alikes are merchants, payroll runs, landlords and charities, none of them labelled fraud. Channels and amounts are drawn from the background data so a single payment carries no tell. Models are trained on the combined labels. Three different injections (seeds), each tested on its own test window (about 200 fraud accounts and 70 look-alike hub accounts each):
+
+| Features | Injected-fraud PR-AUC, seeds 0 / 1 / 2 | Legitimate hubs wrongly flagged (of about 70) |
+|---|---|---|
+| Transaction-only | 0.19 / 0.18 / 0.21 | 7 / 4 / 6 |
+| + behavioral (timing) | 0.71 / 0.66 / **0.12** | 0 / 0 / 1 |
+| + graph | 0.59 / 0.64 / 0.74 | 0 / 2 / 0 |
+| + k-core, clustering, components | 0.65 / 0.59 / 0.61 | 0 / 4 / 1 |
+
+- **Timing and structure matter a lot here.** Transaction-only never gets above 0.21, while models that see timing or structure reach 0.6 to 0.7 in most runs. Money that arrives and leaves within minutes is the signal this data was built around.
+- **The results are not stable across injections.** The timing-only model collapsed in one seed (0.12). The model with graph features was steadier (0.59 to 0.74). The data supports "timing or structure helps", not "this feature set is best".
+- **Look-alike hubs are rarely flagged** by models that see timing or structure (0 to 4 of about 70), against 4 to 7 for transaction-only. Payroll, which also passes money through quickly, was included on purpose.
+
+Ring level, flagged fraction chosen on validation: the graph model recovered 96%, 92% and 87% of injected rings; transaction-only recovered 84%, 88% and 87%. Real-ring share was 57% to 65% against 51% to 60%. **These recovery numbers are high because the injected rings are easy and were written by the same side that wrote the features.** Even transaction-only recovers most of them, so this test does not show that ring grouping beats per-account scoring. It does show that a pig-butchering-shaped flow is detectable at all, and that look-alike hubs do not swamp the alerts.
+
+What would make this convincing: rings from an independent generator, more varied timing (including rings that deliberately delay forwarding), and real or adversarially built look-alikes.
+
 ## Caveats that apply to everything above
 
 - Single time split per dataset. Seeds measure training noise, not split noise.
-- The IBM groups are generic laundering patterns, not pig-butchering.
+- The IBM groups are generic laundering patterns, not pig-butchering. Section 5 covers pig-butchering only on stand-in data.
 - HI-Small is a 10-day synthetic window. Test windows hold 1,000 to 2,000 positive accounts.
 - Ring `total_amount` adds up amounts in several currencies and must not be shown as dollars.
 - Roles (victim, collector, mule, cash-out) are guessed from position inside a ring. IBM data has no role labels, so they are not validated.
