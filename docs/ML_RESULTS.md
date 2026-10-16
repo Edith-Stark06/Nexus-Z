@@ -44,7 +44,7 @@ IBM AML data, test window, PR-AUC (higher is better). Random guessing scores the
 | + graph | **0.158** |
 | + k-core, clustering, components | 0.152 |
 
-The graph gain holds at scale (+30%). Ring level at 1% flagged: 24.2% of groups recovered by the graph model against 11.0% for transaction-only, with 31.6% of detected rings real against 19.9%. The learned ring score added nothing at this scale (average precision 0.381 against 0.381 for the graph model).
+The graph gain holds at scale (+30%). Ring level at 1% flagged: 24.2% of groups recovered by the graph model against 11.0% for transaction-only, with 31.6% of detected rings real against 19.9%. The learned ring score added nothing at this scale for the graph model (average precision 0.381 with the old score, 0.381 with the learned one), though it helped transaction-only (0.315 to 0.369).
 
 ### A real graph that does not agree: Elliptic
 
