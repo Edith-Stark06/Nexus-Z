@@ -55,6 +55,7 @@ class Scorer:
         self.rings: list[Ring] = apply_ring_scorer(detect_rings(self.scores, tx, bundle.top_fraction), bundle.ring_scorer)
         self._by_id = {ring_id(r.members): r for r in self.rings}
         self._ring_of = {m: rid for rid, r in self._by_id.items() for m in r.members}
+        self._ring_cache: dict[str, dict] = {}  # a ring is described once per Scorer, then reused
 
     @classmethod
     def from_transactions(cls, bundle: Bundle, tx: pd.DataFrame, active_since: pd.Timestamp | None = None):
@@ -101,9 +102,14 @@ class Scorer:
         }
 
     def get_ring(self, rid: str) -> dict | None:
-        r = self._by_id.get(rid)
-        if r is None:
+        if rid not in self._by_id:
             return None
+        if rid not in self._ring_cache:
+            self._ring_cache[rid] = self._describe_ring(rid)
+        return self._ring_cache[rid]
+
+    def _describe_ring(self, rid: str) -> dict:
+        r = self._by_id[rid]
         inside = self._inside(r.members)
         roles = infer_roles(r.members, inside)
         reasons = self._reasons(r.members)
