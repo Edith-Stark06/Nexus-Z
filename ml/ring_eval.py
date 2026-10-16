@@ -19,6 +19,9 @@ from data.ibm_aml import load_patterns, load_with_index, primary_period, time_sp
 from .dataset import make_snapshots
 from .features import BEHAVIOR_COLS, GRAPH_COLS, STRUCTURE_COLS, TX_COLS
 from .model import fit_calibration, fit_model, score
+from .ring_score import fit as fit_ring_scorer
+from .ring_score import probabilities as ring_probabilities
+from .ring_score import purity as ring_purity
 from .rings import detect_rings
 
 TOP_FRACTIONS = [0.005, 0.01, 0.02, 0.05]
@@ -51,6 +54,17 @@ def evaluate(rings, patterns, positives: set, window: tuple) -> dict:
             "pure_rings": float(pure.mean()) if len(purity) else 0.0, "ring_score_ap": ap}
 
 
+def learned_ap(rings, positives, val) -> float:
+    """Average precision of the learned ring score on these rings, fitted on the val rings."""
+    from sklearn.metrics import average_precision_score
+
+    params = fit_ring_scorer(*val)
+    pure = ring_purity(rings, positives) >= 0.5
+    if params is None or not rings or not 0 < pure.sum() < len(pure):
+        return float("nan")
+    return float(average_precision_score(pure, ring_probabilities(rings, params)))
+
+
 def run(variant: str) -> None:
     tx, keys = load_with_index(variant)
     tx = primary_period(tx, variant)
@@ -62,7 +76,7 @@ def run(variant: str) -> None:
     positives = {k: set(snaps[k].y.index[snaps[k].y == 1]) for k in windows}
     print(f"{len(patterns)} laundering patterns in {variant}")
 
-    rows = []
+    rows, val_rings = [], {}
     for name, cols in MODELS.items():
         model = fit_model(snaps["train"], snaps["val"], cols)
         calibration = fit_calibration(model, snaps["val"], cols)
@@ -71,8 +85,12 @@ def run(variant: str) -> None:
             hist = tx[tx["ts"] <= cut[k]]
             for frac in TOP_FRACTIONS:
                 rings = detect_rings(scores, hist, frac)
-                rows.append({"model": name, "split": k, "top": frac,
-                             **evaluate(rings, patterns, positives[k], windows[k])})
+                row = {"model": name, "split": k, "top": frac, **evaluate(rings, patterns, positives[k], windows[k])}
+                if k == "val":  # fit the ring scorer on val rings, then rank the test rings with it
+                    val_rings[(name, frac)] = (rings, ring_purity(rings, positives["val"]) >= 0.5)
+                else:
+                    row["learned_ap"] = learned_ap(rings, positives["test"], val_rings[(name, frac)])
+                rows.append(row)
     out = pd.DataFrame(rows)
     out["selection"] = out["recovery"] * out["pure_rings"]
     chosen = out[out["split"] == "val"].sort_values("selection").groupby("model").tail(1).set_index("model")["top"]

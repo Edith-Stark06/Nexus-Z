@@ -13,6 +13,7 @@ from .bundle import Bundle
 from .model import calibrated
 from .explain import shap_values, top_reasons
 from .features import build_features
+from .ring_score import apply as apply_ring_scorer
 from .rings import Ring, detect_rings
 
 VICTIM_LOOKBACK_HOURS = 48
@@ -51,7 +52,7 @@ class Scorer:
     def __init__(self, bundle: Bundle, X: pd.DataFrame, tx: pd.DataFrame, as_of: pd.Timestamp):
         self.bundle, self.X, self.tx, self.as_of = bundle, X, tx, as_of
         self.scores = pd.Series(calibrated(bundle.margin(X), bundle.calibration), index=X.index)
-        self.rings: list[Ring] = detect_rings(self.scores, tx, bundle.top_fraction)
+        self.rings: list[Ring] = apply_ring_scorer(detect_rings(self.scores, tx, bundle.top_fraction), bundle.ring_scorer)
         self._by_id = {ring_id(r.members): r for r in self.rings}
         self._ring_of = {m: rid for rid, r in self._by_id.items() for m in r.members}
 
