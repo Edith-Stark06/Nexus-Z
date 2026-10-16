@@ -63,7 +63,8 @@ def load_patterns(variant: str, keys: pd.Index) -> list[dict]:
     """Parse <variant>_Patterns.txt into one dict per laundering group.
 
     Each dict has: pattern_id, type (CYCLE, FAN-IN, ...), first_ts, last_ts, n_tx and accounts
-    (the set of pseudonymized account ids involved). `keys` comes from load_with_index.
+    (the set of pseudonymized account ids involved) and events (ts, account id) for both ends of every
+    transaction, so a group can be reconstructed as it grew. `keys` comes from load_with_index.
     """
     code_of = pd.Series(np.arange(len(keys)), index=keys)
     blocks, current = [], None
@@ -81,10 +82,11 @@ def load_patterns(variant: str, keys: pd.Index) -> list[dict]:
     for i, b in enumerate(blocks):
         rows = b["rows"]
         ts = pd.to_datetime([r[0] for r in rows], format="%Y/%m/%d %H:%M")
-        ends = [f"{r[1]}:{r[2]}" for r in rows] + [f"{r[3]}:{r[4]}" for r in rows]
-        codes = code_of.reindex(ends).dropna().astype(int)
+        src = code_of.reindex([f"{r[1]}:{r[2]}" for r in rows]).to_numpy()
+        dst = code_of.reindex([f"{r[3]}:{r[4]}" for r in rows]).to_numpy()
+        events = [(t, "ACC-%06X" % int(c)) for t, s, d in zip(ts, src, dst) for c in (s, d) if not np.isnan(c)]
         patterns.append({"pattern_id": i, "type": b["type"], "first_ts": ts.min(), "last_ts": ts.max(),
-                         "n_tx": len(rows), "accounts": {"ACC-%06X" % c for c in codes}})
+                         "n_tx": len(rows), "accounts": {a for _, a in events}, "events": events})
     return patterns
 
 

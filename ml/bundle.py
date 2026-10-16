@@ -20,7 +20,7 @@ from .ring_score import fit as fit_ring_scorer, purity
 from .rings import detect_rings
 
 ALL_COLS = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS
-TOP_FRACTION = 0.02  # share of accounts flagged before grouping into rings; chosen on val in ring_eval
+TOP_FRACTION = 0.01  # share of accounts flagged before grouping into rings; chosen on val in ring_eval
 
 
 @dataclass
