@@ -41,7 +41,8 @@ def shap_values(model, X: pd.DataFrame) -> np.ndarray:
 
     Computed by XGBoost itself, so no extra package is needed. Matches shap.TreeExplainer.
     """
-    contrib = model.get_booster().predict(xgb.DMatrix(X), pred_contribs=True)
+    booster = model.get_booster() if hasattr(model, "get_booster") else model  # classifier or Booster
+    contrib = booster.predict(xgb.DMatrix(X), pred_contribs=True)
     return contrib[:, :-1]  # the last column is the base value
 
 

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
-from xgboost import XGBClassifier
+import xgboost as xgb
 
 from data.ibm_aml import load_transactions, primary_period, time_split
 from data.paths import DATA_DIR
@@ -23,13 +23,17 @@ TOP_FRACTION = 0.02  # share of accounts flagged before grouping into rings; cho
 
 @dataclass
 class Bundle:
-    model: XGBClassifier
+    model: xgb.Booster       # native booster, so serving does not need scikit-learn
     cols: list[str]
     threshold: float        # account score that maximized F1 on val
     top_fraction: float
     ccy_median: dict
     meta: dict
     calibration: tuple = (1.0, 0.0)  # Platt scaling (slope, intercept) on the model margin
+
+    def margin(self, X: pd.DataFrame):
+        """Raw model output (log-odds) for each row of X."""
+        return self.model.predict(xgb.DMatrix(X[self.cols]), output_margin=True)
 
 
 def save_bundle(b: Bundle, folder: Path) -> None:
@@ -43,7 +47,7 @@ def save_bundle(b: Bundle, folder: Path) -> None:
 
 def load_bundle(folder: Path) -> Bundle:
     m = json.loads((folder / "meta.json").read_text(encoding="utf-8"))
-    model = XGBClassifier()
+    model = xgb.Booster()
     model.load_model(folder / "model.json")
     return Bundle(model, m["cols"], m["threshold"], m["top_fraction"], m["ccy_median"], m["meta"],
                   tuple(m.get("calibration", (1.0, 0.0))))
@@ -60,7 +64,7 @@ def train_bundle(variant: str = "HI-Small") -> Bundle:
     meta = {"variant": variant, "feature_version": FEATURE_VERSION, "trees": int(model.best_iteration + 1),
             "train_cutoff": str(snaps["train"].cutoff), "val_cutoff": str(snaps["val"].cutoff),
             "trained_at": pd.Timestamp.now().isoformat(timespec="seconds")}
-    return Bundle(model, ALL_COLS, best_f1_threshold(snaps["val"].y, val_scores), TOP_FRACTION,
+    return Bundle(model.get_booster(), ALL_COLS, best_f1_threshold(snaps["val"].y, val_scores), TOP_FRACTION,
                   currency_medians(tx[split == "train"]), meta, calibration)
 
 
