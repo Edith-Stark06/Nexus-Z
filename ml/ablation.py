@@ -10,12 +10,13 @@ from sklearn.metrics import average_precision_score, precision_recall_curve
 from xgboost import XGBClassifier
 
 from .dataset import make_snapshots
-from .features import BEHAVIOR_COLS, GRAPH_COLS, TX_COLS
+from .features import BEHAVIOR_COLS, GRAPH_COLS, STRUCTURE_COLS, TX_COLS
 
 FEATURE_SETS = {
     "transaction-only": TX_COLS,
     "+ behavioral": TX_COLS + BEHAVIOR_COLS,
     "+ graph": TX_COLS + BEHAVIOR_COLS + GRAPH_COLS,
+    "+ k-core, clustering, components": TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS,
 }
 
 

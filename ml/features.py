@@ -5,6 +5,7 @@ build_features expects only transactions with ts <= the scoring time; it never l
 import numpy as np
 import pandas as pd
 from scipy import sparse
+from scipy.sparse.csgraph import connected_components
 
 CHANNELS = ["ACH", "Bitcoin", "Cash", "Cheque", "Credit Card", "Reinvestment", "Wire"]
 
@@ -19,6 +20,10 @@ BEHAVIOR_COLS = ["span_h", "velocity", "max_tx_per_hour", "hours_active", "pt_mi
 GRAPH_COLS = ["n_out_cp", "n_in_cp", "fan_in_ratio", "repeat_out", "pagerank", "out_nb_in_cp_mean",
               "in_nb_out_cp_mean", "two_hop_out", "two_hop_in", "reciprocity"]
 
+STRUCTURE_COLS = ["kcore", "clustering", "comp_size", "comp_avg_deg"]
+
+FEATURE_VERSION = 2  # bump when columns change so cached snapshots are rebuilt
+HUB_DEGREE_CAP = 100  # accounts with more distinct neighbors are left out of triangle and component counts
 FAST_MINUTES = 15  # an outflow within this many minutes of an inflow counts as fast pass-through
 _HOUR_KEY = 100_000
 _TIME_KEY = 1e7
@@ -40,6 +45,54 @@ def _pagerank(src, dst, weight, n, damping=0.85, iters=30):
     for _ in range(iters):
         r = (1 - damping) / n + damping * (p @ r + r[dangling].sum() / n)
     return r * n
+
+
+def _core_numbers(S: sparse.csr_matrix) -> np.ndarray:
+    """k-core number of every node of a symmetric 0/1 adjacency matrix, by peeling low degrees."""
+    deg = np.asarray(S.sum(axis=1)).ravel().copy()
+    alive = np.ones(S.shape[0], bool)
+    core = np.zeros(S.shape[0], np.int64)
+    k = 0
+    while alive.any():
+        k = max(k, int(deg[alive].min()))
+        while True:
+            peel = np.flatnonzero(alive & (deg <= k))
+            if peel.size == 0:
+                break
+            core[peel] = k
+            alive[peel] = False
+            deg -= np.asarray(S[peel].sum(axis=0)).ravel()
+        k += 1
+    return core
+
+
+def _structure(S: sparse.csr_matrix, cap: int = HUB_DEGREE_CAP, chunk: int = 50_000):
+    """Clustering coefficient and component size/density on the graph without hub accounts.
+
+    Hubs (more than `cap` neighbors) are excluded from triangle and component counting, since
+    exact triangles around a hub with tens of thousands of neighbors are impractical. Their own
+    clustering and component values are NaN.
+    """
+    N = S.shape[0]
+    deg = np.asarray(S.sum(axis=1)).ravel()
+    hub = deg > cap
+    keep = sparse.diags((~hub).astype(np.float64))
+    Sc = (keep @ S @ keep).tocsr()
+
+    tri = np.zeros(N)
+    for lo in range(0, N, chunk):
+        rows = Sc[lo:lo + chunk]
+        tri[lo:lo + chunk] = np.asarray(rows.multiply(rows @ Sc).sum(axis=1)).ravel() / 2
+    pairs = deg * (deg - 1) / 2
+    clustering = np.where(pairs > 0, tri / np.maximum(pairs, 1), 0.0)
+
+    _, label = connected_components(Sc, directed=False)
+    size = np.bincount(label)
+    edge_ends = np.bincount(label, weights=np.asarray(Sc.sum(axis=1)).ravel())
+    comp_size = size[label].astype(float)
+    comp_avg_deg = (edge_ends / size)[label]
+    return (np.where(hub, np.nan, clustering), np.where(hub, np.nan, comp_size),
+            np.where(hub, np.nan, comp_avg_deg))
 
 
 def build_features(tx: pd.DataFrame, ccy_median: dict) -> pd.DataFrame:
@@ -117,5 +170,11 @@ def build_features(tx: pd.DataFrame, ccy_median: dict) -> pd.DataFrame:
     f["two_hop_in"] = np.log1p(AT @ (AT @ ones))
     f["reciprocity"] = np.asarray(A.multiply(AT).sum(axis=1)).ravel() / np.maximum(n_out_cp, 1)
 
-    cols = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS
+    keep = us != ud
+    S = sparse.csr_matrix((np.ones(int(keep.sum())), (us[keep], ud[keep])), shape=(N, N))
+    S = ((S + S.T) > 0).astype(np.float64).tocsr()
+    f["kcore"] = _core_numbers(S).astype(float)
+    f["clustering"], f["comp_size"], f["comp_avg_deg"] = _structure(S)
+
+    cols = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS
     return pd.DataFrame({c: f[c] for c in cols}, index=pd.Index(accs, name="account"))
