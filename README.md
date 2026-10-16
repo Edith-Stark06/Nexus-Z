@@ -3,7 +3,7 @@
 **Graph-based fraud ring detection on IBM LinuxONE.**
 Built for the IBM Z Datathon 2026 (APAC). Theme: Real-Time AI for Critical Decisions.
 
-> **Status:** in development. The design and solution document are done. The code is being built during the datathon. Nothing below is a measured result yet; metrics will be added to this README only once they are measured.
+> **Status:** in development. The ML core is built and measured on IBM synthetic AML data and the Elliptic Bitcoin data; see [docs/ML_RESULTS.md](docs/ML_RESULTS.md) for every number and its limits. The dashboard, the real API backend and the injected pig-butchering rings are still in progress, so **pig-butchering detection itself is not yet tested**.
 
 ## The problem
 
@@ -71,6 +71,8 @@ All identifiers are pseudonymized (for example `ACC-7F3A`). No real personal dat
 
 ## Evaluation plan
 
+Measured results so far are in [docs/ML_RESULTS.md](docs/ML_RESULTS.md). The plan below is what we measure.
+
 | Level | Metric |
 |---|---|
 | Account | Precision, recall, F1, PR-AUC |
@@ -93,7 +95,7 @@ Future scope: consortium ring-signature sharing across institutions, larger grap
 |---|---|
 | `docs/` | Solution document, datathon submission text, team split |
 | `data/`, `eval/` | Synthetic generator, dataset loading, splits, metrics (planned) |
-| `ml/` | Graph build, features, models, SHAP (planned) |
+| `ml/` | Features, models, ring detection, explanations, scoring service. See [ml/README.md](ml/README.md) |
 | `api/`, `infra/` | FastAPI service, streaming simulator, Docker setup (planned) |
 | `dashboard/`, `pitch/` | React + D3 dashboard, pitch material (planned) |
 
