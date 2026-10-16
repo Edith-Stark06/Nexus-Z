@@ -2,7 +2,7 @@
 
 Take the accounts with the highest risk scores, keep the payments between them, and split the
 result into connected groups. A group that is too large to be one ring is split again with Louvain
-community detection. Each ring gets a risk score and descriptors an analyst can read.
+community detection. Each ring gets descriptors an analyst can read, and a risk score.
 """
 from dataclasses import dataclass
 
@@ -16,11 +16,15 @@ from scipy.sparse.csgraph import connected_components
 @dataclass
 class Ring:
     members: list[str]
-    risk: float            # mean of the three highest member scores, 0 to 1
+    risk: float            # ring risk, 0 to 1. Mean of the three highest member scores until a ring scorer is applied
     size: int
     density: float         # distinct linked pairs over possible pairs
     concentration: float   # largest share of the ring's internal payments received by one account
     n_tx: int              # payments between members
+    mean_score: float = 0.0
+    min_score: float = 0.0
+    max_score: float = 0.0
+    top3_score: float = 0.0
 
 
 def _split(graph: nx.Graph, max_size: int, seed: int, resolution: float = 1.0, depth: int = 0) -> list[set]:
@@ -32,21 +36,6 @@ def _split(graph: nx.Graph, max_size: int, seed: int, resolution: float = 1.0, d
         else:
             parts.append(community)
     return parts
-
-
-def _describe(members: list[str], scores: pd.Series, edges: pd.DataFrame) -> Ring:
-    inside = edges[edges["src"].isin(members) & edges["dst"].isin(members)]
-    n = len(members)
-    pairs = inside[["src", "dst"]].apply(frozenset, axis=1).nunique() if len(inside) else 0
-    top3 = scores.reindex(members).nlargest(3)
-    received = inside.groupby("dst")["n"].sum()
-    total = inside["n"].sum()
-    return Ring(
-        members=members, risk=float(top3.mean()), size=n,
-        density=float(pairs / (n * (n - 1) / 2)) if n > 1 else 0.0,
-        concentration=float(received.max() / total) if total else 0.0,
-        n_tx=int(total),
-    )
 
 
 def detect_rings(scores: pd.Series, tx: pd.DataFrame, top_fraction: float, min_size: int = 3,
@@ -64,21 +53,55 @@ def detect_rings(scores: pd.Series, tx: pd.DataFrame, top_fraction: float, min_s
 
     nodes = pd.Index(pd.unique(pd.concat([edges["src"], edges["dst"]], ignore_index=True)))
     r, c = nodes.get_indexer(edges["src"]), nodes.get_indexer(edges["dst"])
+    n_pay = edges["n"].to_numpy()
     adj = sparse.csr_matrix((np.ones(len(r)), (r, c)), shape=(len(nodes), len(nodes)))
-    _, label = connected_components(adj, directed=False)
+    _, comp = connected_components(adj, directed=False)
 
-    rings = []
-    for lab in np.unique(label):
-        members = nodes[label == lab].tolist()
+    ring_of = np.full(len(nodes), -1)
+    n_rings = 0
+    for lab in np.unique(comp):
+        members = np.flatnonzero(comp == lab)
         if len(members) < min_size:
             continue
-        if len(members) > max_size:
-            sub = nx.Graph()
-            sub.add_edges_from(edges.loc[edges["src"].isin(members) & edges["dst"].isin(members),
-                                         ["src", "dst"]].itertuples(index=False))
-            for community in _split(sub, max_size, seed):
-                if len(community) >= min_size:
-                    rings.append(_describe(sorted(community), scores, edges))
-        else:
-            rings.append(_describe(sorted(members), scores, edges))
+        if len(members) <= max_size:
+            ring_of[members] = n_rings
+            n_rings += 1
+            continue
+        keep = (comp[r] == lab) & (comp[c] == lab)
+        sub = nx.Graph()
+        sub.add_edges_from(zip(r[keep].tolist(), c[keep].tolist()))
+        for community in _split(sub, max_size, seed):
+            if len(community) >= min_size:
+                ring_of[list(community)] = n_rings
+                n_rings += 1
+    if n_rings == 0:
+        return []
+
+    # descriptors for every ring at once
+    rs, rd = ring_of[r], ring_of[c]
+    inside = (rs >= 0) & (rs == rd)
+    e = pd.DataFrame({"ring": rs[inside], "a": np.minimum(r, c)[inside], "b": np.maximum(r, c)[inside],
+                      "dst": c[inside], "n": n_pay[inside]})
+    n_tx = e.groupby("ring")["n"].sum().reindex(range(n_rings), fill_value=0)
+    linked_pairs = e.drop_duplicates(["ring", "a", "b"]).groupby("ring").size().reindex(range(n_rings), fill_value=0)
+    top_received = e.groupby(["ring", "dst"])["n"].sum().groupby(level=0).max().reindex(range(n_rings), fill_value=0)
+
+    member_df = pd.DataFrame({"ring": ring_of, "node": np.arange(len(nodes)), "score": scores.reindex(nodes).to_numpy()})
+    member_df = member_df[member_df["ring"] >= 0].sort_values(["ring", "score"], ascending=[True, False])
+    by_ring = member_df.groupby("ring")["score"]
+    top3 = member_df[member_df.groupby("ring").cumcount() < 3].groupby("ring")["score"].mean()
+    size = by_ring.size()
+    stats = pd.DataFrame({"size": size, "mean": by_ring.mean(), "min": by_ring.min(), "max": by_ring.max(), "top3": top3})
+    names = member_df.groupby("ring")["node"].apply(lambda x: sorted(nodes[x.to_numpy()].tolist()))
+
+    rings = []
+    for i in range(n_rings):
+        n = int(stats.at[i, "size"])
+        total = int(n_tx[i])
+        rings.append(Ring(
+            members=names[i], risk=float(stats.at[i, "top3"]), size=n,
+            density=float(linked_pairs[i] / (n * (n - 1) / 2)) if n > 1 else 0.0,
+            concentration=float(top_received[i] / total) if total else 0.0, n_tx=total,
+            mean_score=float(stats.at[i, "mean"]), min_score=float(stats.at[i, "min"]),
+            max_score=float(stats.at[i, "max"]), top3_score=float(stats.at[i, "top3"])))
     return sorted(rings, key=lambda x: x.risk, reverse=True)
