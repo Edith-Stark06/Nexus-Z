@@ -1,0 +1,6 @@
+# Minimum versions this was written against. Pin exact versions after the s390x install check on L1CC.
+fastapi>=0.141
+uvicorn>=0.52
+pydantic>=2.13
+httpx>=0.28    # TestClient
+pytest>=9.1
