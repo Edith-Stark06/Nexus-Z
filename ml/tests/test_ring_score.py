@@ -21,6 +21,7 @@ def make_rings(n, seed):
 
 
 def test_scorer_learns_to_rank_real_rings_above_others_and_generalizes():
+    pytest.importorskip("sklearn")  # fitting is a training-time step
     train, y_train = make_rings(120, seed=0)
     test, y_test = make_rings(80, seed=1)
     params = fit(train, y_train)
@@ -32,6 +33,7 @@ def test_scorer_learns_to_rank_real_rings_above_others_and_generalizes():
 
 
 def test_scorer_needs_both_outcomes_and_enough_rings():
+    pytest.importorskip("sklearn")
     rings, real = make_rings(10, seed=0)
     assert fit(rings, real) is None                    # too few rings
     rings, _ = make_rings(60, seed=0)
