@@ -101,10 +101,10 @@ Future scope: consortium ring-signature sharing across institutions, larger grap
 
 | Name | Workstream |
 |---|---|
-| Ramana Sree K V (team lead) | Platform, API and integration |
-| Tushar Biswas | Data and evaluation |
-| Giridharan R E | Graph, features and models |
-| Verona Ann | Dashboard, victim warning and pitch |
+| Ramana Sree K V (team lead) | Graph, features and models |
+| Verona Ann | Data and evaluation |
+| Giridharan R E | Platform, API and integration |
+| Tushar Biswas | Dashboard, victim warning and pitch |
 
 Each member works on a branch named after them and opens a pull request into `main`. See [docs/TEAM_SPLIT.md](docs/TEAM_SPLIT.md).
 
