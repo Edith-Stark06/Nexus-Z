@@ -31,15 +31,15 @@ INPUT, TEMP, OUT = Path("/kaggle/input"), Path("/kaggle/temp"), Path("/kaggle/wo
 
 
 def find_code() -> Path:
-    for root in INPUT.iterdir():
-        if (root / "ml" / "__init__.py").exists():
-            return root
+    for init in INPUT.rglob("ml/__init__.py"):  # Kaggle mounts datasets at varying depths
+        return init.parent.parent
     target = TEMP / "code"
-    for z in INPUT.rglob("*.zip"):  # Kaggle normally unpacks zips; handle the case where it did not
-        zipfile.ZipFile(z).extractall(target if z.name != "ml.zip" else target / "ml")
-    if not (target / "ml" / "__init__.py").exists():
-        sys.exit("could not find the nexusz-code dataset under /kaggle/input")
-    return target
+    for z in INPUT.rglob("*.zip"):  # fall back to unpacking zips if Kaggle did not
+        zipfile.ZipFile(z).extractall(target / z.stem)
+    if (target / "ml" / "__init__.py").exists():
+        return target
+    layout = [str(p.relative_to(INPUT)) for pattern in ("*/*", "*/*/*") for p in sorted(INPUT.glob(pattern))]
+    sys.exit("could not find the nexusz-code dataset. /kaggle/input holds:\n" + "\n".join(layout[:60]))
 
 
 def sh(cmd, cwd, env, log: Path) -> int:
