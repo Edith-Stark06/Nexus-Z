@@ -35,3 +35,17 @@ def test_recovery_and_purity():
     m = evaluate(rings, patterns, positives={"a", "b"}, window=(pd.Timestamp("2022-09-01"), pd.Timestamp("2022-09-03")))
     assert m["true_rings"] == 2 and m["recovery"] == pytest.approx(0.5)
     assert m["mean_purity"] == pytest.approx(2 / 3) and m["pure_rings"] == 1.0
+
+
+def clique_edges(names):
+    return [(a, b) for i, a in enumerate(names) for b in names[i + 1:]]
+
+
+def test_oversized_group_is_split_into_rings_within_the_size_limit():
+    left, right = list("abcde"), list("vwxyz")
+    pairs = clique_edges(left) + clique_edges(right) + [("e", "v")]  # two tight groups joined by one payment
+    tx = pd.DataFrame(pairs, columns=["src", "dst"])
+    scores = pd.Series(0.9, index=left + right)
+    rings = detect_rings(scores, tx, top_fraction=1.0, min_size=3, max_size=6)
+    assert sorted(r.size for r in rings) == [5, 5]
+    assert {frozenset(r.members) for r in rings} == {frozenset(left), frozenset(right)}

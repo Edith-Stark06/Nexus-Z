@@ -23,6 +23,17 @@ class Ring:
     n_tx: int              # payments between members
 
 
+def _split(graph: nx.Graph, max_size: int, seed: int, resolution: float = 1.0, depth: int = 0) -> list[set]:
+    """Louvain communities, re-split at a higher resolution while any is larger than max_size."""
+    parts = []
+    for community in nx.community.louvain_communities(graph, resolution=resolution, seed=seed):
+        if len(community) > max_size and depth < 5:
+            parts += _split(graph.subgraph(community).copy(), max_size, seed, resolution * 2, depth + 1)
+        else:
+            parts.append(community)
+    return parts
+
+
 def _describe(members: list[str], scores: pd.Series, edges: pd.DataFrame) -> Ring:
     inside = edges[edges["src"].isin(members) & edges["dst"].isin(members)]
     n = len(members)
@@ -65,7 +76,7 @@ def detect_rings(scores: pd.Series, tx: pd.DataFrame, top_fraction: float, min_s
             sub = nx.Graph()
             sub.add_edges_from(edges.loc[edges["src"].isin(members) & edges["dst"].isin(members),
                                          ["src", "dst"]].itertuples(index=False))
-            for community in nx.community.louvain_communities(sub, seed=seed):
+            for community in _split(sub, max_size, seed):
                 if len(community) >= min_size:
                     rings.append(_describe(sorted(community), scores, edges))
         else:

@@ -13,13 +13,12 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import average_precision_score
 
 from data.ibm_aml import load_patterns, load_with_index, primary_period, time_split
 
 from .dataset import make_snapshots
 from .features import BEHAVIOR_COLS, GRAPH_COLS, STRUCTURE_COLS, TX_COLS
-from .model import fit_model, score
+from .model import fit_calibration, fit_model, score
 from .rings import detect_rings
 
 TOP_FRACTIONS = [0.005, 0.01, 0.02, 0.05]
@@ -29,6 +28,8 @@ MODELS = {"transaction-only": TX_COLS, "graph features": TX_COLS + BEHAVIOR_COLS
 
 
 def evaluate(rings, patterns, positives: set, window: tuple) -> dict:
+    from sklearn.metrics import average_precision_score  # evaluation only, not needed for serving
+
     lo, hi = window
     active = [p for p in patterns if p["last_ts"] > lo and p["first_ts"] <= hi and len(p["accounts"]) >= 2]
     owner = {}
@@ -64,8 +65,9 @@ def run(variant: str) -> None:
     rows = []
     for name, cols in MODELS.items():
         model = fit_model(snaps["train"], snaps["val"], cols)
+        calibration = fit_calibration(model, snaps["val"], cols)
         for k in ("val", "test"):
-            scores = score(model, snaps[k], cols)
+            scores = score(model, snaps[k], cols, calibration)
             hist = tx[tx["ts"] <= cut[k]]
             for frac in TOP_FRACTIONS:
                 rings = detect_rings(scores, hist, frac)
