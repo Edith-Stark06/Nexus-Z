@@ -26,12 +26,16 @@ def currency_medians(train_tx: pd.DataFrame) -> dict:
     return {str(k): float(v) for k, v in med.items()}
 
 
-def make_snapshots(variant: str = "HI-Small", use_cache: bool = True) -> dict[str, Snapshot]:
-    cache = CACHE_DIR / f"{variant}_snapshots_v{FEATURE_VERSION}.pkl"
+def make_snapshots(variant: str = "HI-Small", use_cache: bool = True, tx: pd.DataFrame | None = None,
+                   tag: str = "") -> dict[str, Snapshot]:
+    """Snapshots for a variant. Pass `tx` (already restricted to the primary period) to use other
+    transactions, such as the data with injected rings; give it a `tag` so its cache stays separate."""
+    cache = CACHE_DIR / f"{variant}{tag}_snapshots_v{FEATURE_VERSION}.pkl"
     if use_cache and cache.exists():
         return pd.read_pickle(cache)
 
-    tx = primary_period(load_transactions(variant), variant)
+    if tx is None:
+        tx = primary_period(load_transactions(variant), variant)
     split = time_split(tx)
     ccy_median = currency_medians(tx[split == "train"])
 
