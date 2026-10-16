@@ -3,6 +3,7 @@
 Output follows the team data contract: tx_id, ts, src, dst, amount, channel, plus the
 dataset's own label and currency columns. Account ids are pseudonymized as ACC-XXXXXX.
 """
+import numpy as np
 import pandas as pd
 
 from .paths import IBM_AML_DIR
@@ -18,6 +19,12 @@ CATEGORICAL = ["receiving_currency", "payment_currency", "payment_format"]
 
 def load_transactions(variant: str = "HI-Small", nrows: int | None = None) -> pd.DataFrame:
     """Return transactions sorted by time with pseudonymized src/dst account ids."""
+    return load_with_index(variant, nrows)[0]
+
+
+def load_with_index(variant: str = "HI-Small", nrows: int | None = None):
+    """Like load_transactions, but also return the account keys: key i is the raw "bank:account"
+    behind pseudonym ACC-%06X % i. Needed to map other raw files (patterns) onto the same ids."""
     raw = pd.read_csv(
         IBM_AML_DIR / f"{variant}_Trans.csv",
         header=0,
@@ -32,7 +39,7 @@ def load_transactions(variant: str = "HI-Small", nrows: int | None = None) -> pd
     # Bank id plus account number identifies an account; factorize both ends together.
     src_key = raw["from_bank"] + ":" + raw["from_account"]
     dst_key = raw["to_bank"] + ":" + raw["to_account"]
-    codes, _ = pd.factorize(pd.concat([src_key, dst_key], ignore_index=True))
+    codes, keys = pd.factorize(pd.concat([src_key, dst_key], ignore_index=True))
     n = len(raw)
     pseudo = pd.Index(["ACC-%06X" % c for c in range(codes.max() + 1)])
 
@@ -49,7 +56,36 @@ def load_transactions(variant: str = "HI-Small", nrows: int | None = None) -> pd
     })
     tx = tx.sort_values("ts", kind="stable", ignore_index=True)
     tx.insert(0, "tx_id", tx.index.astype("int64"))
-    return tx
+    return tx, pd.Index(keys)
+
+
+def load_patterns(variant: str, keys: pd.Index) -> list[dict]:
+    """Parse <variant>_Patterns.txt into one dict per laundering group.
+
+    Each dict has: pattern_id, type (CYCLE, FAN-IN, ...), first_ts, last_ts, n_tx and accounts
+    (the set of pseudonymized account ids involved). `keys` comes from load_with_index.
+    """
+    code_of = pd.Series(np.arange(len(keys)), index=keys)
+    blocks, current = [], None
+    with open(IBM_AML_DIR / f"{variant}_Patterns.txt", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("BEGIN LAUNDERING ATTEMPT"):
+                current = {"type": line.split(" - ")[1].split(":")[0].strip(), "rows": []}
+            elif line.startswith("END LAUNDERING ATTEMPT"):
+                blocks.append(current)
+                current = None
+            elif current is not None and line:
+                current["rows"].append(line.split(","))
+    patterns = []
+    for i, b in enumerate(blocks):
+        rows = b["rows"]
+        ts = pd.to_datetime([r[0] for r in rows], format="%Y/%m/%d %H:%M")
+        ends = [f"{r[1]}:{r[2]}" for r in rows] + [f"{r[3]}:{r[4]}" for r in rows]
+        codes = code_of.reindex(ends).dropna().astype(int)
+        patterns.append({"pattern_id": i, "type": b["type"], "first_ts": ts.min(), "last_ts": ts.max(),
+                         "n_tx": len(rows), "accounts": {"ACC-%06X" % c for c in codes}})
+    return patterns
 
 
 PRIMARY_DAYS = {"Small": 10, "Medium": 16}
