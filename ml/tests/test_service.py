@@ -52,3 +52,10 @@ def test_alerts_match_api_schema_and_are_newest_first(scorer):
         Alert(**a)
     assert [a["ts"] for a in alerts] == sorted((a["ts"] for a in alerts), reverse=True)
     assert any(a["type"] == "ring" for a in alerts)
+
+
+def test_ring_is_described_once_and_reused(scorer):
+    rid = scorer.list_rings()[0]["ring_id"]
+    assert scorer.get_ring(rid) is scorer.get_ring(rid)       # same object: no recomputation
+    scorer.list_rings(), scorer.list_alerts()                  # these reuse the cache as well
+    assert rid in scorer._ring_cache
