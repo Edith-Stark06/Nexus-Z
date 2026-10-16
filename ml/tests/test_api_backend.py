@@ -24,3 +24,31 @@ def test_ingested_transactions_appear_after_a_refresh(tx_and_bundle):
     assert backend.ingest([new]) == 1
     assert backend.get_account("NEWACC") is not None  # the read triggered a rebuild that includes it
     assert len(backend.tx) == len(tx) + 1
+
+
+def test_real_api_routes_work_with_the_model_backend(tx_and_bundle):
+    """The API's own routes, with the model backend swapped in for the sample one."""
+    from fastapi.testclient import TestClient
+
+    from api.backend import get_backend
+    from api.main import app
+
+    tx, bundle = tx_and_bundle
+    backend = ModelBackend(bundle, tx, active_hours=48, min_refresh_seconds=0)
+    app.dependency_overrides[get_backend] = lambda: backend
+    try:
+        client = TestClient(app)
+        assert client.get("/health").json() == {"status": "ok", "backend": "model"}
+        rings = client.get("/rings").json()
+        assert rings and [r["risk"] for r in rings] == sorted((r["risk"] for r in rings), reverse=True)
+        ring = client.get(f"/rings/{rings[0]['ring_id']}").json()
+        assert ring["members"] and ring["edges"] and len(ring["top_reasons"]) == 5
+        member = ring["members"][0]["id"]
+        assert client.get(f"/accounts/{member}").json()["ring_id"] == rings[0]["ring_id"]
+        assert client.get("/alerts?limit=5").status_code == 200
+        assert client.get("/rings/RNG-NOPE").status_code == 404
+        body = {"tx_id": "N1", "ts": "2022-09-03T00:00:00Z", "src": "V0", "dst": "BRANDNEW", "amount": 500.0, "channel": "ACH"}
+        assert client.post("/transactions", json=body).json() == {"accepted": 1, "backend": "model"}
+        assert client.get("/accounts/BRANDNEW").status_code == 200   # picked up by the rebuild
+    finally:
+        app.dependency_overrides.clear()
