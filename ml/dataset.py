@@ -20,6 +20,12 @@ class Snapshot:
     cutoff: pd.Timestamp
 
 
+def currency_medians(train_tx: pd.DataFrame) -> dict:
+    """Median amount per currency, used to put amounts in different currencies on one scale."""
+    med = train_tx.groupby("currency", observed=True)["amount"].median()
+    return {str(k): float(v) for k, v in med.items()}
+
+
 def make_snapshots(variant: str = "HI-Small", use_cache: bool = True) -> dict[str, Snapshot]:
     cache = CACHE_DIR / f"{variant}_snapshots_v{FEATURE_VERSION}.pkl"
     if use_cache and cache.exists():
@@ -27,9 +33,7 @@ def make_snapshots(variant: str = "HI-Small", use_cache: bool = True) -> dict[st
 
     tx = primary_period(load_transactions(variant), variant)
     split = time_split(tx)
-    train_tx = tx[split == "train"]
-    ccy_median = train_tx.groupby("currency", observed=True)["amount"].median()
-    ccy_median = {str(k): float(v) for k, v in ccy_median.items()}
+    ccy_median = currency_medians(tx[split == "train"])
 
     snapshots, earlier_positive = {}, set()
     for name in SPLITS:
