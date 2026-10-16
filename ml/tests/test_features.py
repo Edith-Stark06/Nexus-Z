@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+from scipy import sparse
 
-from ml.features import FAST_MINUTES, build_features
+from ml.features import FAST_MINUTES, _core_numbers, _structure, build_features
 
 
 def tiny_chain():
@@ -26,6 +27,31 @@ def test_pass_through_and_degrees():
     assert f.loc["C", "n_in_cp"] == 2 and f.loc["C", "n_out_cp"] == 1
     assert f.loc["C", "fan_in_ratio"] == 2 / 2
     assert FAST_MINUTES == 15
+
+
+def small_graph():
+    """Triangle 0-1-2, a tail node 3 hanging off 0, an isolated node 4, and a separate pair 5-6."""
+    edges = [(0, 1), (1, 2), (0, 2), (0, 3), (5, 6)]
+    r, c = zip(*edges)
+    S = sparse.csr_matrix((np.ones(len(edges)), (r, c)), shape=(7, 7))
+    return ((S + S.T) > 0).astype(float).tocsr()
+
+
+def test_core_numbers():
+    assert _core_numbers(small_graph()).tolist() == [2, 2, 2, 1, 0, 1, 1]
+
+
+def test_clustering_and_components():
+    clustering, size, avg_deg = _structure(small_graph(), cap=100)
+    assert np.allclose(clustering[:4], [1 / 3, 1.0, 1.0, 0.0])
+    assert size.tolist() == [4, 4, 4, 4, 1, 2, 2]
+    assert np.isclose(avg_deg[0], 2 * 4 / 4) and avg_deg[5] == 1.0
+
+
+def test_hubs_are_left_out_of_structure_counts():
+    clustering, size, _ = _structure(small_graph(), cap=2)  # node 0 has 3 neighbors, so it is a hub
+    assert np.isnan(clustering[0]) and np.isnan(size[0])
+    assert size[1] == 2 and size[3] == 1  # triangle broken without node 0
 
 
 def test_amounts_are_normalized_by_currency_median():

@@ -6,7 +6,7 @@ import pandas as pd
 from data.ibm_aml import load_transactions, primary_period, time_split
 from data.paths import DATA_DIR
 
-from .features import build_features
+from .features import FEATURE_VERSION, build_features
 
 CACHE_DIR = DATA_DIR / "cache"
 SPLITS = ("train", "val", "test")
@@ -21,7 +21,7 @@ class Snapshot:
 
 
 def make_snapshots(variant: str = "HI-Small", use_cache: bool = True) -> dict[str, Snapshot]:
-    cache = CACHE_DIR / f"{variant}_snapshots.pkl"
+    cache = CACHE_DIR / f"{variant}_snapshots_v{FEATURE_VERSION}.pkl"
     if use_cache and cache.exists():
         return pd.read_pickle(cache)
 
