@@ -24,8 +24,10 @@ DEFAULT_CURRENCY = "US Dollar"  # the API does not carry currency, so ingested r
 class ModelBackend:
     name = "model"
 
-    def __init__(self, bundle: Bundle, tx: pd.DataFrame, active_hours: int = 24, min_refresh_seconds: float = 5.0):
+    def __init__(self, bundle: Bundle, tx: pd.DataFrame, active_hours: int = 24, min_refresh_seconds: float = 5.0,
+                 previous_rings: dict | None = None):
         self.bundle, self.tx = bundle, tx
+        self._previous_rings = previous_rings  # ring ids served before this object existed (async rebuilds pass them in)
         self.active_hours, self.min_refresh_seconds = active_hours, min_refresh_seconds
         self._pending: list[dict] = []
         self.refresh_seconds: float | None = None
@@ -44,7 +46,8 @@ class ModelBackend:
             self.tx = pd.concat([self.tx, new], ignore_index=True).sort_values("ts", kind="stable", ignore_index=True)
             self._pending = []
         since = self.tx["ts"].max() - pd.Timedelta(hours=self.active_hours)
-        self.scorer = Scorer.from_transactions(self.bundle, self.tx, active_since=since)
+        before = self.scorer.ring_members() if hasattr(self, "scorer") else self._previous_rings
+        self.scorer = Scorer.from_transactions(self.bundle, self.tx, active_since=since, previous_rings=before)
         self.refresh_seconds = time.time() - started
         self._last_refresh = time.time()
 
@@ -52,6 +55,9 @@ class ModelBackend:
         if self._pending and time.time() - self._last_refresh >= self.min_refresh_seconds:
             self._rebuild()
         return self.scorer
+
+    def ring_members(self) -> dict:
+        return self.scorer.ring_members()
 
     # -- Backend protocol
     def ingest(self, txs: list[Transaction]) -> int:

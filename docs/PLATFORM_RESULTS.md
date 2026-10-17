@@ -4,16 +4,15 @@ Workstream C. These are **new measurements of the API**, taken with `infra/bench
 model measurements in `docs/ML_RESULTS.md` (accuracy, and the 2.4 to 2.5 s full rescore on the VM). Nothing here is
 copied from there.
 
-**Status: full benchmark = local laptop only. On the LinuxONE VM only a functional check and one contended run were done (section 3);
-the clean VM benchmark is PENDING** because Ramana's training jobs were using the VM. Do not quote the laptop numbers as LinuxONE performance. The VM has 3 vCPUs
-and 7.5 GB; the laptop below has 12 logical CPUs and 15 GB, so the VM should be expected to be slower, but that is a
-prediction, not a measurement.
+**Status: the clean LinuxONE benchmark with the payment-level model is done (section 3b), and the final deployment, the API in a hardened container with the demo bundle, is measured in section 3c.** Sections 1, 2 and 3 are older: the laptop benchmark and the contended VM check were taken with the earlier account-level model, so do not quote their freshness or rebuild figures for the current model. Do not quote the laptop numbers as LinuxONE performance either.
+
+**Update after the merge (checked by Ramana on 2026-10-17, one run).** Every measurement below was taken with the earlier account-level model that was in `ml/artifacts/HI-Small` at the time. The committed model is now the payment-level one (see `docs/ML_RESULTS.md`), which is heavier to rebuild. On the laptop, with the merged code, the real slice and the same 24-hour history (654,467 rows): the API started in 42 s, the first state took **32.9 s** to build and the rebuild after a 20,000-row replay took **32.7 s**, against about 15 s below. So a transaction becomes visible after about 33 s on that laptop, not about 15 s, and longer under sustained ingest. Single requests answered in 3 to 5 ms (70 ms for the first lookup of a ring member); this was not a benchmark. Part of that time was avoidable: describing all 174 rings took 16.6 s of it, because each ring rescanned the whole history and made its own SHAP call. PR #17 filters the history once and explains all members in one call (same output, checked on all 174 rings): that step now takes 1.8 s. The rebuild was not re-timed end to end on the laptop after the change. The idle-VM benchmark with the payment model is section 3b.
 
 | Platform | Status |
 |---|---|
 | Local laptop (Windows), real model, 24 h history + replay | **measured** (2 runs, below) |
 | LinuxONE VM (s390x): environment check, tests, parity, API start, 20k-row replay | **done once, while a training job was running** (section 3) |
-| LinuxONE VM (s390x): `infra/bench.py` (latency p50/p95, throughput, freshness, load) | **pending**: needs an idle VM (command at the end) |
+| LinuxONE VM (s390x): `infra/bench.py` with the payment-level model (latency p50/p95, throughput, freshness, load) | **measured once on an idle VM** (section 3b) |
 
 ## 1. What was measured, and how
 
@@ -142,6 +141,90 @@ Not done on the VM: `infra/bench.py` (p50/p95 per endpoint, throughput, load, fr
 So there is no clean per-endpoint latency for LinuxONE yet. The rebuild time of about 14 to 15 s on 3 vCPUs is similar to the laptop's, but it was measured with another job using most of the CPU, so
 it says little about an idle VM.
 
+## 3b. LinuxONE VM: benchmark with the payment-level model, idle VM
+
+Run by Ramana on 2026-10-17 at 15:38 UTC, one run. VM as in section 3 (3 vCPUs, 7.5 GB, Python 3.12.15, pandas 2.2.3, xgboost 3.4.1); load average 0.00 before the start and nothing else running. Code: `main` at `fd5f2e6` (includes the ring-description speed-up of PR #17). `NEXUSZ_BACKEND=model`, the committed bundle `ml/artifacts/HI-Small` (payment-level), `HI-Slice`, 24 h of history = 654,467 rows, replay file of 208,325 rows from `infra.simulator prepare`. The API ran with `infra/run_api.sh` (no container, no systemd); the benchmark client ran on the same VM over loopback, so it competed with the server for the 3 vCPUs. Same four phases as in section 1.
+
+**Rebuild and freshness**
+
+| Measure | Result |
+|---|---|
+| First state after start (654k rows) | 15.3 s |
+| `last_rebuild_seconds` at the end of the run (769k rows) | 12.5 s |
+| Freshness, 3 idle probes (accepted until visible) | 12.27, 12.59, 12.61 s |
+
+Compared with the laptop figures for the same model before PR #17 (32.9 s first state), the VM is faster. That is a comparison of two different setups (Python 3.14 and pandas 3 on the laptop), not a statement about the speed-up from PR #17 alone, which is only measured as the 16.6 s to 1.8 s ring-description step.
+
+**Idle latency** (milliseconds, 100 sequential requests each, no refresh running)
+
+| Endpoint | p50 | p95 | max |
+|---|---|---|---|
+| `GET /health` | 1.9 | 18.3 | 36.1 |
+| `GET /rings` | 2.9 | 22.7 | 68.6 |
+| `GET /rings/{id}` | 2.4 | 31.5 | 88.6 |
+| `GET /accounts/{id}` | 2.2 | 22.4 | 35.0 |
+| `GET /alerts?limit=50` | 2.6 | 26.6 | 160.8 |
+| `POST /transactions` (500 rows, n=20) | 8.6 | 45.6 | 56.0 |
+
+The medians are a few milliseconds. The p95 values (18 to 32 ms) are much higher than on the laptop (4 to 5 ms); the cause was not investigated.
+
+**Ingest:** 50,000 rows submitted, 50,000 accepted, 0 rejected, in 1.36 s: about 36,900 rows/s into the queue (not scored yet).
+
+**Under load** (60 s, 4 reader threads in a tight loop, about 900 rows/s ingested, 54,500 rows accepted, 0 rejected): a refresh was running in 100% of the samples and 2 refreshes finished; the oldest served state seen was **36.2 s** old. Read latency while rebuilding:
+
+| Endpoint | n | p50 ms | p95 ms | max ms | errors |
+|---|---|---|---|---|---|
+| `GET /health` | 4159 | 3.2 | 41.0 | 538 | 0 |
+| `GET /rings` | 4159 | 4.2 | 45.8 | 341 | 0 |
+| `GET /rings/{id}` | 4159 | 3.4 | 37.6 | 456 | 761 |
+| `GET /accounts/{id}` | 4159 | 4.1 | 57.6 | 462 | 0 |
+| `GET /alerts?limit=50` | 4159 | 3.3 | 39.6 | 578 | 0 |
+| `POST /transactions` (500 rows) | 109 | 20.8 | 107.0 | 260 | 0 |
+
+The 761 errors on `GET /rings/{id}` are all HTTP 404 (counted in the server log; there were no 5xx responses). The benchmark asks for one fixed ring id, and a ring id is a hash of its members, so when a rebuild regrew or split that ring its id no longer existed. This is the likely cause; I did not log which ids disappeared. For the dashboard it means a ring opened from a list that is a few seconds old can return 404 after a refresh, and the page should reload the list when that happens.
+
+Under load the server used about 113% of one core on average. **Resources:** RSS 956 MB after the first state (peak 2,382 MB while building it); 1,685 MB at the end with a peak of 3,255 MB (the old and the new state are held at once while a rebuild finishes), out of 7.5 GB.
+
+Limits: one run, three freshness probes, client and server on the same 3 vCPUs. Under sustained ingest a transaction waits for the rebuild in progress and then for the next one, so about 12 s idle is the best case and the oldest state seen under load was 36 s.
+
+## 3c. LinuxONE VM: the final deployment, the API in a hardened container
+
+Run by Ramana on 2026-10-18, one run, idle VM (load 0.06, nothing else running). `bash infra/podman_api.sh start` runs the platform's own image in a rootless Podman container: the demo bundle `ml/artifacts/HI-Small-pig`, `HI-Pig-Slice`, 24 h of history (656,743 rows), the API's default refresh settings. Same benchmark and the same four phases as section 3b (`infra/bench.py`, client on the same VM over loopback, replay of 209,126 payments). Python 3.12, pandas 3.0.6, XGBoost 3.4.1 inside the image (section 3b's bare process used pandas 2.2.3).
+
+**Why not a built image:** `podman build` on top of the platform image fails on this VM with "unsupported MIME type for compression" before any build step runs, so the script runs the image itself and mounts the three web packages the image lacks (fastapi, uvicorn, pydantic) from a host folder. `infra/Containerfile` stays in the repo as a record and is not used.
+
+**Security settings, read back from the running container** (`bash infra/podman_api.sh check`):
+
+| Property | Evidence |
+|---|---|
+| Reachable from the VM's loopback only | `ss -ltn`: `127.0.0.1:8000` is the only listener on the port |
+| Not root | process user is the image's `ibm-user` (uid 1000), rootless Podman |
+| No privileges | `CapEff: 0000000000000000` (all Linux capabilities dropped), `NoNewPrivs: 1`, seccomp filter active (`Seccomp: 2`), not privileged |
+| Read-only | root filesystem and the repo, data, model and package mounts are read-only; writing to the repo, the data and `/usr` is refused, only a small tmpfs at `/tmp` accepts writes |
+| Limits | memory 5 GB, at most 512 processes. A CPU limit is not possible: the user's cgroup has no cpu controller |
+| SELinux | enforcing on the VM; mounts carry the `:z` label |
+
+**Results**
+
+| Measure | Result |
+|---|---|
+| First state after start (656,743 rows) | 12.1 s |
+| `last_rebuild_seconds` at the end of the run (773,746 rows) | 9.8 s |
+| Freshness, 3 idle probes (accepted until visible) | 9.63, 9.66, 9.91 s |
+| Idle latency, p50 (p95) in ms | `/health` 0.77 (0.94), `/rings` 1.68 (2.45), `/rings/{id}` 0.89 (1.02), `/accounts/{id}` 0.76 (1.04), `/alerts` 0.84 (1.04), `POST /transactions` of 500 rows 7.0 (26.8) |
+| Ingest into the queue | 50,000 rows in 0.8 s, about 60,600 rows/s (not scored yet) |
+| Under load (60 s, 4 reader threads, about 950 rows/s ingested, 57,000 accepted, 0 rejected) | reads p50 2.9 to 4.0 ms, p95 12 to 14 ms; `POST` p50 9.1 ms, p95 95 ms; 3 refreshes completed; the oldest served state was 36.0 s old; server CPU about 181% of one core |
+| Memory (server process) | 798 MB after the first state (peak 1.7 GB); 1.57 GB at the end, peak 2.6 GB, against the 5 GB limit |
+| Errors | 0 responses in the 5xx range, no tracebacks. 4,453 `GET /rings/{id}` calls returned 404: the benchmark asks for one fixed ring id and a ring id is a hash of its members, so it stops existing when a rebuild regrows the ring (the same effect as in section 3b). A further 482 404s are the freshness probe polling for a new account until it appears |
+
+Compared with section 3b (bare process, older config): freshness 9.6 to 9.9 s against 12.3 to 12.6 s, idle p95 1 to 2.5 ms against 18 to 32 ms. The runs differ in more than the container (pandas 3.0.6 against 2.2.3, a different bundle and slice), so this does not show that the container makes it faster. One run, three freshness probes, client and server share the 3 vCPUs. Under sustained ingest a payment waits for the rebuild in progress and then for the next one, so about 10 s idle is the best case and 36 s the worst seen.
+
+## 3d. The dashboard on the VM, and ring ids that stay put
+
+**Dashboard container.** `bash infra/podman_api.sh dash-start` serves the built dashboard from a second rootless container (same platform image and flags as the API: non-root, read-only filesystem, all capabilities dropped, no new privileges, memory 256 MB, 64 processes, mounts read-only, loopback only on port 3000). The server is `infra/serve_dashboard.py` (7 tests): GET and HEAD only, no directory listings, nothing outside the dist folder, a page refresh on a client route such as `/ring/RNG-...` returns the app, a missing asset is a real 404, and the responses carry `X-Content-Type-Options`, `Referrer-Policy` and a content security policy that lets the page load only its own files and talk to the API on loopback. Checked on the VM on 2026-10-18: `/` 200, a deep link 200, a missing asset 404, `POST` 405, only `127.0.0.1:3000` and `127.0.0.1:8000` listening. With both ports forwarded through one SSH tunnel, a browser on the laptop loaded the dashboard from the VM and it read the API container (badge LIVE API) with the security policy active and nothing blocked. The dashboard is built where Node is installed and its `dist` folder is copied to the VM (`docs/DEMO.md`); the VM has no Node.
+
+**Stable ring ids** (`ml/ring_ids.py`, 10 tests). A ring's first id is a hash of its members, so a ring that gained an account got a new id at the next rebuild and an open page got a 404 (4,453 of 9,299 ring-detail requests in section 3c). A rebuilt ring now keeps the id of the previous ring it overlaps most (at least 2 shared accounts and at least half of the smaller ring); a split keeps the id on the better match, a merge keeps the best match's id, and an id is never served twice. Measured once on the API running locally on this data (demo bundle, `HI-Pig-Slice`, 24 h of history, then 40,000 payments streamed in and refreshed): 193 rings before and 155 after; **138 of the 193 ids are still served**, which is every ring that still exists in any form (shares at least 2 accounts and half of the smaller ring), where hash ids would have kept 114 of them (the rings whose member set did not change). The other 55 rings dissolved or left the 24 hour window, and their ids rightly disappear: a page for one of those still says the ring changed. One run, one data set; the VM was not re-benchmarked with this change.
+
 ## 4. Checks that the served results change (local, real model)
 
 On the same server after the replay (`GET /health` -> `refreshes_completed` 8, `history_transactions` 767,470, `data_as_of`
@@ -169,8 +252,7 @@ written in the raw IBM format. The refresh tests use a tiny model trained on a p
 
 ## 6. Not measured / limits
 
-- **No clean LinuxONE benchmark yet**: `bench.py` has not been run there, the systemd unit has not been installed and the Podman image has not been built. Run
-  `bench.py` on an idle VM (below) and fill in the pending row.
+- **LinuxONE:** `bench.py` was run once on an idle VM (section 3b). The systemd unit and the Podman image were not part of that run.
 - One run per configuration; the idle freshness probes are 3 samples, so there is no confidence interval. Treat 15 s as "about 15 s on this machine".
 - Client and server shared the machine, so the client competed for CPU in the load phase.
 - No test of many concurrent ingest clients, only one ingest thread. Batch size 500 only.
@@ -187,4 +269,4 @@ python -m infra.simulator prepare --slice HI-Slice --history-hours 24 --out ~/ne
 python -m infra.bench --url http://127.0.0.1:8000 --replay ~/nexusz-replay.csv --pid <server pid> --out ~/bench.json
 ```
 On the VM `bench.py` reads CPU and memory from `/proc/<pid>` and also records OS, architecture, Python and RAM. Restart the API before each run
-(the bench adds replay rows and probe transactions). Replace the "pending" rows above with the VM numbers and keep the laptop table as the local reference.
+(the bench adds replay rows and probe transactions). The laptop table is the local reference; section 3b has the VM numbers.
