@@ -270,3 +270,10 @@ def test_the_victim_question_is_answered_with_the_payer_the_account_paid_and_the
 def test_a_missing_account_paid_is_never_printed_as_none():
     out = rules_answer("Who may pay in next?", Tools(StubBackend()), [])           # the stub's alerts have no recipient_id
     assert "None" not in out and "paid into RNG-" in out
+
+
+def test_why_was_the_top_ring_flagged_finds_the_top_ring_and_explains_it():
+    used = []
+    out = rules_answer("Why was the top ring flagged?", Tools(StubBackend()), used)
+    assert out.startswith(RING) and "Main reasons" in out                       # the riskiest ring, named, with its reasons
+    assert [x.tool for x in used] == ["list_rings", "get_ring"]
