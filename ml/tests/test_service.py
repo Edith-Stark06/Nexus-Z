@@ -61,6 +61,19 @@ def test_ring_is_described_once_and_reused(scorer):
     assert rid in scorer._ring_cache
 
 
+def test_listing_all_rings_at_once_gives_the_same_descriptions_as_one_by_one(tx_and_bundle):
+    tx, bundle = tx_and_bundle
+    feats = build_features(tx, bundle.ccy_median)
+    batched, single = Scorer(bundle, feats, tx, tx["ts"].max()), Scorer(bundle, feats, tx, tx["ts"].max())
+    batched.list_rings()
+    assert batched._contrib, "list_rings should have explained the members in one batch"
+    for rid in single._by_id:
+        want, got = single.get_ring(rid), batched.get_ring(rid)
+        assert want["edges"] == got["edges"] and want["headline"] == got["headline"]
+        assert [r["feature"] for r in want["top_reasons"]] == [r["feature"] for r in got["top_reasons"]]
+        assert [r["contribution"] for r in want["top_reasons"]] == pytest.approx([r["contribution"] for r in got["top_reasons"]])
+
+
 def test_two_stage_bundle_scores_explains_and_matches_the_api_schema(tx_and_two_stage_bundle):
     from ml.neighbors import NEIGHBOR_COLS
 
