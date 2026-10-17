@@ -3,7 +3,6 @@
 Usage (from the repo root):  python -m ml.bundle HI-Small [output folder] [payment|two_stage|account] [inject seed]
 """
 import json
-import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,7 +17,6 @@ from .dataset import currency_medians, make_snapshots
 from .features import BEHAVIOR_COLS, FEATURE_VERSION, GRAPH_COLS, MOTIF_COLS, STRUCTURE_COLS, TX_COLS
 from .model import calibrated, fit_calibration, fit_model, score
 from .neighbors import NEIGHBOR_COLS
-from .neural import NeuralScorer, tensorflow_available
 from .ring_score import fit as fit_ring_scorer, purity
 from .rings import detect_rings
 
@@ -46,14 +44,6 @@ class Bundle:
     payment_calibration: tuple = (1.0, 0.0)
     grow_fraction: float | None = None  # wider top share rings may grow into (see detect_rings); None means no growth
     high_quantile: float = 0.99        # what counts as a high-risk neighbor in stage 2
-    neural: NeuralScorer | None = None  # network that runs on the accelerator and is mixed with the payment trees (ml/neural.py)
-
-    @property
-    def scorer_name(self) -> str:
-        """What actually scores payments, for /health and the logs."""
-        if self.payment is None:
-            return "account trees"
-        return "payment trees + neural network (NNPA accelerator)" if self.neural is not None else "payment trees"
 
     @property
     def cols2(self) -> list[str]:
@@ -96,18 +86,11 @@ def load_bundle(folder: Path) -> Bundle:
     if m.get("payment"):
         payment = xgb.Booster()
         payment.load_model(folder / "model_payment.json")
-    bundle = Bundle(model=model, cols=m["cols"], threshold=m["threshold"], top_fraction=m["top_fraction"],
+    return Bundle(model=model, cols=m["cols"], threshold=m["threshold"], top_fraction=m["top_fraction"],
                   ccy_median=m["ccy_median"], meta=m["meta"], calibration=tuple(m.get("calibration", (1.0, 0.0))),
                   ring_scorer=m.get("ring_scorer"), stage2=stage2, high_quantile=m.get("high_quantile", 0.99),
                   payment=payment, payment_calibration=tuple(m.get("payment_calibration", (1.0, 0.0))),
                   grow_fraction=m.get("grow_fraction"))
-    if payment is not None and NeuralScorer.exists(folder):
-        if tensorflow_available():
-            bundle.neural = NeuralScorer.load(folder)
-        else:  # never serve a different model without saying so
-            bundle.meta = {**bundle.meta, "neural": "saved with this bundle but TensorFlow is not installed: serving the trees alone"}
-            logging.getLogger("nexusz.bundle").warning(bundle.meta["neural"])
-    return bundle
 
 
 def train_bundle(variant: str = "HI-Small", scorer: str = "payment", inject_seed: int | None = None) -> Bundle:
