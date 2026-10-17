@@ -47,7 +47,7 @@ IBM synthetic AML data, test window (details, seeds and caveats in [docs/ML_RESU
 
 ## AI-assisted chat
 
-The dashboard has an **Assistant** page where an analyst asks questions in plain language. The language model is **IBM Granite 4.2** (30B, falling back to 8B and 3B, then to built-in rules), served by Hugging Face Inference Providers: **it does not run on the LinuxONE VM** (58.6 GB of weights). It answers only from our own API through read-only tools, every answer is checked for invented ids, and the page says which model wrote it. Only the question and compact synthetic facts leave the VM. The model's only provider has announced its retirement for 2026-10-18, hence the fallbacks. Details, data flow, token handling and what was and was not tested: [docs/CHATBOT.md](docs/CHATBOT.md).
+The dashboard has an **Assistant** page where an analyst asks questions in plain language. **IBM Granite Embedding (30M parameters, free, Apache 2.0) runs inside the API container on the LinuxONE VM** and works out which question is being asked (87% right on 31 fresh questions of ours, against 35% for keyword rules, about 10 ms each); the answer is then a fixed sentence filled with facts from our own API through read-only tools, so the model cannot invent a figure and nothing leaves the machine. A hosted **Granite 4.2** (30B, then 8B and 3B) that writes the answers is also built and unit-tested, but it needs a Hugging Face token with credits and has never answered (our account has none), so it is not what we demonstrate. The page says which mode answered. Details, measurements, token handling and what was and was not tested: [docs/CHATBOT.md](docs/CHATBOT.md).
 
 ## How it uses IBM LinuxONE
 

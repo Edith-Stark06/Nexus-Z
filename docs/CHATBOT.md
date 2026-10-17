@@ -1,69 +1,95 @@
 # The AI-assisted chat (IBM Granite)
 
-An analyst can ask NEXUS Z questions in plain language ("Which rings are riskiest?", "Why was the top ring flagged?", "Who may pay in next?") on the **Assistant** page of the dashboard or with `POST /chat`. IBM Granite writes the answer; **every fact in it comes from our own API through read-only tools**, and the answer is checked before it is shown. The assistant explains what the detection model found. It does not detect anything.
+An analyst can ask NEXUS Z questions in plain language ("Which rings are riskiest?", "Why was the top ring flagged?", "Who may pay in next?") on the **Assistant** page of the dashboard or with `POST /chat`. Every fact in an answer comes from our own API through read-only tools. The assistant explains what the detection model found. It does not detect anything.
 
-## What runs where (read this first)
+There are three ways a question is answered, tried in this order, and every answer says which one it used (`mode` in the response, shown under the answer):
+
+| `mode` | Who does what | Needs | Runs on the VM? |
+|---|---|---|---|
+| `llm` | A hosted **IBM Granite 4.2** (30B, then 8B, then 3B) writes the answer after calling the tools; the answer is checked | a Hugging Face token **with credits** | **No**, hosted by Hugging Face / DeepInfra |
+| `local` | **IBM Granite Embedding 30M** decides which question this is; the answer is a fixed sentence filled from the API | nothing (free; 60 MB of weights on the VM) | **Yes**, in the API container, on the CPU |
+| `rules` | Plain keywords decide which question this is; same fixed sentences | nothing | Yes |
+
+**What we ship and demonstrate is `local`**: it is free, it needs no token, nothing leaves the machine, and it is measured below. The hosted `llm` mode is built and unit-tested but has never produced an answer, because the Hugging Face account we have is a free one with no credits (HTTP 402, see "What was tested"). In `local` mode Granite **understands** the question; it writes no text, so it cannot invent a fact. The worst it can do is pick the wrong topic.
+
+## Why Granite understands but does not write, on the VM
+
+We tried the obvious thing first: run a small Granite model on the VM's 3 CPUs and let it write the answers (`docs/ML_RESULTS.md` section 8 and the numbers here, all measured on this VM with llama.cpp, big-endian GGUF, 4-bit):
+
+| Model | Speed | Result |
+|---|---|---|
+| Granite 4.0 350M | 2 s per short question | attached numbers to the wrong facts ("two likely victims" for a ring with one) |
+| Granite 4.0 H 1B | prompt 12 tokens/s, writing 2.2 tokens/s | wrong facts in the answer |
+| Granite 4.2 3B | prompt 5 tokens/s, writing 0.9 tokens/s; 333 s for one answer | rambling reasoning, far too slow |
+| Granite 4.2 30B | does not fit: 58.6 GB of weights, the VM has 7.5 GB of RAM | not possible |
+
+We also tried making the small models only **pick a letter** for the intent of the question (grammar-constrained, 48 questions): 350M got 17%, 1B got 40%, and the keyword rules got 71%. So a small generative model is not good enough here, in either role.
+
+A Granite **embedding** model is a different tool: it turns a text into a vector and takes about 10 ms. We give it a few example questions for each of five topics (`EXAMPLES` in `api/intent.py`), embed the analyst's question, and the closest example decides the topic. If nothing is similar enough (cosine similarity below 0.65), the answer is the help text. That is the whole use of the model.
+
+## What the local mode measured
+
+Model: `ibm-granite/granite-embedding-30m-english` (Apache 2.0, 30.3M parameters, 60.6 MB, revision pinned in `infra/prepare_granite_embedding.sh`), on the VM's CPU through PyTorch. Reproduce: `python -m api.intent_eval` (on the VM: `/opt/venv/bin/python -m api.intent_eval`).
+
+| Question set | Questions | Keyword rules | Granite Embedding |
+|---|---|---|---|
+| Development (used to choose the threshold 0.65) | 47 | 33 = 70% | 41 = **87%** |
+| Held-out | 36 | 17 = 47% | 30 = 83% |
+| **Fresh** (written last, run once, nothing changed afterwards) | 31 | 11 = 35% | 27 = **87%** |
+
+Quote the **fresh** row. The held-out set is not clean: its misses led us to add some examples (three were copied word for word and those three questions were removed from the sets; a few more examples are close paraphrases), so it flatters the model. The questions were written by us, in English, about five topics (the riskiest rings, why the top ring was flagged, likely victims, alerts, data freshness) plus off-topic questions; they are not real analysts' questions, so the true accuracy on analysts will differ. The fresh set's four misses: "what are the scariest groups of accounts right now" (read as victims), "are there people we need to protect" (read as top rings), "anything new I should know about" (read as status), "is the API up" (found no topic). The threshold matters: on the first version of the held-out set (38 questions) 0.60 gave 28 right, 0.65 gave 32 and 0.70 gave 28, so 0.65 is tuned, not a law.
+
+Live on the VM, in the API container (3 vCPUs shared with the rebuilds): the model loads in about 8 s in the background when the API starts; a question then takes 10 to 20 ms for the understanding (the whole answer, tools included, was 0.01 to 0.02 s). The container used 1.19 GB of its 5 GB limit in total. A question that names an id (`RNG-3E0A24`, `ACC-0016AB`) needs no topic and is answered directly.
+
+What the model can get wrong is the topic, never a fact: it cannot add text, so the figures and ids always come from the tools. A wrong topic gives a correct answer to a different question, and the page shows what was asked of the data under "Where this came from" and the similarity in the note.
+
+## How the layers fit
 
 | Part | Where | Notes |
 |---|---|---|
 | Detection, scoring, rings, reasons, the data | LinuxONE VM | unchanged by the assistant |
-| The five tools, the answer checks, the rules fallback, the token | LinuxONE VM (the API container) | `api/chat.py` |
-| **The language model** | **Hugging Face Inference Providers, served by DeepInfra** | **not on the VM** |
+| The five tools, the rules answers, the topic router (Granite Embedding), the checks, the token | LinuxONE VM (the API container) | `api/chat.py`, `api/intent.py` |
+| IBM Granite Embedding weights | the VM, `~/data/granite-embedding-30m-english`, mounted read-only, offline | `bash infra/prepare_granite_embedding.sh` downloads them once |
+| The hosted Granite 4.2 (optional) | Hugging Face Inference Providers, served by DeepInfra | **not on the VM** |
 
-**The model does not run on LinuxONE.** Granite-4.2-30B has 29.3 billion parameters and 58.6 GB of BF16 weights; the VM has 7.5 GB of RAM, 3 vCPUs, no GPU and 29 GB of free disk, and even a 4-bit version (about 17 GB) would not fit in memory. So the call goes out over HTTPS. We do not claim the assistant uses the LinuxONE accelerator, or that the language model is hosted by us. In a real bank the model would run on premises (for example on IBM Z); this demo uses a hosted endpoint because the VM cannot hold the model.
+We do not claim the assistant uses the LinuxONE accelerator (we did not measure it for this model), or that a language model that writes text runs on the VM. In a bank the larger models would run on premises, for example on IBM Z; this demo uses a hosted endpoint for them only because the VM cannot hold them.
 
-**What leaves the VM** on each question: the instruction text (the rules in `api/chat.py`), the question (at most 500 characters), up to the last six turns of the conversation, and the tool results the model asks for: synthetic ring and account ids, estimated roles, risk scores, the reasons behind a score, times and counts (at most 6,000 characters per result). **What never leaves:** the transactions, the model files, the dataset, and the token (it goes only in the request's authorization header). The data is synthetic; with real data this design would need a data-protection review first.
+**What leaves the VM in `local` and `rules` mode: nothing.** In `llm` mode: the instruction text (the rules in `api/chat.py`), the question (at most 500 characters), up to the last six turns, and the tool results the model asks for (synthetic ring and account ids, estimated roles, risk scores, reasons, times and counts, at most 6,000 characters per result). Never the transactions, the model files, the dataset or the token. The data is synthetic; with real data this design would need a data-protection review first.
 
-## The model, checked on 2026-10-18
+## The hosted mode (optional, needs credits)
 
-- `ibm-granite/granite-4.2-30b`: Apache 2.0, not gated, a reasoning model with tool calling, 131,072-token context ([model page](https://huggingface.co/ibm-granite/granite-4.2-30b)).
-- Hugging Face lists one live provider for it, DeepInfra, at $0.16 per million input tokens and $0.65 per million output tokens; the router's public model list reports tool support, a first-token latency of about 170 ms and about 87 tokens per second. Those last numbers are the provider's, not ours.
-- **DeepInfra's page for this model says: "Due to low usage this model will be deprecated on 10/18/2026."** That is the submission day. So the 30B endpoint may stop answering during judging. The same provider also lists `granite-4.2-8b` and `granite-4.2-3b` as live (we did not check whether they have retirement dates).
-- **The assistant therefore never depends on one endpoint.** It tries Granite-4.2-30B, then 8B, then 3B, then a built-in rules engine, and every answer says which one wrote it (`mode`, `model`, `provider` in the response; the page shows it under the answer). Change the order with `NEXUSZ_CHAT_MODELS`.
+- `ibm-granite/granite-4.2-30b`: Apache 2.0, not gated, a reasoning model with tool calling, 131,072-token context ([model page](https://huggingface.co/ibm-granite/granite-4.2-30b)). Hugging Face lists one live provider for it, DeepInfra, at $0.16 per million input tokens and $0.65 per million output tokens (the provider's numbers, not ours).
+- **DeepInfra's page for this model says: "Due to low usage this model will be deprecated on 10/18/2026."** That is the submission day. The same provider also lists `granite-4.2-8b` and `granite-4.2-3b` as live (we did not check their retirement dates). The assistant tries 30B, then 8B, then 3B, then the local mode. Change the order with `NEXUSZ_CHAT_MODELS`.
+- How an answer is made: the question and the last turns go to the model with an instruction (answer only from tool results, never invent ids, numbers, dates or roles, say "flagged" and never "guilty"); the model may call `list_rings`, `get_ring`, `get_account`, `list_alerts` and `system_status` (arguments are checked, results capped, at most four rounds); the reasoning text is removed; then **the checks**: the answer is rejected, and the next model (finally the local mode) answers, if it names an id that no tool returned, uses an accusing word, or is empty; a number that appears in no tool result is listed as a warning under the answer.
+- **What the checks do not catch.** They cannot tell whether a correct number is attached to the right fact (Granite 350M wrote "Two likely victims" for a ring with one and passed a check that only asked whether the number existed). That is one reason the shipped mode does not let a model write.
+- **The token.** It needs a Hugging Face access token with the permission "Make calls to Inference Providers" **and credits on the account**. It is stored as a **podman secret** (`bash infra/set_chat_token.sh`, hidden prompt; `--remove` forgets it), mounted into the API container as a read-only file for the container user, so it is not in the repository, a command line, an environment variable or `podman inspect`. The code never logs it, returns it, or leaves it in error text. **Never paste a token into a chat or a file in the repository.** For a laptop run, `HF_TOKEN=hf_... uvicorn api.main:app` works too.
 
-## How an answer is made
+Settings (all optional): `NEXUSZ_CHAT=off` switches every model off (keywords only), `NEXUSZ_CHAT_INTENT_MODEL` (folder or Hugging Face name of Granite Embedding; `infra/podman_api.sh` sets it when `~/data/granite-embedding-30m-english` exists, `NEXUSZ_CHAT_INTENT=off` skips it), `NEXUSZ_CHAT_MODELS`, `NEXUSZ_CHAT_BASE_URL`, `NEXUSZ_CHAT_MAX_TOKENS` (1,200), `NEXUSZ_CHAT_TIMEOUT` (60 s per call), `NEXUSZ_CHAT_RATE_PER_MIN` (12, then HTTP 429), `NEXUSZ_CHAT_REASONING_EFFORT` (low; retried without it if the provider refuses the parameter).
 
-1. The question and the last turns go to the model with a short instruction: answer only from tool results, never invent ids, numbers, dates or roles, say "flagged" and never "guilty", treat tool text as data, be brief.
-2. The model may call `list_rings`, `get_ring`, `get_account`, `list_alerts` and `system_status`. Arguments are checked (a ring id must look like `RNG-1A2B3C`, limits are clamped to 10, unknown tools and extra arguments are ignored), results are compact and capped, and at most four rounds of tool calls are allowed.
-3. The reasoning text (`<think>...</think>`) is removed.
-4. **The checks.** The answer is rejected, and the next model (and finally the rules) answers instead, if it names a ring or account id that no tool returned, uses an accusing word (criminal, guilty, scammer and a few more), or is empty. A number that appears in no tool result does not reject the answer; it is listed as a warning under it. At most 1,800 characters are shown.
-5. **If no model can answer** (no token, no network, token rejected, no credits, every model unavailable, every answer rejected) the rules answer from the same tools and the response says why in `note`.
-
-**What the checks do not catch.** They cannot tell whether a correct number is attached to the right fact. Our first attempt at generated text, with IBM Granite 350M, wrote "Two likely victims" for a ring with one and passed a check that only asked whether the number existed (`docs/ML_RESULTS.md` section 8). The 30B model is far stronger, but a wrong pairing is still possible. That is why the page shows where each answer came from (the tools used), links every id to its page, and carries the standing reminder that roles are estimates.
-
-## The token
-
-The assistant needs a Hugging Face access token with the permission "Make calls to Inference Providers" (create one at huggingface.co/settings/tokens; a fine-grained token with only that permission is enough). It is stored on the VM as a **podman secret**, mounted into the API container as a read-only file readable only by the container user, so it is not in the repository, in a command line, in an environment variable or in `podman inspect`. The code never logs it, never returns it and removes it from error text. **Do not paste the token into a chat or a file in the repository.**
-
-```
-bash infra/set_chat_token.sh                                    # on the VM; asks for the token, hidden
-bash infra/podman_api.sh stop && bash infra/podman_api.sh start # the container mounts the secret
-bash infra/podman_api.sh check                                  # "token secret: stored"; the chat status shows mode llm
-bash infra/set_chat_token.sh --remove                           # forget it (the assistant then answers by rules)
-```
-For a laptop run, `HF_TOKEN=hf_... uvicorn api.main:app` works too. Other settings (all optional): `NEXUSZ_CHAT=off` switches the model off, `NEXUSZ_CHAT_MODELS`, `NEXUSZ_CHAT_BASE_URL`, `NEXUSZ_CHAT_MAX_TOKENS` (1,200), `NEXUSZ_CHAT_TIMEOUT` (60 s per call), `NEXUSZ_CHAT_RATE_PER_MIN` (12, then HTTP 429), `NEXUSZ_CHAT_REASONING_EFFORT` (low; retried without it if the provider refuses the parameter).
+To set up the local mode on a fresh VM: `bash infra/prepare_granite_embedding.sh`, then `bash infra/podman_api.sh stop && bash infra/podman_api.sh start`, then `bash infra/podman_api.sh check` (it prints "Granite Embedding: ... mounted read-only, offline" and the chat status `"mode":"local"`). Without the downloaded folder the assistant uses keywords and says so.
 
 ## What was tested, and what was not
 
 | Check | Result |
 |---|---|
-| 37 unit tests (`api/tests/test_chat.py`) against a scripted fake of the provider | pass: tool loop, thinking removed, unknown id rejected, accusing word rejected, unmatched number warned, retired model falls back, 401/402/403 stop at once and the token never appears in a response or the logs, timeouts and network errors, the loop is cut off, rate limit, input validation, the rules answers |
-| 11 dashboard tests (`dashboard/src/__tests__/assistant.test.jsx`) | pass: provider named from its real address, rules mode stated plainly, history never includes an error, no sample data on failure |
-| The real API over HTTP against a scripted stand-in for the router (not Granite) and a real browser | pass: a question went through two model calls and one tool call and showed linked ids |
-| The router's public model list, no token | lists all three Granite models, live, 30B with tool support |
-| An unauthenticated chat call, from the laptop and from a container on the VM | HTTP 401 from both: the endpoint exists and the VM can reach it |
-| The assistant in rules mode on the VM, real model backend | answered "riskiest rings", "who may pay in next" and "how current is the data" with real ring ids |
-| **An authenticated call to Granite** (2026-10-18, on the VM, token stored as the podman secret) | **reached the provider, but no answer was produced.** The token is valid and has the right scope (`inference.serverless.write`), and Hugging Face answered HTTP 402: "You have no remaining credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get monthly included credits." The account is a free one. The assistant behaved as designed: it stopped at once (the 8B and 3B would fail the same way on this account), answered by rules, and said why. **So nothing here yet shows how Granite phrases answers, how long they take or what they cost.** Our own estimate of about $0.001 per question (about 3,000 tokens in and a few hundred out at the prices above) is an estimate, not a measurement |
-| The token's whereabouts, checked on the VM by searching for its first characters | in no container setting, environment variable, log, process list, shell history, repository file or file under the home directory; only in the podman secret store, mounted read-only for the container user |
+| 38 tests of the hosted path and the rules (`api/tests/test_chat.py`) against a scripted fake of the provider | pass: tool loop, thinking removed, unknown id rejected, accusing word rejected, unmatched number warned, retired model falls back, 401/402/403 stop at once and the token never appears in a response or the logs, timeouts, rate limit, input validation, the rules answers |
+| 24 unit tests of the local path (`api/tests/test_intent.py`), one skipped without the model | pass: every topic has an answer, nothing close enough gives the help text and keywords do not overrule it, an id in the question skips the router, a model that cannot load gives keywords and says why, hosted first and local after a failure, status and endpoints, no example question is also a test question |
+| Granite Embedding for real, on the VM (`python -m api.intent_eval`) | table above |
+| 12 dashboard tests (`dashboard/src/__tests__/assistant.test.jsx`) | pass: provider named from its real address, local mode says the model only chose the question and nothing leaves the machine, rules mode stated plainly, history never includes an error, no sample data on failure |
+| The real API container on the VM, local mode, seven questions through `POST /chat` | the right topic and answer for the five paraphrases tried ("which clusters carry the most risk", "why is the number one ring considered suspicious", "who is likely to be cheated next", "have any alarms gone off", "how long ago was the system updated"), the help text for "tell me a joke", and the direct answer for "Explain RNG-FFFF" (no such ring) |
+| Hosted mode: an unauthenticated call, from the laptop and from a container on the VM | HTTP 401 from both: the endpoint exists and the VM can reach it |
+| **Hosted mode: an authenticated call to Granite** (2026-10-18, on the VM) | **reached the provider, but no answer was produced.** The token was valid with the right scope, and Hugging Face answered HTTP 402: "You have no remaining credits. Purchase pre-paid credits to continue using Inference Providers." The account is a free one. The assistant behaved as designed: it stopped at once, answered without a hosted model, and said why. **So nothing here shows how the hosted Granite phrases answers, how long they take or what they cost**; our estimate of about $0.001 per question is an estimate. The token used for this test was pasted into a chat, so it must be treated as exposed: it was removed from the VM and has to be revoked at huggingface.co/settings/tokens |
+| Not done | a browser run of the final Assistant page against the VM (a headless browser would not start here; the page is covered by the dashboard tests and the served files were checked to contain the new text); an accelerator (NNPA) measurement for the embedding model |
 
 ## Limits
 
-- It answers about the rings, accounts, alerts and data freshness in the running system. It does not know the ML results or the documentation, and it does not explain the model beyond the reasons attached to a ring or account.
+- It answers about the rings, accounts, alerts and data freshness in the running system. It does not know the ML results or the documentation, and does not explain the model beyond the reasons attached to a ring or account.
+- `local` and `rules` answers are fixed sentences: they list, they do not converse, and they do not remember earlier turns. Only the hosted mode takes the conversation into account.
+- The topic router knows five topics and English. A question it does not recognise gets the help text; a question it mistakes for another topic gets a correct answer to that other topic (87% right on the fresh set, so about one in eight).
 - Ring ids can change when a ring is rebuilt; a question about an id that no longer exists gets that answer.
-- A Granite answer takes seconds to tens of seconds (reasoning, one to four calls). The rules answer instantly.
-- The 30B endpoint may disappear (see above); the 8B and 3B answer less well. We have not compared them.
+- The hosted 30B endpoint may disappear (see above); the 8B and 3B answer less well. We have not compared them.
 - There is no login. The API listens on the VM's loopback and is reached through the SSH tunnel; the rate limit is global, not per user, and exists to stop a runaway page, not a determined user.
 
 ## What to say in the demo
 
-Say: "The assistant is IBM Granite, hosted by Hugging Face, answering only from what our API returns, with a check on every answer. It does not run on the LinuxONE VM and it does not detect anything." Do not say: that the language model runs on LinuxONE or the accelerator, that its answers are always right, or that anything was verified with the 30B before the authenticated test above has been run. If the page shows "Built-in rules", say so.
+Say: "The assistant uses IBM Granite Embedding, running on the LinuxONE VM, to understand the question; the answer is a fixed sentence filled with facts from our own API, so it cannot invent a figure. It does not detect anything, and nothing leaves the machine." Do not say: that a language model writes the answers on the VM, that Granite uses the accelerator, that it understands every question (about 87% of ours), or that the hosted 30B was used. If the page shows "Built-in rules", say so.

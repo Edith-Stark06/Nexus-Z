@@ -63,7 +63,7 @@ case "${1:-}" in
     # IBM Granite Embedding runs inside the API container and picks the topic of a question. Read-only, offline, no token needed.
     INTENT_ARGS=""
     if [ -f "$INTENT_DIR/config.json" ] && [ "${NEXUSZ_CHAT_INTENT:-on}" != off ]; then
-      INTENT_ARGS="-v $INTENT_DIR:/srv/nexusz/granite-embedding:ro,z -e NEXUSZ_CHAT_INTENT_MODEL=/srv/nexusz/granite-embedding -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -e HF_HOME=/tmp/hf -e OMP_NUM_THREADS=2"
+      INTENT_ARGS="-v $INTENT_DIR:/srv/nexusz/granite-embedding-30m-english:ro,z -e NEXUSZ_CHAT_INTENT_MODEL=/srv/nexusz/granite-embedding-30m-english -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -e HF_HOME=/tmp/hf -e OMP_NUM_THREADS=2"
     fi
     podman run -d --name "$NAME" $USERNS $SECRET_ARGS $INTENT_ARGS \
       -p "127.0.0.1:$PORT:8000" \
@@ -101,7 +101,7 @@ case "${1:-}" in
       if podman exec "$NAME" sh -c "touch $p" 2>/dev/null; then echo "$p: written"; else echo "$p: refused"; fi
     done
     echo "== assistant (never prints the token)"
-    if podman secret exists "$CHAT_SECRET" 2>/dev/null; then echo "token secret: stored, mounted read-only for the container user"; else echo "token secret: none (the assistant answers by rules)"; fi
+    if podman secret exists "$CHAT_SECRET" 2>/dev/null; then echo "token secret: stored, mounted read-only for the container user"; else echo "token secret: none (no hosted model; Granite Embedding or the rules answer)"; fi
     podman exec "$NAME" sh -c 'ls -l /run/secrets/nexusz_hf_token 2>/dev/null || echo "not mounted in the container"'
     if [ -f "$INTENT_DIR/config.json" ]; then echo "Granite Embedding: $INTENT_DIR (mounted read-only, offline)"; else echo "Granite Embedding: not downloaded (run infra/prepare_granite_embedding.sh)"; fi
     curl -fsS "http://127.0.0.1:$PORT/chat/status" || echo "chat status unavailable"
