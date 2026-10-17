@@ -19,8 +19,9 @@ On the VM (keep it idle: no training or benchmarks while recording):
 cd ~/Nexus-Z && git checkout main && git pull
 export NEXUSZ_DATA_DIR=$HOME/data
 ~/nexusz-venv/bin/python -m infra.simulator prepare --slice HI-Pig-Slice --history-hours 24 --out ~/pig-replay.csv --force
-NEXUSZ_BACKEND=model NEXUSZ_SLICE=HI-Pig-Slice NEXUSZ_BUNDLE=$HOME/Nexus-Z/ml/artifacts/HI-Small-pig \
-  NEXUSZ_HISTORY_HOURS=24 NEXUSZ_ENV_FILE=/dev/null bash infra/run_api.sh          # wait for "Application startup complete" (about 30 s)
+bash infra/podman_api.sh deps        # once: the three web packages the platform image lacks go in ~/nexusz-pylibs
+bash infra/podman_api.sh start       # the API in a hardened container; wait about 30 s, then: bash infra/podman_api.sh status
+bash infra/podman_api.sh check       # optional on camera: loopback only, non-root, read-only, no capabilities, memory limit
 ```
 On your laptop:
 ```
@@ -35,7 +36,7 @@ Start the stream when you are ready to show it (a second terminal on the VM):
 
 ## What to show
 
-1. The terminal on the VM: `podman ps` (the platform container), `ss -ltn` (only loopback), the API log.
+1. The terminal on the VM: `podman ps` (the Jupyter container and the API container), `bash infra/podman_api.sh check` (the security settings), `ss -ltn` (only loopback).
 2. The home page: the flagged rings, highest risk first. Read the ring ids off the screen; they depend on the data seen so far and change as the stream arrives.
 3. Open one ring: the flow graph (victims, collectors, mules, cash-out), the payments, **why it was flagged**.
 4. Start the replay. Within about 12 seconds the ring list changes; refreshes go on while payments arrive.
@@ -51,10 +52,10 @@ Start the stream when you are ready to show it (a second terminal on the VM):
 
 ## Between takes
 
-Restart the API (the replay adds payments to its history). Ring ids are the same on a fresh start.
+Restart the API (the replay adds payments to its history): `bash infra/podman_api.sh stop && bash infra/podman_api.sh start`. Ring ids are the same on a fresh start.
 
 ## If something breaks
 
 - Dashboard shows "sample data" instead of LIVE API: the tunnel or the API is down. `curl http://127.0.0.1:8000/health` on the laptop.
-- API will not start: `tail ~/bench/api_pig.log`; check `NEXUSZ_DATA_DIR`, that `HI-Pig-Slice_Trans.csv` exists, and that no other process holds port 8000.
+- API will not start: `bash infra/podman_api.sh logs`; check `NEXUSZ_DATA_DIR`, that `HI-Pig-Slice_Trans.csv` exists, and that no other process holds port 8000.
 - A ring page says it was updated: ring ids change when a ring grows; go back to the list.
