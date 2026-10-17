@@ -1,6 +1,6 @@
 """Payment-level model against the account-level model, scored on accounts and on rings.
 
-Usage (from the repo root):  python -m ml.edge_eval HI-Small [negative keep rate]
+Usage (from the repo root):  python -m ml.edge_eval HI-Small [negative keep rate] [seed]
 
 Training keeps every laundering payment and a random share of the others (default 5%), because there are
 about 1 laundering payment per 1,300. Validation and test use every payment. Account scores are the highest
@@ -101,4 +101,5 @@ def run(variant: str = "HI-Small", keep_rate: float = 0.05, seed: int = 0) -> No
 
 
 if __name__ == "__main__":
-    run(sys.argv[1] if len(sys.argv) > 1 else "HI-Small", float(sys.argv[2]) if len(sys.argv) > 2 else 0.05)
+    run(sys.argv[1] if len(sys.argv) > 1 else "HI-Small", float(sys.argv[2]) if len(sys.argv) > 2 else 0.05,
+        int(sys.argv[3]) if len(sys.argv) > 3 else 0)
