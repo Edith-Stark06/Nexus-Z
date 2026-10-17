@@ -1,0 +1,127 @@
+.warning {
+  padding: 16px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  align-items: center;
+}
+
+.crumb {
+  font-size: 12px;
+  color: var(--text-dim);
+  align-self: flex-start;
+}
+
+.crumb a {
+  color: var(--accent);
+}
+
+.warning-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.warning-icon {
+  font-size: 32px;
+}
+
+.warning-card h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.warning-sub {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.warning-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.wm-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.wm-row span {
+  color: var(--text-dim);
+}
+
+.wm-row b {
+  color: var(--text);
+}
+
+.warning-message {
+  background: rgba(224, 80, 46, 0.08);
+  border: 1px solid rgba(224, 80, 46, 0.3);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wm-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.warning-message p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.warning-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.warning-actions a {
+  text-decoration: none;
+  font-size: 14px;
+  padding: 9px 16px;
+  border-radius: 6px;
+}
+
+.warning-actions a.ghost {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.warning-actions a.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.warning-unknown {
+  align-items: flex-start;
+}
+
+.warning-unknown .warning-card {
+  border-color: rgba(232, 166, 0, 0.4);
+}
