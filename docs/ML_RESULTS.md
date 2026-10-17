@@ -178,7 +178,25 @@ A rolling protocol rebuilds features from only the last 48 hours (`ml/rolling.py
 
 Ring level, flagged fraction chosen on validation: the graph model recovered 96%, 92% and 87% of injected rings; transaction-only recovered 84%, 88% and 87%. Real-ring share was 57% to 65% against 51% to 60%. **These recovery numbers are high because the injected rings are easy and were written by the same side that wrote the features.** Even transaction-only recovers most of them, so this test does not show that ring grouping beats per-account scoring. It does show that a pig-butchering-shaped flow is detectable at all, and that look-alike hubs do not swamp the alerts.
 
-What would make this convincing: rings from an independent generator, more varied timing (including rings that deliberately delay forwarding), and real or adversarially built look-alikes.
+What would make this convincing: rings from an independent generator, more varied timing (including rings that deliberately delay forwarding), and real or adversarially built look-alikes. The next subsection is a first step; the generator is still ours.
+
+### A second generator with varied timing and adversarial look-alikes
+
+Verona wrote `data/rings.py`: 8 ring shapes (including batched, delayed, split and mixed-speed forwarding, and rings whose accounts already have ordinary history) and 5 look-alike types (merchant, payroll, landlord, charity, new customer), half of them adversarial (fast pass-through). Evaluated with the independent harness `python -m eval.run` (metrics checked against scikit-learn), 3 seeds, test window, account models only. Full tables and six robustness scenarios: [eval/results/RESULTS.md](../eval/results/RESULTS.md).
+
+| Features | PR-AUC, injected fraud accounts | Rings recovered |
+|---|---|---|
+| Transaction-only | 0.179 ± 0.013 | 0.616 ± 0.056 |
+| + behavioral (timing) | 0.413 ± 0.042 | 0.639 ± 0.168 |
+| + graph | 0.362 ± 0.033 | 0.736 ± 0.087 |
+| + k-core, clustering, components | 0.407 ± 0.010 | 0.727 ± 0.142 |
+| + bursts and motifs | 0.396 ± 0.025 | 0.704 ± 0.076 |
+
+- **Most of the gain over transaction-only comes from timing features.** Graph features add nothing on top of them here, and the burst and motif features add nothing either (inside the noise). This is the same pattern as on Elliptic and differs from the 20 to 30% graph gain on IBM's own laundering labels.
+- **Weak spots:** batched rings are recovered about a third of the time, delayed rings 44 to 64%, and about 55% of landlord hubs are flagged by the graph models. With only 30 injected rings instead of 90, PR-AUC drops to 0.02. Precision on all candidates is 0.23 to 0.26.
+- **Not tested here:** the committed payment-level model. These figures are for the account models.
+- The six robustness scenarios were measured before the burst and motif features existed (four feature sets); only the default scenario was re-run.
+- Still synthetic and designed by the team that designed the features, so it shows the method works on rings of this kind, not accuracy on real fraud.
 
 ## 6. Better models: payment-level scoring, two stages, ring growth
 
