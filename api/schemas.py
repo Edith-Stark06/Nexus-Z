@@ -55,6 +55,7 @@ class Ring(RingSummary):
     members: list[Member]
     edges: list[Edge]
     top_reasons: list[Reason]
+    summary: str | None = None  # a short case write-up from the same facts; see ml/narrative.py
 
 
 class Neighborhood(BaseModel):

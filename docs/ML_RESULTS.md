@@ -280,6 +280,38 @@ Read these with care:
 
 SHAP says which features pushed a score up, not whether the feature was high or low. The first labels ("Many transfers to itself") assumed high, so an injected ring, which has no self-transfers at all, was explained with "Receiver: many transfers to itself": the opposite of the data. Each reason now checks the feature's value against the typical value in the scored window, and when the label is not true it adds "(absent)" (`ml/explain.py: label_holds`; `ml/tests/test_explain.py`). A ring's reasons use the members' mean values, and a one-hot or a share counts as true only at 0.5 or more. The ring headline leads with the first signal that is really present. Reasons that have no direction (time of day, payment size) are never marked.
 
+## 8. The on-chip AI accelerator: what we measured, and what we did not ship
+
+The LinuxONE VM has the NNPA facility (the CPU reports `nnpa`) and the platform container has TensorFlow with the `ibm-zdnn-plugin`, `torch_nnpa` and `llama.cpp` built with zDNN, plus an IBM Granite 4.0 350M base model. The platform's own notebooks "verify" acceleration by checking that a library file exists and printing a fixed list of "accelerated ops", which proves nothing about where arithmetic ran. The VM exposes the processor's own counters (`pai_ext`, events such as `NNPA_MATMUL_OP`), so we count NNPA operations from outside the container while each workload runs (`bash infra/accel_counters.sh`, workloads in `ml/accel_probe.py`, idle VM, 2026-10-18):
+
+| Workload | Speed | NNPA operations | of which matrix multiplies | sigmoid |
+|---|---|---|---|---|
+| XGBoost trees, 200 trees, 200,000 rows (control) | 534,793 rows/s | **0** | 0 | 0 |
+| TensorFlow dense network (120, 256, 128, 1), 200,000 random rows | 1,305,552 rows/s | 5,459 | 471 | 157 |
+| IBM Granite 4.0 350M through llama.cpp, 40 tokens | 7.4 tokens/s | 36,106 | 6,160 | 0 |
+
+So the claim that is true and measured: **networks and Granite run on the accelerator on this VM; trees do not.** The counters are machine-wide while nothing else ran, and in an earlier probe the relu counter stayed at 0, so not every operation of the network is offloaded. Counts are operations, not a speed-up: we did not compare against the same network with the accelerator off.
+
+**NEXUS Z's detection does not use the accelerator**, because the network we tried was worse than the trees:
+
+### A neural network on the same payments (not shipped)
+
+`python -m ml.neural HI-Small <folder> 0 <share of normal payments kept>`: a dense network (256, 128, 64) on the same payment features as the payment trees, trained on the demo data (IBM plus injected rings, seed 0), with the share of each model chosen on validation. Test window, 1,021,539 payments:
+
+| Model | Payment PR-AUC | Account PR-AUC |
+|---|---|---|
+| Payment trees (XGBoost) | **0.818** | **0.541** |
+| Network trained on 5% of normal payments (162,347 rows) | 0.508 | 0.128 |
+| Network trained on 15% of normal payments (about 460,000 rows) | 0.732 | 0.391 |
+
+On validation, mixing in any share of the network lowered PR-AUC (trees alone 0.9668; with a quarter network 0.9639 to 0.9660; network alone 0.907 to 0.939), so the best mix is trees only. A run with 40% of normal payments was killed for lack of memory (7.5 GB). One seed, one data set; more careful tuning might close more of the gap, but trees on tabular data like this are hard to beat and the demo needs a working system.
+
+### Granite case summaries (not shipped)
+
+First attempt: Granite wrote a whole summary from a fact sheet. It attached numbers to the wrong facts ("Two likely victims" for a ring with one; "9 more payers may be at risk" for a ring with none, where 9 was the collector count), and a check that asks only whether a number appears on the sheet passed both. Second attempt: the model wrote one sentence with no numbers or ids, from three worked examples; 10 of 10 sentences passed that check, but three were copies of an example, and of the other seven at least three were wrong or nonsensical, for example "paid by ach" became "A payment made by a credit card is a payment made by a credit card", and "the receiver passes the money on quickly" became "The receiver of a payment is often the same person who sent it." (judged by reading them, not by a formal rating). A check can reject numbers and accusations but not a wrong meaning, so **nothing a model writes reaches a user**. The case summary on each ring (`summary` in `GET /rings/{id}`, `ml/narrative.py`) is a template of exact facts plus hand-written, cautious meanings of the main signal.
+
+What this section does and does not support: the accelerator works on this platform and we can prove it with hardware counters; a model that uses it is not better than ours for this task, so ours does not.
+
 ## Caveats that apply to everything above
 
 - Single time split per dataset. Seeds measure training noise, not split noise.
