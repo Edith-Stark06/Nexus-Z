@@ -9,6 +9,8 @@ the clean VM benchmark is PENDING** because Ramana's training jobs were using th
 and 7.5 GB; the laptop below has 12 logical CPUs and 15 GB, so the VM should be expected to be slower, but that is a
 prediction, not a measurement.
 
+**Update after the merge (checked by Ramana on 2026-10-17, one run).** Every measurement below was taken with the earlier account-level model that was in `ml/artifacts/HI-Small` at the time. The committed model is now the payment-level one (see `docs/ML_RESULTS.md`), which is heavier to rebuild. On the laptop, with the merged code, the real slice and the same 24-hour history (654,467 rows): the API started in 42 s, the first state took **32.9 s** to build and the rebuild after a 20,000-row replay took **32.7 s**, against about 15 s below. So a transaction becomes visible after about 33 s on that laptop, not about 15 s, and longer under sustained ingest. Single requests answered in 3 to 5 ms (70 ms for the first lookup of a ring member); this was not a benchmark. The VM benchmark still has to be run on an idle VM **with the new model**, and the freshness figures below should not be quoted for the current model.
+
 | Platform | Status |
 |---|---|
 | Local laptop (Windows), real model, 24 h history + replay | **measured** (2 runs, below) |
