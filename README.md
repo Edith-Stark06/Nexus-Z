@@ -1,111 +1,136 @@
 # NEXUS Z
 
 **Graph-based fraud ring detection on IBM LinuxONE.**
-Built for the IBM Z Datathon 2026 (APAC). Theme: Real-Time AI for Critical Decisions.
+IBM Z Datathon 2026. Theme: **Real-Time AI for Critical Decisions** (fraud detection).
 
-> **Status:** in development. The ML core is built and measured on IBM synthetic AML data and the Elliptic Bitcoin data; see [docs/ML_RESULTS.md](docs/ML_RESULTS.md) for every number and its limits. The dashboard, the real API backend and the injected pig-butchering rings are still in progress, so **pig-butchering detection itself is not yet tested**.
+> **Status (Oct 17, 2026):** the ML core, the scoring service and the LinuxONE training setup are built and measured. The dashboard, the real-model backend for the API and the data workstream's own ring generator are still in progress. **Pig-butchering detection is only tested on stand-in rings written by the modelling side**, so there is no accuracy claim for that typology yet. Every number in this repository comes from a run; weak results are shown too. See [docs/ML_RESULTS.md](docs/ML_RESULTS.md).
 
 ## The problem
 
-Pig-butchering scams groom victims over weeks, then push them to deposit money on fake investment platforms. Each payment looks ordinary on its own, and the victim sends it voluntarily, so rules built around stolen credentials or unusual devices don't fire. Banks that score payments one at a time miss it.
+Pig-butchering scams groom victims over weeks, then push them to deposit money on fake investment platforms. Each payment looks ordinary on its own, and the victim sends it voluntarily, so rules built around stolen credentials or unusual devices do not fire. Banks that score payments one at a time miss it.
 
-The fraud shows up in the network:
+The fraud shows up in the network and in the timing:
 
 1. Many victims pay a few **collector** accounts.
-2. Funds are layered through chains of **mule** accounts.
-3. Money exits fast through **cash-out** or crypto off-ramps.
+2. Funds move through chains of **mule** accounts within minutes.
+3. Money leaves through a **cash-out** or crypto off-ramp.
+
+People lose their savings this way. A system that flags the ring early, explains why, and warns the next victim before they pay protects them.
 
 ## What NEXUS Z does
 
-NEXUS Z treats the transaction network as a time-evolving graph and detects **rings** (coordinated groups) instead of single bad transactions.
+It treats the transaction network as a graph and looks for **rings** (coordinated groups) instead of single bad payments.
 
-- Scores each account on its structural role and behavior within its neighborhood.
-- Groups accounts into communities and aggregates their scores into a ring risk score.
-- Explains every flagged account and ring with SHAP, so an investigator can see why.
-- Marks likely victims and raises a warning **before** more money is sent.
+- Scores each account from 48 features: transaction, timing (pass-through), graph (fan-in, PageRank, neighbors, 2-hop reach) and structure (k-core, clustering, components).
+- Groups the highest-risk accounts into rings (connected by their payments, split with Louvain community detection) and gives each ring a risk score.
+- Explains every flag with exact per-feature contributions (TreeSHAP, computed by XGBoost).
+- Marks accounts that recently paid into a flagged ring as likely victims and raises a warning.
+
+## What was measured
+
+IBM synthetic AML data, test window (details, seeds and caveats in [docs/ML_RESULTS.md](docs/ML_RESULTS.md)):
+
+| Result | Measured |
+|---|---|
+| Graph features vs transaction-only, account PR-AUC (HI-Small) | 0.110 to 0.135 (up to 0.160 with k-core and clustering), the same on a Kaggle run and on the LinuxONE VM |
+| Same comparison at 6 times the size (32M transactions) | 0.122 to 0.158 |
+| Laundering groups recovered as rings | graph model about 20 to 30%; transaction-only 3 to 12% depending on the run |
+| Time to detect a ring (graph model, replayed in 6-hour steps) | median 4.9 hours, but only 20% of groups were detected |
+| Full rescore of 48 hours (863K transactions) on the LinuxONE VM | 2.3 to 2.5 s, about 5 to 8 ms per account with explanation |
+
+**What these do not show:** accuracy is low (about 30% precision at 20% recall on HI-Small, about 5% precision on the lower-fraud LI-Small); graph features added nothing on the Elliptic Bitcoin data; the injected pig-butchering rings are easy and were designed by the same side that designed the features, so results on them are optimistic.
+
+## How it uses IBM LinuxONE
+
+- **Platform:** the datathon's LinuxONE Community Cloud VM (RHEL 9.8, s390x, 3 vCPUs, 7.5 GB RAM).
+- **Training and scoring both run on the VM**, inside the platform's Jupyter Lab ML container (Podman), on CPU. Training the final model takes about 2.5 minutes; see [ml/LINUXONE.md](ml/LINUXONE.md).
+- **Security:** Jupyter is bound to the VM's loopback and reached through an SSH tunnel with a random token. The platform README's public port and published default token are deliberately not used.
+- **Big-endian check:** a model trained on a little-endian laptop gives identical predictions on the s390x VM (largest difference 9e-16).
+- **Not used:** no on-chip AI accelerator. We make no accelerator claims.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  subgraph OFFLINE["Offline: train and measure"]
+    A[Data sources<br/>IBM AML + injected rings] --> B[Time split] --> C[Train models<br/>XGBoost] --> D[(Model bundle)]
+    D --> E[Evaluation<br/>PR-AUC, ring recovery]
+  end
+  subgraph ONLINE["Online: score as transactions arrive"]
+    F[Transaction stream] --> G[Graph state] --> H[Refresh features] --> I[Score accounts<br/>and form rings] --> J[Explain + alert]
+    J --> K[Query API<br/>FastAPI] --> L[Dashboard]
+    J --> M[Victim warning]
+  end
+  D -. loaded at startup .-> I
 ```
-Data sources -> Ingest (FastAPI) -> Incremental graph -> Feature engine -> XGBoost (account score)
-                                                                                    |
-Dashboard (React + D3) <- Query API <- SHAP explainer <- Ring aggregation <---------+
-                              ^                                 |
-                              +------ Alert service (ring alerts + victim warnings)
-```
 
-Everything runs in Docker containers on IBM LinuxONE Community Cloud.
-
-### Features
-
-| Group | Signals |
-|---|---|
-| Structural | In/out degree, fan-in/fan-out ratio, PageRank, k-core, clustering coefficient, 2-3 hop neighborhood stats |
-| Behavioral | Velocity, burst timing, pass-through time, amount splitting, account age |
-| Community | Louvain/Leiden community id, size, density, share of high-risk members |
+The online path rebuilds features, scores and rings in micro-batches (a full recompute, not an incremental update). Team architecture reference: https://claude.ai/artifact/SHz4vHQrEPCE8Q9mQ2fLdr
 
 ### API
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /transactions` | Ingest a transaction or batch; update the graph incrementally |
-| `GET /accounts/{id}` | Risk score, SHAP reasons, neighborhood summary |
-| `GET /rings` | Detected rings with ring risk and size |
-| `GET /rings/{id}` | Ring members, edges, fund-flow timeline, top reasons |
+| `POST /transactions` | Ingest a transaction or a batch |
+| `GET /accounts/{id}` | Risk, role, ring, reasons, neighborhood |
+| `GET /rings` | Detected rings, highest risk first |
+| `GET /rings/{id}` | Members, time-ordered payments, top reasons |
 | `GET /alerts` | Ring alerts and victim warnings, newest first |
 
-### Dashboard
+The API currently serves sample data by default. `ml/api_backend.py` provides the real-model backend and is being wired in; see [ml/README.md](ml/README.md).
 
-Force-directed D3 graph (color by risk, size by flow volume, rings outlined), ranked alert queue, SHAP detail panel, a time slider to replay fund flow, and a preview of the warning a customer would see before a flagged payment.
+## Run it
+
+```
+python -m pytest ml/tests api/tests -q                 # tests
+uvicorn api.main:app --port 8000                       # API with sample data
+python -m ml.bundle HI-Small                           # train (needs the data, see below)
+bash ml/linuxone_jupyter.sh                            # LinuxONE VM: Jupyter Lab ML container
+```
+
+The trained model and real example output are committed in [ml/artifacts/HI-Small](ml/artifacts). Heavy runs can also use a Kaggle CPU notebook: [ml/KAGGLE.md](ml/KAGGLE.md).
 
 ## Data
 
-| Source | Role |
-|---|---|
-| Public synthetic AML dataset (e.g. IBM AML transactions) | Realistic background traffic (availability and license to be confirmed) |
-| Public labeled crypto transaction graph (e.g. Elliptic) | Test illicit fund-flow patterns on a real graph (availability and license to be confirmed) |
-| Synthetic pig-butchering rings (generated by us) | Ground truth for ring recovery; varied sizes, shapes and timing |
-| Hard negatives (generated by us) | Merchants, payroll, landlords, charities that look like hubs |
+Public data only. All account identifiers are pseudonymized (for example `ACC-7F3A`). Datasets are not stored in this repository; set `NEXUSZ_DATA_DIR` to the folder that holds them.
 
-All identifiers are pseudonymized (for example `ACC-7F3A`). No real personal data is used. Train/test split is by time.
+| Dataset | Use | License |
+|---|---|---|
+| [IBM Transactions for Anti Money Laundering](https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml) (HI/LI Small, HI Medium) | Background traffic and laundering patterns | CDLA-Sharing 1.0 |
+| [Elliptic Data Set](https://www.kaggle.com/datasets/ellipticco/elliptic-data-set) (Bitcoin) | Check graph features on a real labeled graph | CC BY-NC-ND 4.0 |
+| Injected pig-butchering rings and look-alikes (merchants, payroll, landlords, charities) | Ground truth for ring recovery and false positives | Generated by us (stand-in in `ml/standin_rings.py`) |
 
-## Evaluation plan
-
-Measured results so far are in [docs/ML_RESULTS.md](docs/ML_RESULTS.md). The plan below is what we measure.
-
-| Level | Metric |
-|---|---|
-| Account | Precision, recall, F1, PR-AUC |
-| Ring | Ring recovery rate, purity, time-to-detection |
-| System | End-to-end scoring latency on LinuxONE |
-| Ablation | Transaction-only features vs graph features |
-| Robustness | Hard-negative false-positive rate, varied ring shapes |
-
-Because we generate some of the rings ourselves, high scores alone prove little. That is why the plan includes hard negatives, varied ring shapes, public background data and a time-based split, and why features only use edges available at scoring time.
-
-## Scope
-
-In scope for the 24-hour build: one typology (pig-butchering), one model family (XGBoost), a working prototype with a live dashboard.
-
-Future scope: consortium ring-signature sharing across institutions, larger graphs, a GraphSAGE comparison model, additional scam typologies.
+Time-based split everywhere; features only use transactions up to the scoring time ([ml/PROTOCOL.md](ml/PROTOCOL.md)).
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
-| `docs/` | Solution document, datathon submission text, team split |
-| `data/`, `eval/` | Synthetic generator, dataset loading, splits, metrics (planned) |
-| `ml/` | Features, models, ring detection, explanations, scoring service. See [ml/README.md](ml/README.md) |
-| `api/`, `infra/` | FastAPI service, streaming simulator, Docker setup (planned) |
-| `dashboard/`, `pitch/` | React + D3 dashboard, pitch material (planned) |
+| `ml/` | Features, models, rings, explanations, scoring service, LinuxONE and Kaggle runners. [ml/README.md](ml/README.md) |
+| `api/` | FastAPI service and schemas. [api/README.md](api/README.md) |
+| `data/` | Dataset loaders (IBM AML) and profiling |
+| `docs/` | Solution document, results ([ML_RESULTS.md](docs/ML_RESULTS.md)), team split, hand-offs, submission checklist ([SUBMISSION_CHECKLIST.md](docs/SUBMISSION_CHECKLIST.md)) |
+
+## Open-source resources used
+
+[XGBoost](https://github.com/dmlc/xgboost), [scikit-learn](https://scikit-learn.org), [pandas](https://pandas.pydata.org), [NumPy](https://numpy.org), [SciPy](https://scipy.org), [NetworkX](https://networkx.org) (Louvain communities), [FastAPI](https://fastapi.tiangolo.com), [Pydantic](https://docs.pydantic.dev), [Uvicorn](https://www.uvicorn.org), [pytest](https://pytest.org), [Podman](https://podman.io). The Jupyter Lab ML container image and guide are from the LinuxONE Community Cloud: [linuxone-community-cloud/jupyter-lab-ml](https://github.com/linuxone-community-cloud/jupyter-lab-ml). Experiments also ran on Kaggle notebooks.
+
+Datasets are cited as: Altman et al., "Realistic Synthetic Financial Transactions for Anti-Money Laundering Models", NeurIPS 2023 ([arXiv:2306.16424](https://arxiv.org/abs/2306.16424)); Weber et al., "Anti-Money Laundering in Bitcoin: Experimenting with Graph Convolutional Networks for Financial Forensics", KDD 2019 Workshop on Anomaly Detection in Finance.
+
+## Limitations
+
+- Accuracy is modest and most laundering groups are still missed. See the results document for the full list.
+- Scoring recomputes everything in micro-batches. It is fast on a 48-hour window, not incremental.
+- Roles (victim, collector, mule, cash-out) are guessed from position inside a ring; the data has no role labels.
+- Amounts mix currencies and must not be shown as dollars.
+- The ring score favors small rings and was fitted on few validation rings.
 
 ## Team
 
 | Name | Workstream |
 |---|---|
-| Ramana Sree K V (team lead) | Graph, features and models |
-| Verona Ann | Data and evaluation |
+| Ramana Sree K V (team lead) | Graph, features, models, rings, explanations |
 | Giridharan R E | Platform, API and integration |
+| Verona Ann | Data and evaluation |
 | Tushar Biswas | Dashboard, victim warning and pitch |
 
 Each member works on a branch named after them and opens a pull request into `main`. See [docs/TEAM_SPLIT.md](docs/TEAM_SPLIT.md).
