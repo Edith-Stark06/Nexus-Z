@@ -96,7 +96,7 @@ case "${1:-}" in
     done
     echo "== assistant (never prints the token)"
     if podman secret exists "$CHAT_SECRET" 2>/dev/null; then echo "token secret: stored, mounted read-only for the container user"; else echo "token secret: none (the assistant answers by rules)"; fi
-    podman exec "$NAME" sh -c 'ls -l /run/secrets/ 2>/dev/null | tail -n +2' || true
+    podman exec "$NAME" sh -c 'ls -l /run/secrets/nexusz_hf_token 2>/dev/null || echo "not mounted in the container"'
     curl -fsS "http://127.0.0.1:$PORT/chat/status" || echo "chat status unavailable"
     echo
     echo "== resources"; podman stats --no-stream --format '{{.Name}} memory={{.MemUsage}} cpu={{.CPUPerc}}' "$NAME"

@@ -50,6 +50,7 @@ Platform: the datathon VM, IBM LinuxONE (machine type 9175), RHEL 9.8, s390x (bi
 ### What we do not claim
 
 - **No on-chip accelerator for our model.** XGBoost, pandas and NetworkX run on ordinary CPU. We did measure the accelerator on this VM with the processor's own counters: a TensorFlow network and IBM Granite through llama.cpp executed thousands of NNPA operations, XGBoost executed none (`bash infra/accel_counters.sh`; [ML_RESULTS.md](ML_RESULTS.md) section 8). A network trained on our payments was worse than the trees (test account PR-AUC 0.39 to 0.13 against 0.54) and a mix gave no gain, so detection stays on trees. We claim no speed-up from the accelerator.
+- **The AI-assisted chat does not run on LinuxONE.** The language model (IBM Granite 4.2, 30B with 8B, 3B and rule-based fallbacks) is hosted by Hugging Face Inference Providers; the grounding tools, the answer checks and the token handling run in the API container on the VM, and only the question and compact synthetic facts leave it. It explains what the detection found; it detects nothing. [CHATBOT.md](CHATBOT.md).
 - **Not an incremental update.** Scoring recomputes everything in micro-batches. It is fast on a window of recent data, not per payment.
 - **Training did not need a GPU.**
 
