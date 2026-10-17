@@ -14,8 +14,8 @@ RING = {"ring_id": "RNG-4A1B2C", "risk": 97, "accounts": 7,
 
 def test_summary_states_the_ring_facts_and_leads_with_a_signal_that_is_really_present():
     text = case_summary(RING)
-    for part in ("RNG-4A1B2C", "7 accounts", "31 payments", "97 of 100", "main signal is that money leaves within minutes",
-                 "2 likely victims", "2 collectors", "2 mules", "1 cash-outs"):
+    for part in ("RNG-4A1B2C", "7 accounts", "31 payments", "97 of 100", "main signal is: money leaves within minutes",
+                 "Estimated roles: 2 likely victims, 2 collectors, 2 mules and 1 cash-out."):
         assert part in text
     assert "transfers to itself" not in text            # the absent signal is not presented as a signal
     assert text.endswith("Verify the accounts before any action; roles are estimates.")
@@ -30,7 +30,7 @@ def test_without_a_present_signal_or_a_known_meaning_the_summary_still_reads_cle
     text = case_summary(bare)
     assert "main signal" not in text and text.startswith("Ring RNG-4A1B2C links 7 accounts")
     unknown = {**RING, "top_reasons": [{"feature": "mystery", "label": "Mystery feature", "contribution": 0.4}]}
-    assert "main signal is that mystery feature." in case_summary(unknown) and meaning_for("mystery") is None
+    assert "main signal is: mystery feature." in case_summary(unknown) and meaning_for("mystery") is None
 
 
 @pytest.mark.parametrize("feature,expected", [
@@ -51,3 +51,9 @@ def test_every_meaning_is_cautious_and_free_of_numbers_and_accusations():
 
 def test_clean_reason_drops_the_prefix_and_the_absent_marker():
     assert clean_reason("Sender: Money leaves within minutes (absent)") == "money leaves within minutes"
+
+
+def test_roles_use_singular_and_plural_correctly():
+    one = {**RING, "members": [{"id": "a", "role": "victim", "score": 0.5}, {"id": "b", "role": "collector", "score": 0.5}]}
+    assert "Estimated roles: 1 likely victim and 1 collector." in case_summary(one)
+    assert "Estimated roles: 3 mules." in case_summary({**RING, "members": [{"id": str(i), "role": "mule", "score": 0.5} for i in range(3)]})
