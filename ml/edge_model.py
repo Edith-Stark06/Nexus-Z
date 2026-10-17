@@ -84,24 +84,28 @@ def payment_probabilities(model, calibration, window, hist, all_X, cols, ccy_med
     return calibrated(booster.predict(xgb.DMatrix(rows), output_margin=True), calibration)
 
 
-def fit_payment_model(tx, split, snaps, cols, ccy_median, keep_rate: float = 0.05, seed: int = 0):
-    """Train the payment model. Returns (classifier, Platt calibration, validation payment probabilities).
+def payment_frames(tx, split, snaps, cols, ccy_median, keep_rate: float = 0.05, seed: int = 0):
+    """The rows the payment models learn from: (X, y) for training and for validation.
 
     Training keeps every laundering payment and a random `keep_rate` share of the rest, since only about
     1 payment in 1,300 is laundering. Validation (early stopping and calibration) uses every payment.
     """
-    from xgboost import XGBClassifier
-
-    from .model import calibrated, fit_calibration  # noqa: F401  (fit_calibration shown for symmetry with the account model)
-
     cut = {k: tx.loc[split == k, "ts"].max() for k in ("train", "val")}
     train_w, val_w = tx[split == "train"], tx[split == "val"].reset_index(drop=True)
     rng = np.random.default_rng(seed)
     sample = train_w[(train_w["is_laundering"] == 1) | (rng.random(len(train_w)) < keep_rate)].reset_index(drop=True)
     X_tr = payment_features(sample, tx[tx["ts"] <= cut["train"]], snaps["train"].all_X, cols, ccy_median)
-    y_tr = sample["is_laundering"].to_numpy()
     X_va = payment_features(val_w, tx[tx["ts"] <= cut["val"]], snaps["val"].all_X, cols, ccy_median)
-    y_va = val_w["is_laundering"].to_numpy()
+    return (X_tr, sample["is_laundering"].to_numpy()), (X_va, val_w["is_laundering"].to_numpy())
+
+
+def fit_payment_model(tx, split, snaps, cols, ccy_median, keep_rate: float = 0.05, seed: int = 0):
+    """Train the payment model. Returns (classifier, Platt calibration, validation payment probabilities)."""
+    from xgboost import XGBClassifier
+
+    from .model import calibrated, fit_calibration  # noqa: F401  (fit_calibration shown for symmetry with the account model)
+
+    (X_tr, y_tr), (X_va, y_va) = payment_frames(tx, split, snaps, cols, ccy_median, keep_rate, seed)
     model = XGBClassifier(n_estimators=800, learning_rate=0.05, max_depth=6, subsample=0.8, colsample_bytree=0.8,
                           scale_pos_weight=float((y_tr == 0).sum() / max(y_tr.sum(), 1)), eval_metric="aucpr",
                           early_stopping_rounds=40, tree_method="hist", n_jobs=-1, random_state=seed)

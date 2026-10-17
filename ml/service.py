@@ -14,6 +14,7 @@ import pandas as pd
 from .bundle import Bundle
 from .model import calibrated
 from .explain import shap_values, top_reasons
+from .narrative import case_summary
 from .edge_model import account_scores, payment_features
 from .features import build_features_with_edges
 from .neighbors import stage2_inputs
@@ -190,7 +191,7 @@ class Scorer:
         roles = infer_roles(r.members, inside)
         reasons = self._reasons(r.members)
         edges = inside.sort_values("ts").tail(MAX_EDGES)
-        return {
+        described = {
             "ring_id": rid, "risk": int(round(r.risk * 100)), "accounts": r.size,
             "victims": sum(v == "victim" for v in roles.values()),
             "headline": self._headline(r, reasons),
@@ -201,6 +202,8 @@ class Scorer:
                       for e in edges.itertuples()],
             "top_reasons": reasons,
         }
+        described["summary"] = case_summary(described, r.n_tx)
+        return described
 
     def list_rings(self) -> list[dict]:
         keys = ("ring_id", "risk", "accounts", "victims", "headline", "first_seen", "flagged_at")
