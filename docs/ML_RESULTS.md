@@ -209,6 +209,20 @@ Laundering groups recovered, rings that are real, and mean purity, test window, 
 
 Growth is a dial between catching more of each group and keeping rings clean. The committed setting recovers a third of the laundering groups with seven in ten rings real. Without growth the rings are almost all real but a fifth of the groups are found. The validation-chosen setting also holds on test.
 
+### A second variant: LI-Small
+
+The same payment-level model (57 features, 5% of non-laundering payments in training, seed 0, same time split and protocol) was trained and evaluated on LI-Small, which has a much lower laundering rate (chance PR-AUC 0.0006 at payment level). It ran on a Kaggle CPU notebook in 789 s, not on the VM, because LI-Small does not fit in the VM's 7.5 GB with our evaluation. Command: `python -m ml.edge_eval LI-Small`. Test window, account level:
+
+| Model | PR-AUC | Precision | Recall | PR-AUC on accounts never flagged before |
+|---|---|---|---|---|
+| Account model | 0.031 | 0.035 | 0.196 | 0.018 |
+| Payment-level model (max per account) | **0.093** | **0.090** | **0.334** | **0.089** |
+
+- **The ranking gain holds on a second variant.** Three times the account PR-AUC (HI-Small: 0.453 against 0.149), and about five times on accounts never flagged before.
+- **Absolute accuracy is low.** Precision 9% at 33% recall. Do not describe this as a high-accuracy detector; LI-Small is harder because laundering is rarer.
+- **Ring recovery did not improve.** Rings formed without growth, with the share of flagged accounts chosen on validation: the account model recovers 10.2% of the 59 laundering groups (mean purity 3.4%, 3.8% of rings real) and the payment model 6.8% (mean purity 11%, 14% of rings real). The payment model's rings are cleaner but fewer groups are found. We did not run the committed ring-growth setting on LI-Small, so this table says nothing about it.
+- The payment model stopped at 75 trees (358 on HI-Small), and its payment-level PR-AUC is 0.076 on test (0.101 on validation). One seed, one split.
+
 ### Choices that were tested
 
 - **Burst and motif features** (distinct payers within an hour, six hours or a day; directed triangles; feed-forward loops; repeated amounts) did not help the account model (PR-AUC 0.149 against 0.160). They **did help the payment model** when added to the endpoint features: payment-level PR-AUC 0.468 against 0.434 and account PR-AUC 0.453 against 0.428 (seed 0, same split). The committed model uses them, which makes it 57 features. The 3-seed table above was measured before this change, so the committed model has one seed behind the 0.468 and 0.453 figures, not three.
@@ -217,7 +231,7 @@ Growth is a dial between catching more of each group and keeping rings clean. Th
 
 ### Caveats specific to this section
 
-- One dataset (IBM AML HI-Small), one time split, three training seeds. Seeds measure training noise, not split noise. The strict 0.25% rows and the growth rows in the rings table are from seed 0 only; the other payment-model and account-model ring figures are ranges over the three seeds.
+- Mostly one dataset (IBM AML HI-Small), one time split, three training seeds; LI-Small above is one seed. Seeds measure training noise, not split noise. The strict 0.25% rows and the growth rows in the rings table are from seed 0 only; the other payment-model and account-model ring figures are ranges over the three seeds.
 - The payment model looks at payments in a window together with the history up to the cutoff, including the receiver's next payment. A payment is therefore flagged once the evidence appears (for example when the money is forwarded), which is why detection time is replayed separately.
 - Precision and recall are at one validation-chosen threshold; other thresholds trade them off.
 
