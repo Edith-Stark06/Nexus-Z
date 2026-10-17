@@ -3,7 +3,7 @@
 **Graph-based fraud ring detection on IBM LinuxONE.**
 IBM Z Datathon 2026. Theme: **Real-Time AI for Critical Decisions** (fraud detection).
 
-> **Status (Oct 17, 2026):** the ML core, the scoring service and the LinuxONE training setup are built and measured. The dashboard is still being finished. **Pig-butchering detection is only tested on synthetic rings** (our first stand-in, and a second, more varied generator with adversarial look-alikes written by the data workstream; both are our own idea of the scam), so there is no accuracy claim for that typology. Every number in this repository comes from a run; weak results are shown too. See [docs/ML_RESULTS.md](docs/ML_RESULTS.md).
+> **Status (Oct 18, 2026):** the ML core, the scoring service, the container deployment on LinuxONE and the demo are built and measured; the dashboard is being finished. **Pig-butchering detection is only tested on synthetic rings** that our own team generated (`data/rings.py`), so there is no accuracy claim for that typology on real fraud. A model trained on IBM's labels alone finds none of those rings; the demo bundle, trained with them, recovers 84% (24 h window) and 69% (48 h) of rings drawn after training, with caveats in [docs/ML_RESULTS.md](docs/ML_RESULTS.md) section 7. Every number in this repository comes from a run; weak and negative results are shown too.
 
 ## The problem
 
@@ -37,9 +37,12 @@ IBM synthetic AML data, test window (details, seeds and caveats in [docs/ML_RESU
 | Same comparison at 6 times the size (32M transactions) | 0.122 to 0.158 |
 | Laundering groups recovered as rings (payment model, rings grown to 2%) | 34%, with 70% of rings real (account model: 20 to 30% recovered, 31 to 46% real) |
 | Groups detected in a replay of the test window in 6-hour steps | **55%** (36 of 65) with the committed model, against 20% for its account model; median 9.7 hours; 45% not detected |
+| Same payment model on the lower-fraud LI-Small (one seed, Kaggle CPU) | account PR-AUC 0.093 against 0.031 for the account model, but fewer groups recovered as rings (6.8% against 10.2%) |
+| Synthetic pig-butchering rings never seen in training (demo bundle, 4 random draws pooled) | 84% of rings recovered in the last 24 h, 69% in 48 h; the IBM-only model: 0% |
+| API on the VM in a hardened container | first state 12 s; a new payment visible in about 10 s; idle requests about 1 ms; no server errors |
 | Full rescore on the LinuxONE VM (3 vCPUs) | 0.28 s for 6 hours of data, 3.2 s for 48 hours (863K transactions), 15.7 s for all 5.1M transactions |
 
-**What these do not show:** most laundering groups are still missed (a third recovered as rings, 45% never detected in the replay); the payment-level figures are on one dataset (HI-Small) and one time split, and the lower-fraud LI-Small was only run with the account model (about 5% precision); graph features added nothing on the Elliptic Bitcoin data; the injected pig-butchering rings are easy and were designed by the same side that designed the features, so results on them are optimistic.
+**What these do not show:** most laundering groups are still missed (a third recovered as rings, 45% never detected in the replay); the payment-level figures are on one dataset (HI-Small) and one time split, and the lower-fraud LI-Small was run once (precision about 9% at 33% recall); graph features added nothing on the Elliptic Bitcoin data; the injected pig-butchering rings are easy and were designed by the same side that designed the features, so results on them are optimistic.
 
 ## How it uses IBM LinuxONE
 
@@ -47,7 +50,8 @@ IBM synthetic AML data, test window (details, seeds and caveats in [docs/ML_RESU
 - **Training and scoring both run on the VM**, inside the platform's Jupyter Lab ML container (Podman), on CPU. Training the final payment-level model takes about 15 minutes; see [ml/LINUXONE.md](ml/LINUXONE.md).
 - **Security:** Jupyter is bound to the VM's loopback and reached through an SSH tunnel with a random token. The platform README's public port and published default token are deliberately not used.
 - **Big-endian check:** a model trained on a little-endian laptop gives identical predictions on the s390x VM (largest difference 9e-16).
-- **Not used:** no on-chip AI accelerator. We make no accelerator claims.
+- **Containerized serving:** the API runs in a hardened rootless Podman container from the platform image: loopback only, non-root, read-only filesystem, every capability dropped, memory limit. `bash infra/podman_api.sh check` prints the settings read back from the running container; measured in [docs/PLATFORM_RESULTS.md](docs/PLATFORM_RESULTS.md) section 3c.
+- **Accelerator, measured and not used for detection:** the VM's NNPA counters show a neural network and IBM Granite executing thousands of accelerator operations and XGBoost none (`bash infra/accel_counters.sh`). A network trained on our payments was worse than the trees and Granite wrote wrong sentences, so detection is trees on the CPU and nothing a language model writes reaches a user ([docs/ML_RESULTS.md](docs/ML_RESULTS.md) section 8). We claim no accelerator speed-up.
 
 ## Architecture
 
@@ -85,6 +89,7 @@ The API currently serves sample data by default. `ml/api_backend.py` provides th
 python -m pytest ml/tests api/tests -q                 # tests
 uvicorn api.main:app --port 8000                       # API with sample data
 python -m ml.bundle HI-Small                           # train (needs the data, see below)
+# the full demo (VM container + tunnel + dashboard + streaming replay): docs/DEMO.md
 bash ml/linuxone_jupyter.sh                            # LinuxONE VM: Jupyter Lab ML container
 ```
 
