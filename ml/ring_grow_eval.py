@@ -29,7 +29,7 @@ def payment_scores(variant: str, seed: int, tx, split, snaps) -> dict:
     if cache.exists():
         return pd.read_pickle(cache)
     ccy = currency_medians(tx[split == "train"])
-    cols = FEATURE_SETS["+ k-core, clustering, components"]
+    cols = FEATURE_SETS["+ bursts and motifs"]
     model, cal, p_val = fit_payment_model(tx, split, snaps, cols, ccy, seed=seed)
     out = {}
     for k, p in (("val", p_val), ("test", None)):
