@@ -22,21 +22,25 @@ Account open dates in the contract export are also synthetic. Numbers are mean �
 | all candidates | + behavioral | 160 | 0.413 ± 0.042 | 0.247 ± 0.018 | 0.601 ± 0.100 | 0.347 ± 0.003 |
 | all candidates | + graph | 160 | 0.362 ± 0.033 | 0.230 ± 0.030 | 0.646 ± 0.068 | 0.337 ± 0.021 |
 | all candidates | + k-core, clustering, components | 160 | 0.407 ± 0.010 | 0.263 ± 0.015 | 0.665 ± 0.088 | 0.375 ± 0.005 |
+| all candidates | + bursts and motifs | 160 | 0.396 ± 0.025 | 0.237 ± 0.034 | 0.661 ± 0.048 | 0.347 ± 0.033 |
 | new accounts only | transaction-only | 55 | 0.359 ± 0.026 | 0.297 ± 0.071 | 0.452 ± 0.041 | 0.352 ± 0.038 |
 | new accounts only | + behavioral | 55 | 0.648 ± 0.131 | 0.766 ± 0.076 | 0.659 ± 0.179 | 0.693 ± 0.092 |
 | new accounts only | + graph | 55 | 0.644 ± 0.101 | 0.625 ± 0.264 | 0.621 ± 0.098 | 0.597 ± 0.093 |
 | new accounts only | + k-core, clustering, components | 55 | 0.703 ± 0.071 | 0.741 ± 0.065 | 0.645 ± 0.104 | 0.683 ± 0.032 |
+| new accounts only | + bursts and motifs | 55 | 0.696 ± 0.107 | 0.698 ± 0.200 | 0.643 ± 0.062 | 0.660 ± 0.111 |
 | all labels (IBM + injected) | transaction-only | 1834 | 0.154 ± 0.005 | 0.451 ± 0.018 | 0.175 ± 0.007 | 0.252 ± 0.009 |
 | all labels (IBM + injected) | + behavioral | 1834 | 0.184 ± 0.005 | 0.510 ± 0.021 | 0.165 ± 0.015 | 0.249 ± 0.016 |
 | all labels (IBM + injected) | + graph | 1834 | 0.214 ± 0.003 | 0.497 ± 0.028 | 0.186 ± 0.016 | 0.270 ± 0.013 |
 | all labels (IBM + injected) | + k-core, clustering, components | 1834 | 0.230 ± 0.003 | 0.531 ± 0.005 | 0.183 ± 0.019 | 0.272 ± 0.021 |
+| all labels (IBM + injected) | + bursts and motifs | 1834 | 0.226 ± 0.006 | 0.500 ± 0.021 | 0.186 ± 0.010 | 0.271 ± 0.007 |
 
 Paired per-seed differences (injected fraud accounts, all candidates):
 
 - + behavioral vs transaction-only: PR-AUC +0.234 ± 0.045, outside the noise
 - + graph vs + behavioral: PR-AUC -0.051 ± 0.025, outside the noise
 - + k-core, clustering, components vs + graph: PR-AUC +0.044 ± 0.036, outside the noise
-- full graph set vs transaction-only: PR-AUC +0.228 ± 0.009, outside the noise
+- + bursts and motifs vs + k-core, clustering, components: PR-AUC -0.010 ± 0.015, inside the noise
+- full graph set vs transaction-only: PR-AUC +0.218 ± 0.018, outside the noise
 
 ## Ring level (default scenario, test window)
 
@@ -46,6 +50,7 @@ Paired per-seed differences (injected fraud accounts, all candidates):
 | + behavioral | 0.005, 0.01 | 22.0 | 0.639 ± 0.168 | 0.554 ± 0.022 | 77 | 0.0 |
 | + graph | 0.005, 0.01 | 22.0 | 0.736 ± 0.087 | 0.551 ± 0.075 | 84 | 0.3 |
 | + k-core, clustering, components | 0.005, 0.01 | 22.0 | 0.727 ± 0.142 | 0.559 ± 0.063 | 91 | 0.0 |
+| + bursts and motifs | 0.005 | 22.0 | 0.704 ± 0.076 | 0.591 ± 0.017 | 79 | 0.0 |
 
 Recovery by ring shape (test):
 
@@ -55,6 +60,7 @@ Recovery by ring shape (test):
 | + behavioral | 1.00 ± 0.00 | 0.93 ± 0.12 | 0.83 ± 0.24 | 0.33 ± 0.29 | 0.58 ± 0.37 | 0.72 ± 0.25 | 0.56 ± 0.10 | 0.22 ± 0.38 |
 | + graph | 1.00 ± 0.00 | 1.00 ± 0.00 | 1.00 ± 0.00 | 0.33 ± 0.29 | 0.58 ± 0.23 | 0.81 ± 0.17 | 0.72 ± 0.25 | 0.56 ± 0.51 |
 | + k-core, clustering, components | 1.00 ± 0.00 | 1.00 ± 0.00 | 0.83 ± 0.24 | 0.33 ± 0.29 | 0.64 ± 0.34 | 0.81 ± 0.17 | 0.72 ± 0.25 | 0.44 ± 0.38 |
+| + bursts and motifs | 1.00 ± 0.00 | 1.00 ± 0.00 | 0.83 ± 0.24 | 0.33 ± 0.29 | 0.58 ± 0.23 | 0.81 ± 0.17 | 0.56 ± 0.10 | 0.56 ± 0.51 |
 
 ## Hard negatives: legitimate look-alikes (default scenario)
 
@@ -66,6 +72,7 @@ Share of active look-alike hubs flagged at the validation threshold (lower is be
 | + behavioral | 0.04 (41/seed) | 0.03 | 0.05 | 0.07 | 0.27 | 0.00 | 0.04 | 0.00 |
 | + graph | 0.05 (41/seed) | 0.05 | 0.05 | 0.00 | 0.55 | 0.00 | 0.00 | 0.00 |
 | + k-core, clustering, components | 0.05 (41/seed) | 0.03 | 0.07 | 0.00 | 0.55 | 0.00 | 0.00 | 0.00 |
+| + bursts and motifs | 0.05 (41/seed) | 0.03 | 0.07 | 0.00 | 0.55 | 0.00 | 0.00 | 0.00 |
 
 ## Time to detection (default scenario)
 
@@ -77,6 +84,7 @@ The test window is replayed in 6-hour steps; at each step features, scores and r
 | + behavioral | 5.7 | 0.841 ± 0.167 | 6.5 ± 1.4 | 9.5 ± 2.1 | 0.841 ± 0.167 |
 | + graph | 5.7 | 0.897 ± 0.090 | 6.2 ± 1.6 | 11.0 ± 5.2 | 0.897 ± 0.090 |
 | + k-core, clustering, components | 5.7 | 0.897 ± 0.090 | 5.8 ± 0.9 | 10.4 ± 5.3 | 0.897 ± 0.090 |
+| + bursts and motifs | 5.7 | 0.897 ± 0.090 | 6.2 ± 1.6 | 9.8 ± 3.7 | 0.897 ± 0.090 |
 
 ## Robustness: other ring and look-alike mixes
 
@@ -87,7 +95,7 @@ The test window is replayed in 6-hour steps; at each step features, scores and r
 | all-adversarial | transaction-only | 0.162 ± 0.040 | 0.513 ± 0.036 | 0.542 ± 0.042 | 0.25 | 3 |
 | all-adversarial | + k-core, clustering, components | 0.394 ± 0.043 | 0.676 ± 0.039 | 0.722 ± 0.096 | 0.05 | 3 |
 | default | transaction-only | 0.179 ± 0.013 | 0.549 ± 0.018 | 0.616 ± 0.056 | 0.14 | 3 |
-| default | + k-core, clustering, components | 0.407 ± 0.010 | 0.665 ± 0.088 | 0.727 ± 0.142 | 0.05 | 3 |
+| default | + bursts and motifs | 0.396 ± 0.025 | 0.661 ± 0.048 | 0.704 ± 0.076 | 0.05 | 3 |
 | fast-rings-only | transaction-only | 0.203 ± 0.065 | 0.556 ± 0.096 | 0.762 ± 0.221 | 0.02 | 3 |
 | fast-rings-only | + k-core, clustering, components | 0.480 ± 0.087 | 0.755 ± 0.138 | 0.880 ± 0.132 | 0.02 | 3 |
 | few-rings | transaction-only | 0.003 ± 0.002 | 0.055 ± 0.053 | 0.067 ± 0.115 | 0.00 | 3 |
