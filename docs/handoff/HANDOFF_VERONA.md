@@ -35,6 +35,15 @@ Where the artifact is out of date: (1) the ML core is built, so the "model funct
 - Evidence we need: graph features beat transaction-only; rings are recovered; legitimate look-alikes are not flagged; the evaluation is not circular.
 - **Everything reported must be measured by a run.** No projected or invented numbers.
 
+## Event rules and judging (from the Participant Guidebook, IBM Z Datathon 2026)
+
+- **Dates:** Oct 17 to 18, 2026. India hub times (IST): kick-off Oct 17 9:00 to 10:00; virtual continuation Oct 17 17:00 to Oct 18 10:00; closing ceremony Oct 18 10:30. **Submission is due at the end of the datathon (Oct 18, 10:00 IST); confirm the exact time in the Hack2Skill portal.** Submit at https://hack2skill.com/event/datathon-2026.
+- **Submit:** a video of **at most 3 minutes** (problem, data supporting the problem, solution, and **how it leverages IBM Z: tech stack, show the LinuxONE instance and the model**), the GitHub link, links to every open-source resource used, and a project title in the form `[Team Name_IBM Z Datathon 2026 Project]`. Put the event code `SSF2026` in the project description. Optional: a flowchart and a prototype.
+- **Judging, 10 points each:** (1) value to the community and theme alignment, (2) novelty and originality, (3) technical design and use of the LinuxONE platform and AI/ML packages on it (containerization, security, scalability and compute, **with screenshots as evidence**), (4) execution and pitch quality (including a demo and staying within the time limit).
+- **Rules that touch your work:** all code must be created from scratch during the event window; open-source libraries are allowed but their links must be in the submission; public datasets are allowed if legally and properly licensed; do not reuse another team's code or ideas; no political or hateful projects.
+- **Mandatory labs:** the guidebook says the two platform labs (predictive AI hybrid / multi-model, and predictive AI plus generative AI, in `linuxone-community-cloud/jupyter-lab-ml`) must be completed before building the team's own solution. Ramana will confirm who runs them and keeps screenshots.
+- Evidence for criterion 3 that already exists: training and scoring on the s390x VM inside a Podman container, Jupyter bound to loopback with a token (`ml/LINUXONE.md`), timings in `docs/ML_RESULTS.md`. Collect screenshots of these as you produce them.
+
 ## 4. Where things stand
 
 Done and in `main`:
@@ -148,9 +157,8 @@ Acceptance: `eval/` runs from one command and writes a results file (for example
 
 ## 7. Questions to send to Ramana (through Verona)
 
-1. Datathon judging criteria, deadline, and whether the organizers supply a dataset (this decides how much of Task 2 matters).
-2. Is the final demo data HI-Small plus injected rings?
-3. Should account open dates be part of the data contract?
+1. Is the final demo data HI-Small plus injected rings? (The organizers supply no dataset; public datasets are allowed with licenses cited.)
+2. Should account open dates be part of the data contract?
 
 ## 8. Report back
 

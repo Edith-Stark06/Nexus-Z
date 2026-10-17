@@ -67,7 +67,7 @@ Elliptic Bitcoin data (nodes are transactions, test steps 35 to 49):
 | Transaction-only (2% flagged) | 335 | 11.9% | 13.4% | 13.4% |
 | Graph features (1% flagged) | 79 | **21.6%** | **43.6%** | **41.8%** |
 
-- On the Kaggle replication the graph model recovered 32% of groups at 29% purity (2% flagged), so recovery is in a 20 to 30% range, not a fixed number.
+- On the Kaggle replication the graph model recovered 32% of groups at 29% purity (2% flagged), so recovery is in a 20 to 30% range, not a fixed number. Transaction-only is also not fixed: on the Kaggle and LinuxONE runs the setting chosen on validation was 0.5% flagged and it recovered only 3% of groups, against 12% on the laptop run above. Report it as 3 to 12%.
 - On LI-Small at 5% flagged: 25.4% recovered by the graph model against 6.8% for transaction-only, but purity is only 4.5%.
 - **Most groups are still missed, and most detected rings are not pure.**
 
