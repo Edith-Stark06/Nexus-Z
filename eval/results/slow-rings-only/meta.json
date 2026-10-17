@@ -1,0 +1,18 @@
+{
+ "variant": "HI-Small",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "scenario": "slow-rings-only",
+ "inject": {
+  "kinds": [
+   "delayed",
+   "batched",
+   "mixed"
+  ]
+ },
+ "step_hours": 6,
+ "replay": false
+}
