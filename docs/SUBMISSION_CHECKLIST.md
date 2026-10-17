@@ -34,7 +34,7 @@ The two platform labs are described as mandatory before a team builds its own so
 | Criterion | What we can show | Gap |
 |---|---|---|
 | Value to community and theme | Real-time fraud detection; protects scam victims; warning before the next payment | Frame it around people, not just the model |
-| Novelty and originality | Ring-first detection, pass-through timing, explanations, victim warning | Pig-butchering results are on stand-in data only |
+| Novelty and originality | Ring-first detection, pass-through timing, explanations, victim warning | Pig-butchering results are on synthetic rings only (`eval/results/RESULTS.md`) |
 | Technical design and LinuxONE use (**screenshots as evidence**) | Training and scoring on the s390x VM in a Podman container; Jupyter on loopback with a token; same predictions as the laptop | Screenshots not taken yet. No accelerator is used, so claim none. Labs not done |
 | Execution and pitch | Measured numbers, honest caveats | Video and demo not made. Dashboard not built |
 

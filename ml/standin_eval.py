@@ -8,7 +8,7 @@ Models are trained on the combined labels (IBM laundering plus injected fraud ac
                   many legitimate hubs (merchants, payroll, landlords, charities) are wrongly flagged
   ring level      share of injected rings recovered, by shape, and how many detected rings are
                   mostly legitimate hubs
-The generator is ml/standin_rings.py. It is a stand-in for the data workstream's generator.
+The generator is data/rings.py (the data workstream's). The first stand-in is ml/standin_rings.py.
 """
 import sys
 
@@ -36,7 +36,7 @@ def run(variant: str = "HI-Small", seed: int = 0) -> None:
     split = time_split(tx2)
     cut = {k: tx2.loc[split == k, "ts"].max() for k in ("train", "val", "test")}
     windows = {"val": (cut["train"], cut["val"]), "test": (cut["val"], cut["test"])}
-    snaps = make_snapshots(variant, tx=tx2, tag=f"-standin{seed}")
+    snaps = make_snapshots(variant, tx=tx2, tag=f"-datarings{seed}")
 
     pig = set().union(*[r["accounts"] for r in inj.rings])
     hard = set().union(*[h["accounts"] for h in inj.hard])
