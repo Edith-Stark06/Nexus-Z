@@ -27,7 +27,6 @@ import numpy as np
 import pandas as pd
 from scipy import sparse
 from scipy.sparse.csgraph import connected_components
-from sklearn.metrics import average_precision_score, roc_auc_score
 from xgboost import XGBClassifier
 
 from data.paths import DATA_DIR
@@ -129,6 +128,8 @@ def ring_report(rings, y_of: dict, flagged: set) -> dict:
 
 
 def run(folder: Path, seeds: tuple = (0, 1, 2, 3, 4)) -> None:
+    from sklearn.metrics import average_precision_score, roc_auc_score  # evaluation only; the building blocks above need no scikit-learn
+
     started = time.time()
     table, src, dst = load(folder)
     first, last, y = table["first_ts"].to_numpy(), table["last_ts"].to_numpy(), table["y"].to_numpy()
