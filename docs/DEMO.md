@@ -46,7 +46,7 @@ Start the stream when you are ready to show it (a second terminal on the VM):
 ## Say, and do not say
 
 - Say: "synthetic data", "estimated roles", "near real time, about 12 seconds on the idle VM".
-- Do not say: real-time or instant; that an account is a criminal (say flagged); that warnings were sent (we flag likely victims); that the accelerator is used (it is not).
+- Do not say: real-time or instant; that an account is a criminal (say flagged); that warnings were sent (we flag likely victims); that NEXUS Z detection runs on the accelerator (it does not; only the measurement in step 7 does).
 - Reasons marked "(absent)" mean the model is flagging the *lack* of something (for example no history); explain it that way if asked.
 
 ## Between takes
