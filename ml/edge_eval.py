@@ -12,14 +12,13 @@ import sys
 import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score
-from xgboost import XGBClassifier
 
 from data.ibm_aml import load_patterns, load_with_index, primary_period, time_split
 
 from .ablation import FEATURE_SETS, best_f1_threshold
 from .dataset import currency_medians, make_snapshots
-from .edge_model import account_scores, payment_features
-from .model import calibrated, fit_calibration, fit_model, score
+from .edge_model import account_scores, fit_payment_model, payment_probabilities
+from .model import fit_calibration, fit_model, score
 from .ring_eval import evaluate
 from .rings import detect_rings
 from .stack_eval import account_row
@@ -49,25 +48,9 @@ def run(variant: str = "HI-Small", keep_rate: float = 0.05, seed: int = 0) -> No
     win = {k: tx[split == k].reset_index(drop=True) for k in ("train", "val", "test")}
     hist = {k: tx[tx["ts"] <= cut[k]] for k in ("train", "val", "test")}
 
-    rng = np.random.default_rng(seed)
-    w = win["train"]
-    sample = w[(w["is_laundering"] == 1) | (rng.random(len(w)) < keep_rate)].reset_index(drop=True)
-    Xtr = payment_features(sample, hist["train"], snaps["train"].all_X, cols, ccy)
-    ytr = sample["is_laundering"].to_numpy()
-    Xva = payment_features(win["val"], hist["val"], snaps["val"].all_X, cols, ccy)
-    yva = win["val"]["is_laundering"].to_numpy()
-    Xte = payment_features(win["test"], hist["test"], snaps["test"].all_X, cols, ccy)
-    yte = win["test"]["is_laundering"].to_numpy()
-    print(f"payments: train sample {len(Xtr):,} ({int(ytr.sum())} laundering), val {len(Xva):,} ({int(yva.sum())}), "
-          f"test {len(Xte):,} ({int(yte.sum())}); {Xtr.shape[1]} features", flush=True)
-
-    model = XGBClassifier(n_estimators=800, learning_rate=0.05, max_depth=6, subsample=0.8, colsample_bytree=0.8,
-                          scale_pos_weight=float((ytr == 0).sum() / max(ytr.sum(), 1)), eval_metric="aucpr",
-                          early_stopping_rounds=40, tree_method="hist", n_jobs=-1, random_state=seed)
-    model.fit(Xtr, ytr, eval_set=[(Xva, yva)], verbose=False)
-    m_va, m_te = model.predict(Xva, output_margin=True), model.predict(Xte, output_margin=True)
-    cal = platt(m_va, yva)
-    p_va, p_te = calibrated(m_va, cal), calibrated(m_te, cal)
+    model, cal, p_va = fit_payment_model(tx, split, snaps, cols, ccy, keep_rate, seed)
+    p_te = payment_probabilities(model, cal, win["test"], hist["test"], snaps["test"].all_X, cols, ccy)
+    yva, yte = win["val"]["is_laundering"].to_numpy(), win["test"]["is_laundering"].to_numpy()
     print(f"payment model: {model.best_iteration + 1} trees; payment-level PR-AUC val {average_precision_score(yva, p_va):.3f}, "
           f"test {average_precision_score(yte, p_te):.3f} (chance {yte.mean():.4f})", flush=True)
 

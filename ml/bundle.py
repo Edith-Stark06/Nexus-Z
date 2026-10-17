@@ -21,7 +21,8 @@ from .ring_score import fit as fit_ring_scorer, purity
 from .rings import detect_rings
 
 ALL_COLS = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS
-TOP_FRACTION = 0.01  # share of accounts flagged before grouping into rings; chosen on val in ring_eval
+# Share of accounts flagged before grouping into rings, per scorer; chosen on validation ring recovery and purity.
+TOP_FRACTIONS = {"payment": 0.005, "two_stage": 0.01, "account": 0.01}
 
 
 @dataclass
@@ -35,6 +36,8 @@ class Bundle:
     calibration: tuple = (1.0, 0.0)  # Platt scaling (slope, intercept) on the model margin
     ring_scorer: dict | None = None  # learned ring score parameters (see ring_score.py)
     stage2: xgb.Booster | None = None  # optional second stage that also sees neighbors' stage-1 scores (ml/stack.py)
+    payment: xgb.Booster | None = None  # payment-level model (ml/edge_model.py); when present it is the scorer
+    payment_calibration: tuple = (1.0, 0.0)
     high_quantile: float = 0.99        # what counts as a high-risk neighbor in stage 2
 
     @property
@@ -55,10 +58,13 @@ def save_bundle(b: Bundle, folder: Path) -> None:
     b.model.save_model(folder / "model.json")
     if b.stage2 is not None:
         b.stage2.save_model(folder / "model_stage2.json")
+    if b.payment is not None:
+        b.payment.save_model(folder / "model_payment.json")
     (folder / "meta.json").write_text(json.dumps(
         {"cols": b.cols, "threshold": b.threshold, "top_fraction": b.top_fraction,
          "ccy_median": b.ccy_median, "meta": b.meta, "calibration": list(b.calibration),
-         "ring_scorer": b.ring_scorer, "two_stage": b.stage2 is not None, "high_quantile": b.high_quantile}, indent=2),
+         "ring_scorer": b.ring_scorer, "two_stage": b.stage2 is not None, "high_quantile": b.high_quantile,
+         "payment": b.payment is not None, "payment_calibration": list(b.payment_calibration)}, indent=2),
         encoding="utf-8")
 
 
@@ -70,43 +76,68 @@ def load_bundle(folder: Path) -> Bundle:
     if m.get("two_stage"):
         stage2 = xgb.Booster()
         stage2.load_model(folder / "model_stage2.json")
-    return Bundle(model, m["cols"], m["threshold"], m["top_fraction"], m["ccy_median"], m["meta"],
-                  tuple(m.get("calibration", (1.0, 0.0))), m.get("ring_scorer"), stage2, m.get("high_quantile", 0.99))
+    payment = None
+    if m.get("payment"):
+        payment = xgb.Booster()
+        payment.load_model(folder / "model_payment.json")
+    return Bundle(model=model, cols=m["cols"], threshold=m["threshold"], top_fraction=m["top_fraction"],
+                  ccy_median=m["ccy_median"], meta=m["meta"], calibration=tuple(m.get("calibration", (1.0, 0.0))),
+                  ring_scorer=m.get("ring_scorer"), stage2=stage2, high_quantile=m.get("high_quantile", 0.99),
+                  payment=payment, payment_calibration=tuple(m.get("payment_calibration", (1.0, 0.0))))
 
 
-def train_bundle(variant: str = "HI-Small", two_stage: bool = True) -> Bundle:
-    """Train the model folder. Two-stage (the default) adds the neighbor-score second stage of ml/stack.py."""
+def train_bundle(variant: str = "HI-Small", scorer: str = "payment") -> Bundle:
+    """Train the model folder.
+
+    scorer "payment" (default): a payment-level model; an account's risk is its riskiest payment (ml/edge_model.py).
+    scorer "two_stage": the account model plus a second stage that sees neighbors' scores (ml/stack.py).
+    scorer "account": the plain account model. The plain account model is always trained and saved as well.
+    """
     from .ablation import best_f1_threshold  # scikit-learn is only needed for training, not serving
+    assert scorer in TOP_FRACTIONS, scorer
     snaps = make_snapshots(variant)
     tx = primary_period(load_transactions(variant), variant)
     split = time_split(tx)
-    meta = {"variant": variant, "feature_version": FEATURE_VERSION, "train_cutoff": str(snaps["train"].cutoff),
-            "val_cutoff": str(snaps["val"].cutoff), "trained_at": pd.Timestamp.now().isoformat(timespec="seconds")}
-    if two_stage:
+    ccy = currency_medians(tx[split == "train"])
+    meta = {"variant": variant, "feature_version": FEATURE_VERSION, "scorer": scorer,
+            "train_cutoff": str(snaps["train"].cutoff), "val_cutoff": str(snaps["val"].cutoff),
+            "trained_at": pd.Timestamp.now().isoformat(timespec="seconds")}
+    fitted = fit_model(snaps["train"], snaps["val"], ALL_COLS)
+    calibration = fit_calibration(fitted, snaps["val"], ALL_COLS)
+    meta["trees"] = int(fitted.best_iteration + 1)
+    model, stage2, payment, payment_calibration = fitted.get_booster(), None, None, (1.0, 0.0)
+    if scorer == "payment":
+        from .edge_model import account_scores, fit_payment_model
+
+        pay_model, payment_calibration, p_val = fit_payment_model(tx, split, snaps, ALL_COLS, ccy)
+        val_window = tx[split == "val"].reset_index(drop=True)
+        val_scores = account_scores(val_window, p_val).reindex(snaps["val"].X.index).fillna(0.0)
+        payment, meta["trees_payment"] = pay_model.get_booster(), int(pay_model.best_iteration + 1)
+    elif scorer == "two_stage":
         from .stack import fit_stacked
 
         stacked = fit_stacked(snaps["train"], snaps["val"], ALL_COLS)
         val_scores = stacked.score(snaps["val"])
-        model, stage2, calibration = stacked.stage1.get_booster(), stacked.stage2.get_booster(), stacked.calibration
-        meta["trees"], meta["trees_stage2"] = int(stacked.stage1.best_iteration + 1), int(stacked.stage2.best_iteration + 1)
+        stage2, calibration = stacked.stage2.get_booster(), stacked.calibration
+        model, meta["trees"] = stacked.stage1.get_booster(), int(stacked.stage1.best_iteration + 1)
+        meta["trees_stage2"] = int(stacked.stage2.best_iteration + 1)
     else:
-        fitted = fit_model(snaps["train"], snaps["val"], ALL_COLS)
-        calibration = fit_calibration(fitted, snaps["val"], ALL_COLS)
         val_scores = score(fitted, snaps["val"], ALL_COLS, calibration)
-        model, stage2 = fitted.get_booster(), None
-        meta["trees"] = int(fitted.best_iteration + 1)
-    val_rings = detect_rings(val_scores, tx[tx["ts"] <= snaps["val"].cutoff], TOP_FRACTION)
+    top_fraction = TOP_FRACTIONS[scorer]
+    val_rings = detect_rings(val_scores, tx[tx["ts"] <= snaps["val"].cutoff], top_fraction)
     val_positive = set(snaps["val"].y.index[snaps["val"].y == 1])
     ring_scorer = fit_ring_scorer(val_rings, purity(val_rings, val_positive) >= 0.5)
     meta["val_rings"] = len(val_rings)
-    return Bundle(model, ALL_COLS, best_f1_threshold(snaps["val"].y, val_scores), TOP_FRACTION,
-                  currency_medians(tx[split == "train"]), meta, calibration, ring_scorer, stage2)
+    return Bundle(model=model, cols=ALL_COLS, threshold=best_f1_threshold(snaps["val"].y, val_scores),
+                  top_fraction=top_fraction, ccy_median=ccy, meta=meta, calibration=calibration,
+                  ring_scorer=ring_scorer, stage2=stage2, payment=payment, payment_calibration=payment_calibration)
 
 
 if __name__ == "__main__":
     variant = sys.argv[1] if len(sys.argv) > 1 else "HI-Small"
     out = Path(sys.argv[2]) if len(sys.argv) > 2 else DATA_DIR / "models" / variant
-    bundle = train_bundle(variant)
+    chosen = sys.argv[3] if len(sys.argv) > 3 else "payment"
+    bundle = train_bundle(variant, chosen)
     save_bundle(bundle, out)
-    stage = f" + stage 2 ({bundle.meta['trees_stage2']} trees)" if bundle.stage2 is not None else ""
-    print(f"saved {len(bundle.cols)}-feature model ({bundle.meta['trees']} trees{stage}) to {out}")
+    extra = "".join(f", {k.replace('trees_', '')} {v} trees" for k, v in bundle.meta.items() if k.startswith("trees_"))
+    print(f"saved {len(bundle.cols)}-feature {chosen} model (account model {bundle.meta['trees']} trees{extra}) to {out}")

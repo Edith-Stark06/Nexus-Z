@@ -25,6 +25,9 @@ def flow_features(window: pd.DataFrame, hist: pd.DataFrame, index: pd.Index, ccy
         payment's amount over that inbound amount. Small gap and ratio near 1 mean money passed straight through.
     next_out_gap / next_out_ratio: minutes until the receiver next sends money, and that outflow over this amount.
     """
+    if len(window) < 50_000:  # a few payments need only the history of their own senders and receivers
+        hist = hist[hist["dst"].isin(window["src"]) | hist["src"].isin(window["dst"])]
+
     def codes(frame, col):
         return index.get_indexer(frame[col]).astype(np.int64)
 
@@ -68,6 +71,47 @@ def payment_features(window: pd.DataFrame, hist: pd.DataFrame, all_X: pd.DataFra
     dst_x = all_X[cols].iloc[all_X.index.get_indexer(window["dst"])].add_prefix("d_").reset_index(drop=True)
     rows = pd.concat([base.reset_index(drop=True), flow, src_x, dst_x], axis=1).astype("float32")
     return rows
+
+
+def payment_probabilities(model, calibration, window, hist, all_X, cols, ccy_median) -> np.ndarray:
+    """Calibrated laundering probability of every payment in `window`. `model` is a Booster or a classifier."""
+    import xgboost as xgb
+
+    from .model import calibrated
+
+    rows = payment_features(window, hist, all_X, cols, ccy_median)
+    booster = model.get_booster() if hasattr(model, "get_booster") else model
+    return calibrated(booster.predict(xgb.DMatrix(rows), output_margin=True), calibration)
+
+
+def fit_payment_model(tx, split, snaps, cols, ccy_median, keep_rate: float = 0.05, seed: int = 0):
+    """Train the payment model. Returns (classifier, Platt calibration, validation payment probabilities).
+
+    Training keeps every laundering payment and a random `keep_rate` share of the rest, since only about
+    1 payment in 1,300 is laundering. Validation (early stopping and calibration) uses every payment.
+    """
+    from xgboost import XGBClassifier
+
+    from .model import calibrated, fit_calibration  # noqa: F401  (fit_calibration shown for symmetry with the account model)
+
+    cut = {k: tx.loc[split == k, "ts"].max() for k in ("train", "val")}
+    train_w, val_w = tx[split == "train"], tx[split == "val"].reset_index(drop=True)
+    rng = np.random.default_rng(seed)
+    sample = train_w[(train_w["is_laundering"] == 1) | (rng.random(len(train_w)) < keep_rate)].reset_index(drop=True)
+    X_tr = payment_features(sample, tx[tx["ts"] <= cut["train"]], snaps["train"].all_X, cols, ccy_median)
+    y_tr = sample["is_laundering"].to_numpy()
+    X_va = payment_features(val_w, tx[tx["ts"] <= cut["val"]], snaps["val"].all_X, cols, ccy_median)
+    y_va = val_w["is_laundering"].to_numpy()
+    model = XGBClassifier(n_estimators=800, learning_rate=0.05, max_depth=6, subsample=0.8, colsample_bytree=0.8,
+                          scale_pos_weight=float((y_tr == 0).sum() / max(y_tr.sum(), 1)), eval_metric="aucpr",
+                          early_stopping_rounds=40, tree_method="hist", n_jobs=-1, random_state=seed)
+    model.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], verbose=False)
+    margin = model.predict(X_va, output_margin=True)
+    from sklearn.linear_model import LogisticRegression  # training only
+
+    lr = LogisticRegression(C=1e6, max_iter=1000).fit(margin.reshape(-1, 1), y_va)
+    calibration = (float(lr.coef_[0, 0]), float(lr.intercept_[0]))
+    return model, calibration, calibrated(margin, calibration)
 
 
 def account_scores(window: pd.DataFrame, payment_scores: np.ndarray) -> pd.Series:
