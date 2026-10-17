@@ -21,8 +21,13 @@ GRAPH_COLS = ["n_out_cp", "n_in_cp", "fan_in_ratio", "repeat_out", "pagerank", "
               "in_nb_out_cp_mean", "two_hop_out", "two_hop_in", "reciprocity"]
 
 STRUCTURE_COLS = ["kcore", "clustering", "comp_size", "comp_avg_deg"]
+# Burst and motif signals: how many different accounts pay or are paid within one short block of time
+# (a pig-butchering collector shows a fan-in burst), directed 3-cycles, feed-forward loops (a pays b and c,
+# b pays c), and repeated outgoing amounts (splitting).
+MOTIF_COLS = ["fanin_1h", "fanin_6h", "fanin_24h", "fanout_1h", "fanout_6h", "fanout_24h", "cyc3", "ffl",
+              "dup_amount_share"]
 
-FEATURE_VERSION = 2  # bump when columns change so cached snapshots are rebuilt
+FEATURE_VERSION = 3  # bump when columns change so cached snapshots are rebuilt
 HUB_DEGREE_CAP = 100  # accounts with more distinct neighbors are left out of triangle and component counts
 FAST_MINUTES = 15  # an outflow within this many minutes of an inflow counts as fast pass-through
 _HOUR_KEY = 100_000
@@ -93,6 +98,30 @@ def _structure(S: sparse.csr_matrix, cap: int = HUB_DEGREE_CAP, chunk: int = 50_
     comp_avg_deg = (edge_ends / size)[label]
     return (np.where(hub, np.nan, clustering), np.where(hub, np.nan, comp_size),
             np.where(hub, np.nan, comp_avg_deg))
+
+
+def _block_fan(acc, other, tm, hours, n_acc):
+    """Largest number of different counterparties an account has inside any one block of `hours` hours."""
+    block = (tm // (hours * 60)).astype(np.int64)
+    n_block = int(block.max()) + 1
+    triple = np.unique((acc.astype(np.int64) * n_block + block) * n_acc + other)
+    cell, per_cell = np.unique(triple // n_acc, return_counts=True)
+    return _agg(per_cell, cell // n_block, n_acc, "max")
+
+
+def _motifs(A, deg_total, cap: int = HUB_DEGREE_CAP, chunk: int = 50_000):
+    """Directed 3-cycles and feed-forward loops per node, on the graph without hub accounts."""
+    N = A.shape[0]
+    keep = sparse.diags((deg_total <= cap).astype(np.float64))
+    Ac = (keep @ A @ keep).tocsr()
+    AT = Ac.T.tocsr()
+    cyc, ffl = np.zeros(N), np.zeros(N)
+    for lo in range(0, N, chunk):
+        rows = Ac[lo:lo + chunk]
+        paths = rows @ Ac  # two-step paths from each node in the chunk
+        cyc[lo:lo + chunk] = np.asarray(paths.multiply(AT[lo:lo + chunk]).sum(axis=1)).ravel()
+        ffl[lo:lo + chunk] = np.asarray(paths.multiply(rows).sum(axis=1)).ravel()
+    return cyc, ffl
 
 
 def build_features(tx: pd.DataFrame, ccy_median: dict) -> pd.DataFrame:
@@ -176,5 +205,19 @@ def build_features(tx: pd.DataFrame, ccy_median: dict) -> pd.DataFrame:
     f["kcore"] = _core_numbers(S).astype(float)
     f["clustering"], f["comp_size"], f["comp_avg_deg"] = _structure(S)
 
-    cols = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS
+    # burst and motif features
+    for hours in (1, 6, 24):
+        f[f"fanin_{hours}h"] = _block_fan(d, s, tm, hours, N)
+        f[f"fanout_{hours}h"] = _block_fan(s, d, tm, hours, N)
+    no_self = A.copy()
+    no_self.setdiag(0)
+    no_self.eliminate_zeros()
+    f["cyc3"], f["ffl"] = _motifs(no_self.tocsr(), np.asarray(S.sum(axis=1)).ravel())
+    cents = np.rint(tx["amount"].to_numpy() * 100).astype(np.int64)
+    amount_key, key_count = np.unique(s.astype(np.int64) * 1_000_000_000_000 + cents, return_counts=True)
+    repeated = amount_key[key_count > 1]
+    dup = np.isin(s.astype(np.int64) * 1_000_000_000_000 + cents, repeated)
+    f["dup_amount_share"] = np.bincount(s[dup], minlength=N) / np.maximum(out_cnt, 1)
+
+    cols = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS + MOTIF_COLS
     return pd.DataFrame({c: f[c] for c in cols}, index=pd.Index(accs, name="account"))
