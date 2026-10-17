@@ -185,7 +185,7 @@ Growth is a dial between catching more of each group and keeping rings clean. Th
 
 ### Caveats specific to this section
 
-- One dataset (IBM AML HI-Small), one time split, three training seeds. Seeds measure training noise, not split noise.
+- One dataset (IBM AML HI-Small), one time split, three training seeds. Seeds measure training noise, not split noise. The strict 0.25% rows and the growth rows in the rings table are from seed 0 only; the other payment-model and account-model ring figures are ranges over the three seeds.
 - The payment model looks at payments in a window together with the history up to the cutoff, including the receiver's next payment. A payment is therefore flagged once the evidence appears (for example when the money is forwarded), which is why detection time is replayed separately.
 - Precision and recall are at one validation-chosen threshold; other thresholds trade them off.
 
