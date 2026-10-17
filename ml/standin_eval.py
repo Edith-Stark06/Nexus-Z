@@ -23,7 +23,7 @@ from .dataset import make_snapshots
 from .model import fit_calibration, fit_model, score
 from .ring_eval import evaluate
 from .rings import detect_rings
-from .standin_rings import RING_KINDS, inject
+from data.rings import RING_KINDS, inject
 
 TOP_FRACTIONS = [0.005, 0.01, 0.02]
 
