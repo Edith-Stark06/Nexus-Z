@@ -1,68 +1,68 @@
 {
-  "ring_id": "RNG-6603B4",
-  "risk": 99,
+  "ring_id": "RNG-E78176",
+  "risk": 97,
   "accounts": 3,
   "victims": 1,
   "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-  "first_seen": "2022-09-07T02:25:00Z",
+  "first_seen": "2022-09-09T19:31:00Z",
   "flagged_at": "2022-09-10T23:59:00Z",
-  "total_amount": 26230.86,
+  "total_amount": 33557.28,
   "members": [
     {
-      "id": "ACC-006FCF",
+      "id": "ACC-003FD7",
       "role": "cashout",
-      "score": 0.4115
+      "score": 0.7387
     },
     {
-      "id": "ACC-03FFC6",
-      "role": "cashout",
-      "score": 0.7412
+      "id": "ACC-018624",
+      "role": "mule",
+      "score": 0.7532
     },
     {
-      "id": "ACC-056E23",
+      "id": "ACC-03771E",
       "role": "victim",
-      "score": 0.5916
+      "score": 0.0819
     }
   ],
   "edges": [
     {
-      "src": "ACC-056E23",
-      "dst": "ACC-03FFC6",
-      "amount": 17620.22,
-      "ts": "2022-09-07T02:25:00Z"
+      "src": "ACC-03771E",
+      "dst": "ACC-018624",
+      "amount": 15810.55,
+      "ts": "2022-09-09T19:31:00Z"
     },
     {
-      "src": "ACC-056E23",
-      "dst": "ACC-006FCF",
-      "amount": 8610.64,
-      "ts": "2022-09-07T12:18:00Z"
+      "src": "ACC-018624",
+      "dst": "ACC-003FD7",
+      "amount": 17746.73,
+      "ts": "2022-09-10T04:40:00Z"
     }
   ],
   "top_reasons": [
     {
       "feature": "cross_ccy_share",
       "label": "Often changes currency",
-      "contribution": 1.288
+      "contribution": 1.975
     },
     {
       "feature": "out_share_ACH",
       "label": "Sends mostly by ACH",
-      "contribution": 1.098
+      "contribution": 0.863
     },
     {
       "feature": "in_share_ACH",
       "label": "Receives mostly by ACH",
-      "contribution": 0.774
+      "contribution": 0.79
     },
     {
       "feature": "in_nb_out_cp_mean",
       "label": "Paid by accounts that pay many others",
-      "contribution": 0.435
+      "contribution": 0.39
     },
     {
-      "feature": "out_share_Cheque",
-      "label": "Sends mostly by Cheque",
-      "contribution": 0.32
+      "feature": "max_tx_per_hour",
+      "label": "Bursts of payments within an hour",
+      "contribution": 0.253
     }
   ]
 }

@@ -1,0 +1,80 @@
+{
+  "ring_id": "RNG-73101D",
+  "risk": 94,
+  "accounts": 3,
+  "victims": 1,
+  "headline": "3 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+  "first_seen": "2022-09-08T16:58:00Z",
+  "flagged_at": "2022-09-10T23:59:00Z",
+  "total_amount": 1463376.32,
+  "members": [
+    {
+      "id": "ACC-008AA3",
+      "role": "victim",
+      "score": 0.7102
+    },
+    {
+      "id": "ACC-01BCDB",
+      "role": "cashout",
+      "score": 0.1513
+    },
+    {
+      "id": "ACC-02C78D",
+      "role": "collector",
+      "score": 0.6673
+    }
+  ],
+  "edges": [
+    {
+      "src": "ACC-008AA3",
+      "dst": "ACC-02C78D",
+      "amount": 316105.88,
+      "ts": "2022-09-08T16:58:00Z"
+    },
+    {
+      "src": "ACC-008AA3",
+      "dst": "ACC-02C78D",
+      "amount": 1131798.67,
+      "ts": "2022-09-08T16:58:00Z"
+    },
+    {
+      "src": "ACC-02C78D",
+      "dst": "ACC-01BCDB",
+      "amount": 3057.54,
+      "ts": "2022-09-08T19:19:00Z"
+    },
+    {
+      "src": "ACC-02C78D",
+      "dst": "ACC-01BCDB",
+      "amount": 12414.23,
+      "ts": "2022-09-08T19:19:00Z"
+    }
+  ],
+  "top_reasons": [
+    {
+      "feature": "cross_ccy_share",
+      "label": "Often changes currency",
+      "contribution": 1.362
+    },
+    {
+      "feature": "out_share_ACH",
+      "label": "Sends mostly by ACH",
+      "contribution": 0.878
+    },
+    {
+      "feature": "in_share_ACH",
+      "label": "Receives mostly by ACH",
+      "contribution": 0.813
+    },
+    {
+      "feature": "out_share_Cheque",
+      "label": "Sends mostly by Cheque",
+      "contribution": 0.449
+    },
+    {
+      "feature": "span_h",
+      "label": "Active over a long span",
+      "contribution": -0.381
+    }
+  ]
+}
