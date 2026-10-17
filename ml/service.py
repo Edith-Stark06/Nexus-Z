@@ -67,7 +67,8 @@ class Scorer:
             self._keep_payment_rows(rows, p)
         else:
             self._score_accounts(X, all_X, edges)
-        self.rings: list[Ring] = apply_ring_scorer(detect_rings(self.scores, tx, bundle.top_fraction), bundle.ring_scorer)
+        self.rings: list[Ring] = apply_ring_scorer(
+            detect_rings(self.scores, tx, bundle.top_fraction, grow_fraction=bundle.grow_fraction), bundle.ring_scorer)
         self._by_id = {ring_id(r.members): r for r in self.rings}
         self._ring_of = {m: rid for rid, r in self._by_id.items() for m in r.members}
         self._ring_cache: dict[str, dict] = {}  # a ring is described once per Scorer, then reused

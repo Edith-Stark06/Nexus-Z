@@ -1,6 +1,6 @@
 """Payment-level model against the account-level model, scored on accounts and on rings.
 
-Usage (from the repo root):  python -m ml.edge_eval HI-Small [negative keep rate] [seed]
+Usage (from the repo root):  python -m ml.edge_eval HI-Small [negative keep rate] [seed] [endpoint feature set name]
 
 Training keeps every laundering payment and a random share of the others (default 5%), because there are
 about 1 laundering payment per 1,300. Validation and test use every payment. Account scores are the highest
@@ -34,14 +34,15 @@ def platt(margin: np.ndarray, y: np.ndarray) -> tuple:
     return float(lr.coef_[0, 0]), float(lr.intercept_[0])
 
 
-def run(variant: str = "HI-Small", keep_rate: float = 0.05, seed: int = 0) -> None:
+def run(variant: str = "HI-Small", keep_rate: float = 0.05, seed: int = 0, features: str = FEATURES) -> None:
     tx, keys = load_with_index(variant)
     tx = primary_period(tx, variant)
     split = time_split(tx)
     patterns = load_patterns(variant, keys)
     snaps = make_snapshots(variant)
     ccy = currency_medians(tx[split == "train"])
-    cols = FEATURE_SETS[FEATURES]
+    cols = FEATURE_SETS[features]
+    print(f"endpoint feature set: {features} ({len(cols)} columns), keep rate {keep_rate}, seed {seed}", flush=True)
     cut = {k: tx.loc[split == k, "ts"].max() for k in ("train", "val", "test")}
     windows = {"val": (cut["train"], cut["val"]), "test": (cut["val"], cut["test"])}
     positives = {k: set(snaps[k].y.index[snaps[k].y == 1]) for k in windows}
@@ -85,4 +86,4 @@ def run(variant: str = "HI-Small", keep_rate: float = 0.05, seed: int = 0) -> No
 
 if __name__ == "__main__":
     run(sys.argv[1] if len(sys.argv) > 1 else "HI-Small", float(sys.argv[2]) if len(sys.argv) > 2 else 0.05,
-        int(sys.argv[3]) if len(sys.argv) > 3 else 0)
+        int(sys.argv[3]) if len(sys.argv) > 3 else 0, sys.argv[4] if len(sys.argv) > 4 else FEATURES)

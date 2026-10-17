@@ -126,9 +126,13 @@ def test_payment_bundle_survives_save_and_load(tx_and_payment_bundle, tmp_path):
     import numpy as np
     from ml.bundle import load_bundle, save_bundle
 
+    import dataclasses
+
     tx, bundle = tx_and_payment_bundle
+    bundle = dataclasses.replace(bundle, grow_fraction=0.5)
     save_bundle(bundle, tmp_path)
     loaded = load_bundle(tmp_path)
     assert loaded.payment is not None and loaded.payment_calibration == bundle.payment_calibration
+    assert loaded.grow_fraction == 0.5
     a, b = Scorer.from_transactions(bundle, tx), Scorer.from_transactions(loaded, tx)
     assert np.allclose(a.scores.to_numpy(), b.scores.to_numpy())
