@@ -12,7 +12,7 @@ NEXUSZ_BACKEND=model NEXUSZ_DATA_DIR=<data folder> NEXUSZ_SLICE=HI-Slice python 
 # terminal 2
 cd dashboard && npm ci && npm run dev        # http://localhost:3000
 ```
-The API takes about 30 s to start (it builds the first state). The sample-data fallback hides API problems, so **check that the "LIVE API" badge is showing** before you judge a screen. Ramana will tell you when the demo bundle (`HI-Pig-Slice`, synthetic pig-butchering rings) is ready; the screens are the same, with different rings.
+The API takes about 30 s to start (it builds the first state). The sample-data fallback hides API problems, so **check that the "LIVE API" badge is showing** before you judge a screen. The demo uses the synthetic pig-butchering slice and the typology bundle; `docs/DEMO.md` has the exact commands (API on the VM, SSH tunnel to your laptop, replay). To run it all on your own laptop you need the data folder, so use the tunnel to the VM: ask Ramana for access, or ask him to start the VM API for you.
 
 ## Must fix (a judge would notice)
 
@@ -21,15 +21,17 @@ The API takes about 30 s to start (it builds the first state). The sample-data f
 3. **Dates read "10 Sept ago".** `relativeTime` in `src/lib/constants.js` compares with the browser's clock (2026), but the data is from 2022, so everything is "years ago" and falls through to a bare date plus "ago". Show the **absolute UTC time** instead, for example `Sep 10, 2022 12:55 UTC`, on the ring cards, the alerts tables and the ring header. The API's `GET /health` has `data_as_of` if you want a "data as of" label in the sidebar.
 4. **Stand-in wording is out of date.** `src/pages/Dashboard.jsx:54` and `src/pages/Layout.jsx:39` say "stand-in rings used for testing". Use: "Synthetic data: IBM's AML transactions with simulated pig-butchering rings. Accuracy is modest; many laundering groups are still missed." Keep the pointer to `docs/ML_RESULTS.md`.
 5. **Ring ids change between refreshes.** A ring id is a hash of its members, so a ring that grows or splits during a refresh (about every 12 s while data streams in) gets a new id and `GET /rings/{id}` returns **404**. Measured: 18% of ring-detail requests during a load test. When a ring page gets a 404, reload `/rings` and show "This ring was updated" with a link back to the list, not an error. Do not cache ring ids across polls.
-6. **`tel:0`** on "Talk to my bank" (`src/pages/WarningScreen.jsx:55,141`): remove the link or make it a button that shows "Contact your bank using the number on your card".
-7. **External Google Fonts** (`index.html:7-9`): the demo must run on a VM or a laptop without internet. Remove the three `<link>` lines and use the system font stack.
+6. **"fraud ring" is too strong.** `src/pages/WarningScreen.jsx` says "This account is flagged as part of a fraud ring". We flag; we do not convict. Use "flagged ring" / "a ring under review". (With item 1 fixed this screen is otherwise right: it shows the paid account, its role, ring and risk.)
+7. **`tel:0`** on "Talk to my bank" (`src/pages/WarningScreen.jsx:55,141`): remove the link or make it a button that shows "Contact your bank using the number on your card".
+8. **External Google Fonts** (`index.html:7-9`): the demo must run on a VM or a laptop without internet. Remove the three `<link>` lines and use the system font stack.
 
 ## Should fix (looks unfinished)
 
-8. **Ring header total.** `src/pages/RingDetail.jsx:60` prints `24,717,523.6` with no unit. The data mixes currencies, so label it "total (mixed currencies)" or drop it.
-9. **"Why flagged" on the ring page** prints `Paid by ACH+2.67` with no separation (the account page does this well, with a numbered list and a right-aligned value). Reuse the account page's list.
-10. **Flow graph.** Nodes have no labels. Show the account id on hover and add a small legend for the role colours. Arrowheads on edges would show direction.
-11. **Role words.** The roles are guessed from position in the ring (the data has no role labels). Keep "(estimated role)" wherever a role is shown.
+9. **Ring header total.** `src/pages/RingDetail.jsx:60` prints `24,717,523.6` with no unit. The data mixes currencies, so label it "total (mixed currencies)" or drop it.
+10. **"Why flagged" on the ring page** prints `Paid by ACH+2.67` with no separation (the account page does this well, with a numbered list and a right-aligned value). Reuse the account page's list.
+11. **Flow graph.** Nodes have no labels. Show the account id on hover and add a small legend for the role colours. Arrowheads on edges would show direction.
+12. **Role words.** Also: some reasons now end in "(absent)", for example "Receiver: many transfers to itself (absent)". That is deliberate: the model is flagging the lack of something. Show the text as the API sends it; do not strip it.
+    Roles: The roles are guessed from position in the ring (the data has no role labels). Keep "(estimated role)" wherever a role is shown.
 
 ## Do not
 
