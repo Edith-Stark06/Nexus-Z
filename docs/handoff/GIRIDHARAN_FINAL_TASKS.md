@@ -8,6 +8,10 @@ For Giridharan's Claude. Deadline: **Oct 18, 10:00 PM IST** for the Hack2Skill s
 - Ramana ran your `infra/bench.py` on the idle VM with the committed payment bundle: first state 15.3 s, a new payment visible in 12.3 to 12.6 s, idle p50 2 to 3 ms, oldest state under load 36 s. It is in `docs/PLATFORM_RESULTS.md` section 3b. **Do not re-run the benchmark** and do not quote the older freshness numbers (about 15 s, account model) for the current model.
 - Under load, 761 of 4,159 `GET /rings/{id}` calls returned 404, because a ring id is a hash of its members and changes when a rebuild regrows or splits a ring. This is expected behaviour, not a server error. Tushar's dashboard should reload the list on a 404. If you want to help: tell Tushar, and do not change the id scheme this late.
 
+## The demo to record
+
+The demo you record is the one in **`docs/DEMO.md`** (read it first): the API on the VM serving the synthetic pig-butchering slice with the typology bundle (`ml/artifacts/HI-Small-pig`), an SSH tunnel to a laptop, the dashboard, and `infra.simulator replay --speed 600` streaming payments. Ramana dress-rehearsed it on the VM: first state 16 s, 209,126 payments in about 3 minutes, 12 refreshes, rebuilds of 11 to 16 s. Tushar is fixing the dashboard wording (`docs/handoff/TUSHAR_DEMO_FIXES.md`); record the final video **after** his PR is merged. Screenshots of the VM (tasks 1) do not depend on him. Replace the "API running" and "rings and reasons" commands below with the ones in `docs/DEMO.md` (`NEXUSZ_SLICE=HI-Pig-Slice`, `NEXUSZ_BUNDLE=.../ml/artifacts/HI-Small-pig`).
+
 ## Your tasks, in this order
 
 ### 1. Screenshots (needed for judging criterion 3, "containerization, security, scalability, compute")
