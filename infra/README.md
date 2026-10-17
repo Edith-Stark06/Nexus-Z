@@ -1,16 +1,16 @@
 # NEXUS Z platform: setup, deployment, simulator, benchmark
 
-Workstream C. Everything here was written and tested on a Windows laptop (Python 3.14). **The LinuxONE
-VM was not reachable while this was written** (no SSH access yet), so each VM step below is marked
-with its status. Nothing marked "not yet run on the VM" has been verified there.
+Workstream C. Everything here was written and tested on a Windows laptop (Python 3.14). Parts were then run on the LinuxONE VM (2026-10-17, while
+Ramana's training jobs were using it); each step below says what was and was not verified there.
+Nothing marked "not yet run on the VM" has been verified.
 
 | Piece | File | Status |
 |---|---|---|
 | Backend switch, background refresh, health | `api/backend.py`, `api/async_backend.py`, `api/main.py` | tested locally (unit, local integration) |
 | Streaming simulator | `infra/simulator.py` | tested locally |
-| Benchmark | `infra/bench.py` | run locally; VM run pending (`docs/PLATFORM_RESULTS.md`) |
-| VM environment script | `infra/setup_vm.sh` | syntax-checked, architecture guard checked; **not yet run on the VM** |
-| API without a container | `infra/run_api.sh`, `infra/nexusz-api.service` | `run_api.sh` logic mirrors the tested local command; **not yet run on the VM** |
+| Benchmark | `infra/bench.py` | run locally; **VM run pending**: needs an idle VM (`docs/PLATFORM_RESULTS.md`) |
+| VM environment script | `infra/setup_vm.sh` | **`--check --tests` run on the VM: environment OK, 102 passed / 4 skipped, parity identical.** The install path (dnf, pandas and XGBoost builds) has **not** been exercised: the environment already existed |
+| API without a container | `infra/run_api.sh`, `infra/nexusz-api.service` | **`run_api.sh` run on the VM (foreground): `/health` answered, model backend served rings, replay worked.** The systemd unit has **not** been installed or tested |
 | API in Podman | `infra/Containerfile`, `infra/podman_api.sh` | **not yet built or run on the VM. Do not claim containers until it has been** |
 
 ## Target environment (from the handoff)
@@ -47,8 +47,8 @@ Caveats, so nobody is surprised:
 - The pandas and XGBoost compiles take a long time on 3 vCPUs and need about 1.5 GB of free memory.
 - `pip check` will report that pandas 2.2.3 wants numpy 1.26 on Python 3.12; the RHEL numpy 1.24.4 is what the tested
   environment uses (`--no-deps`).
-- Expected test result on the VM: about 34 passed and 4 skipped in `ml/tests api/tests` (the skips need scikit-learn
-  or SHAP). Our new tests add to the passed count. Record the real numbers.
+- Measured on the VM (2026-10-17): `ml/tests api/tests infra/tests` gives 102 passed, 4 skipped (the skips need
+  scikit-learn or SHAP, which the VM does not have).
 - Parity: `python -m ml.latency_check check ~/bundle ~/reference.csv` (the script runs it with `--tests`).
 
 ## 2. Run the API

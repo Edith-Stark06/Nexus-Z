@@ -4,15 +4,16 @@ Workstream C. These are **new measurements of the API**, taken with `infra/bench
 model measurements in `docs/ML_RESULTS.md` (accuracy, and the 2.4 to 2.5 s full rescore on the VM). Nothing here is
 copied from there.
 
-**Status: local laptop measurements only. LinuxONE measurements are PENDING** (no SSH access to the VM when this was
-written; the key and address come from Ramana). Do not quote the laptop numbers as LinuxONE performance. The VM has 3 vCPUs
+**Status: full benchmark = local laptop only. On the LinuxONE VM only a functional check and one contended run were done (section 3);
+the clean VM benchmark is PENDING** because Ramana's training jobs were using the VM. Do not quote the laptop numbers as LinuxONE performance. The VM has 3 vCPUs
 and 7.5 GB; the laptop below has 12 logical CPUs and 15 GB, so the VM should be expected to be slower, but that is a
 prediction, not a measurement.
 
 | Platform | Status |
 |---|---|
 | Local laptop (Windows), real model, 24 h history + replay | **measured** (2 runs, below) |
-| LinuxONE VM (s390x), same workload | **pending** (command at the end) |
+| LinuxONE VM (s390x): environment check, tests, parity, API start, 20k-row replay | **done once, while a training job was running** (section 3) |
+| LinuxONE VM (s390x): `infra/bench.py` (latency p50/p95, throughput, freshness, load) | **pending**: needs an idle VM (command at the end) |
 
 ## 1. What was measured, and how
 
@@ -117,7 +118,31 @@ is the current code. Run 1 is kept so the effect is visible: `/alerts` idle p50 
 14.6 -> 14.8 s (the alert precompute now happens inside the rebuild). Idle freshness was 11.8 to 14.7 s in run 1 and 14.9 to 15.3 s in run 2; that
 difference is larger than the work added, so treat it as run-to-run variation (3 probes each), not as a regression I can explain.
 
-## 3. Checks that the served results change (local, real model)
+## 3. LinuxONE VM: what was run (contended, not a benchmark)
+
+VM: RHEL 9.8, s390x (big-endian), 3 vCPUs, 7.5 GB RAM, Python 3.12.15, numpy 1.24.4, scipy 1.11.1, pandas 2.2.3, xgboost 3.4.1.
+Date 2026-10-17 around 11:55 to 12:00 UTC. Code: branch `giridharan-re` at `e73442e`, in a separate clone (Ramana's checkout was not touched).
+**Another user's job was running the whole time**: `ml.stack_eval HI-Small` (about 265% CPU, 3 GB) during the setup check, and `ml.edge_eval HI-Small`
+(about 175 to 200% CPU, 4.4 GB) during the API run. My processes ran at `nice 19` inside a 2 GB memory cap. Treat the timings below as pessimistic and not repeatable; they are
+not a clean benchmark.
+
+| Check | Result |
+|---|---|
+| `bash infra/setup_vm.sh --check --tests` | environment matches the documented one (all pinned versions present, native `xgboost.Booster` round trip OK, byteorder big) |
+| `python -m pytest ml/tests api/tests infra/tests -q` | **102 passed, 4 skipped, 0 failed** (3.9 s; the 4 skips are the scikit-learn and SHAP tests the handoff predicted) |
+| `python -m ml.latency_check check ~/bundle ~/reference.csv` | **IDENTICAL within 1e-5**: max margin difference 8.88e-16 over 300 rows |
+| API via `infra/run_api.sh` (foreground, no container, no systemd), model backend, `HI-Slice`, 24 h history = 654,467 rows | `/health` answered 21 s after launch; `backend: model`; first state built in 14.09 s |
+| Endpoints on that state | 59 rings, ring detail with edges and reasons, account lookup, 35 alerts (ring and victim_warning) |
+| `infra.simulator replay --max 20000` | 20,000 submitted, 20,000 accepted, 0 rejected, 0 failed, 1.4 s |
+| After the replay | `refreshes_completed` 2, `last_rebuild_seconds` 15.0, `data_as_of` moved to 2022-09-10T00:40, rows were in the served state 32 s after the replay finished (checked every 2 s) |
+| Server memory | RSS 570 MB after start (peak 943 MB); 652 MB after the replay (peak 1,473 MB) |
+| Shutdown | server stopped cleanly; port 8000 closed; nothing left running |
+
+Not done on the VM: `infra/bench.py` (p50/p95 per endpoint, throughput, load, freshness probes), systemd service install (not approved in the session), Podman build.
+So there is no clean per-endpoint latency for LinuxONE yet. The rebuild time of about 14 to 15 s on 3 vCPUs is similar to the laptop's, but it was measured with another job using most of the CPU, so
+it says little about an idle VM.
+
+## 4. Checks that the served results change (local, real model)
 
 On the same server after the replay (`GET /health` -> `refreshes_completed` 8, `history_transactions` 767,470, `data_as_of`
 2022-09-10T12:03): 50 rings; the top ring is `RNG-B60786` (risk 87, 5 accounts). At the start (24 h history only) the top three alerts were
@@ -127,7 +152,7 @@ On the same server after the replay (`GET /health` -> `refreshes_completed` 8, `
 that the warning rule ("paid into a flagged ring recently") is independent of the payer's own score and has not been evaluated. Unknown
 account and ring ids return 404.
 
-## 4. Tests
+## 5. Tests
 
 | Suite | Command | Result (local, Python 3.14) |
 |---|---|---|
@@ -136,16 +161,16 @@ account and ring ids return 404.
 | `api/tests` | | 39 passed (8 existing + 31 new: backend selection, bad configuration, refresh, atomic swap, payment pre-check) |
 | `infra/tests` | | 37 passed (simulator parsing, batching, determinism, timeouts, HTTP failures; bench helpers) |
 | All | `python -m pytest ml/tests api/tests infra/tests -q` | **105 passed, 1 skipped, 0 failed** |
-| LinuxONE | same command | **pending** (expect a few more skips there: scikit-learn / SHAP) |
+| LinuxONE (s390x, Python 3.12) | same command, via `setup_vm.sh --check --tests` | **102 passed, 4 skipped, 0 failed** (4 skips: scikit-learn / SHAP). Ran before the final doc-only commit; code unchanged |
 
 Local integration (real bundle and real slice, API process, simulator, bench): done, the results above. The model-mode API test
 `test_model_mode_serves_the_real_bundle_over_the_slice` runs the real `ml/artifacts/HI-Small` bundle over a small synthetic slice
 written in the raw IBM format. The refresh tests use a tiny model trained on a planted ring and a deliberately slow builder.
 
-## 5. Not measured / limits
+## 6. Not measured / limits
 
-- **Nothing on LinuxONE yet:** setup script, parity check, Podman or systemd deployment, VM latency, VM memory. Run it there
-  (below) and fill the table.
+- **No clean LinuxONE benchmark yet**: `bench.py` has not been run there, the systemd unit has not been installed and the Podman image has not been built. Run
+  `bench.py` on an idle VM (below) and fill in the pending row.
 - One run per configuration; the idle freshness probes are 3 samples, so there is no confidence interval. Treat 15 s as "about 15 s on this machine".
 - Client and server shared the machine, so the client competed for CPU in the load phase.
 - No test of many concurrent ingest clients, only one ingest thread. Batch size 500 only.
@@ -154,7 +179,7 @@ written in the raw IBM format. The refresh tests use a tiny model trained on a p
 - Long runs grow the history (ingested rows are kept) and with it the rebuild time; not measured beyond +113k rows.
 - Mixed currencies: amounts are not dollars; the bench does not check amounts.
 
-## 6. Reproduce, and the pending VM run
+## 7. Reproduce, and the pending VM run
 
 ```bash
 # start the API (see infra/README.md), then:

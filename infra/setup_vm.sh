@@ -89,7 +89,7 @@ for p in "${DNF_PACKAGES[@]}"; do rpm -q "$p" >/dev/null 2>&1 || missing+=("$p")
 if [ "${#missing[@]}" -eq 0 ]; then
   log "all required RPMs are installed"
 elif [ "$CHECK_ONLY" = 1 ]; then
-  log "MISSING RPMs: ${missing[*]}"
+  log "RPMs not installed: ${missing[*]} (a normal run installs them; they matter only for rebuilding pandas or XGBoost, so an existing working environment is not affected)"
 else
   command -v dnf >/dev/null || die "dnf not found; install manually: ${missing[*]}"
   sudo -n true 2>/dev/null || die "need passwordless sudo to install: ${missing[*]} (or ask an admin to install them)"
