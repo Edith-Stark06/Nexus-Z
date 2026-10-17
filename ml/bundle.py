@@ -22,7 +22,10 @@ from .rings import detect_rings
 
 ALL_COLS = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS
 # Share of accounts flagged before grouping into rings, per scorer; chosen on validation ring recovery and purity.
-TOP_FRACTIONS = {"payment": 0.005, "two_stage": 0.01, "account": 0.01}
+TOP_FRACTIONS = {"payment": 0.0025, "two_stage": 0.01, "account": 0.01}
+# Wider net rings may grow into, from ring_grow_eval on validation: strict 0.25% with growth to 2% beat no growth
+# on recovery times purity. Trading some purity for recovery is a dial, see docs/ML_RESULTS.md.
+GROW_FRACTIONS = {"payment": 0.02, "two_stage": None, "account": None}
 
 
 @dataclass
@@ -38,6 +41,7 @@ class Bundle:
     stage2: xgb.Booster | None = None  # optional second stage that also sees neighbors' stage-1 scores (ml/stack.py)
     payment: xgb.Booster | None = None  # payment-level model (ml/edge_model.py); when present it is the scorer
     payment_calibration: tuple = (1.0, 0.0)
+    grow_fraction: float | None = None  # wider top share rings may grow into (see detect_rings); None means no growth
     high_quantile: float = 0.99        # what counts as a high-risk neighbor in stage 2
 
     @property
@@ -64,7 +68,8 @@ def save_bundle(b: Bundle, folder: Path) -> None:
         {"cols": b.cols, "threshold": b.threshold, "top_fraction": b.top_fraction,
          "ccy_median": b.ccy_median, "meta": b.meta, "calibration": list(b.calibration),
          "ring_scorer": b.ring_scorer, "two_stage": b.stage2 is not None, "high_quantile": b.high_quantile,
-         "payment": b.payment is not None, "payment_calibration": list(b.payment_calibration)}, indent=2),
+         "payment": b.payment is not None, "payment_calibration": list(b.payment_calibration),
+         "grow_fraction": b.grow_fraction}, indent=2),
         encoding="utf-8")
 
 
@@ -83,7 +88,8 @@ def load_bundle(folder: Path) -> Bundle:
     return Bundle(model=model, cols=m["cols"], threshold=m["threshold"], top_fraction=m["top_fraction"],
                   ccy_median=m["ccy_median"], meta=m["meta"], calibration=tuple(m.get("calibration", (1.0, 0.0))),
                   ring_scorer=m.get("ring_scorer"), stage2=stage2, high_quantile=m.get("high_quantile", 0.99),
-                  payment=payment, payment_calibration=tuple(m.get("payment_calibration", (1.0, 0.0))))
+                  payment=payment, payment_calibration=tuple(m.get("payment_calibration", (1.0, 0.0))),
+                  grow_fraction=m.get("grow_fraction"))
 
 
 def train_bundle(variant: str = "HI-Small", scorer: str = "payment") -> Bundle:
@@ -124,13 +130,15 @@ def train_bundle(variant: str = "HI-Small", scorer: str = "payment") -> Bundle:
     else:
         val_scores = score(fitted, snaps["val"], ALL_COLS, calibration)
     top_fraction = TOP_FRACTIONS[scorer]
-    val_rings = detect_rings(val_scores, tx[tx["ts"] <= snaps["val"].cutoff], top_fraction)
+    grow_fraction = GROW_FRACTIONS[scorer]
+    val_rings = detect_rings(val_scores, tx[tx["ts"] <= snaps["val"].cutoff], top_fraction, grow_fraction=grow_fraction)
     val_positive = set(snaps["val"].y.index[snaps["val"].y == 1])
     ring_scorer = fit_ring_scorer(val_rings, purity(val_rings, val_positive) >= 0.5)
     meta["val_rings"] = len(val_rings)
     return Bundle(model=model, cols=ALL_COLS, threshold=best_f1_threshold(snaps["val"].y, val_scores),
                   top_fraction=top_fraction, ccy_median=ccy, meta=meta, calibration=calibration,
-                  ring_scorer=ring_scorer, stage2=stage2, payment=payment, payment_calibration=payment_calibration)
+                  ring_scorer=ring_scorer, stage2=stage2, payment=payment, payment_calibration=payment_calibration,
+                  grow_fraction=grow_fraction)
 
 
 if __name__ == "__main__":
