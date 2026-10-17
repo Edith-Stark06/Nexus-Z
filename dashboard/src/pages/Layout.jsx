@@ -36,8 +36,9 @@ export default function Layout({ children, usingMock }) {
             <span className="badge badge-live">Live API</span>
           )}
           <div className="sidebar-note">
-            Tested on stand-in rings. Accuracy is modest; many laundering groups
-            are still missed. See docs/ML_RESULTS.md.
+            Synthetic data: IBM AML transactions with simulated pig-butchering
+            rings. Accuracy is modest; many laundering groups are still missed.
+            See docs/ML_RESULTS.md.
           </div>
         </div>
       </aside>
