@@ -64,6 +64,8 @@ class Scorer:
             self._all_X, self._window = all_X, window.reset_index(drop=True)
             rows = payment_features(self._window, tx, all_X, bundle.cols, bundle.ccy_median)
             p = calibrated(bundle.payment.predict(xgb.DMatrix(rows), output_margin=True), bundle.payment_calibration)
+            if bundle.neural is not None:  # the dense network runs on the accelerator; its answer is mixed with the trees'
+                p = bundle.neural.mix(p, bundle.neural.probability(rows))
             self.scores = account_scores(self._window, p).reindex(X.index).fillna(0.0)
             self._typical = rows.sample(min(len(rows), TYPICAL_SAMPLE), random_state=0).median().to_dict()
             self._keep_payment_rows(rows, p)

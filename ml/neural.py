@@ -1,7 +1,7 @@
 """A neural payment scorer that runs on the IBM Z on-chip AI accelerator, used together with the XGBoost payment model.
 
 Usage (from the repo root, inside the platform container, which has TensorFlow and the zDNN plugin):
-    python -m ml.neural HI-Small <bundle folder> [inject seed]
+    python -m ml.neural HI-Small <bundle folder> [inject seed or none] [share of non-laundering payments kept, default 0.05]
 
 It learns from exactly the rows the payment-level XGBoost model learns from (ml/edge_model.py: payment_frames), trains a
 small dense network, picks how much weight the two models get on validation data, reports both models and their mix on
@@ -130,7 +130,7 @@ class NeuralScorer:
         return (Path(folder) / META_FILE).exists() and (Path(folder) / KERAS_FILE).exists()
 
 
-def run(variant: str, folder: Path, inject_seed: int | None = None, seed: int = 0) -> None:
+def run(variant: str, folder: Path, inject_seed: int | None = None, keep_rate: float = 0.05, seed: int = 0) -> None:
     import xgboost as xgb
     from sklearn.metrics import average_precision_score
 
@@ -152,7 +152,7 @@ def run(variant: str, folder: Path, inject_seed: int | None = None, seed: int = 
         snaps = make_snapshots(variant, tx=tx, tag=f"-pig{inject_seed}")
     split = time_split(tx)
     cols, ccy = bundle.cols, bundle.ccy_median
-    (X_tr, y_tr), (X_va, y_va) = payment_frames(tx, split, snaps, cols, ccy, seed=seed)
+    (X_tr, y_tr), (X_va, y_va) = payment_frames(tx, split, snaps, cols, ccy, keep_rate, seed)
     print(f"training rows {len(X_tr):,} ({int(y_tr.sum()):,} laundering), validation rows {len(X_va):,}", flush=True)
     net = NeuralScorer.fit(X_tr, y_tr, X_va, y_va, seed)
 
@@ -180,10 +180,14 @@ def run(variant: str, folder: Path, inject_seed: int | None = None, seed: int = 
     with pd.option_context("display.float_format", "{:.3f}".format, "display.width", 160):
         print(f"\n-- test window, {len(test_w):,} payments (chance {y_te.mean():.4f}) --")
         print(pd.DataFrame(rows).to_string(index=False))
+    if net.weight == 0.0:  # a network the mix gives no weight would only cost time when serving
+        print("the trees alone were best on validation: the network is not saved")
+        return
     net.save(Path(folder))
     print(f"saved the network and its mix weight to {folder}")
 
 
 if __name__ == "__main__":
     run(sys.argv[1] if len(sys.argv) > 1 else "HI-Small", Path(sys.argv[2]),
-        int(sys.argv[3]) if len(sys.argv) > 3 else None)
+        int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] != "none" else None,
+        float(sys.argv[4]) if len(sys.argv) > 4 else 0.05)
