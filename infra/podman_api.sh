@@ -39,6 +39,7 @@ DASH_NAME="${NEXUSZ_DASHBOARD_CONTAINER:-nexusz-dashboard}"
 DASH_DIST="${NEXUSZ_DASHBOARD_DIST:-$HOME/nexusz-dashboard-dist}"
 DASH_PORT="${NEXUSZ_DASHBOARD_PORT:-3000}"
 CHAT_SECRET="${NEXUSZ_CHAT_SECRET:-nexusz_hf_token}"
+INTENT_DIR="${NEXUSZ_INTENT_DIR:-$DATA_DIR/granite-embedding-30m-english}"   # IBM Granite Embedding 30M, from infra/prepare_granite_embedding.sh
 PY=/opt/venv/bin/python      # the platform image's interpreter (the default `python` is the system one, without the packages)
 USERNS="--userns=keep-id:uid=1000,gid=1000"   # the image's own user, as in ml/LINUXONE.md
 
@@ -59,7 +60,12 @@ case "${1:-}" in
     # Without it the assistant answers from its built-in rules. The token is never an environment variable, so `podman inspect` cannot show it.
     SECRET_ARGS=""
     if podman secret exists "$CHAT_SECRET" 2>/dev/null; then SECRET_ARGS="--secret $CHAT_SECRET,type=mount,uid=1000,gid=1000,mode=0400"; fi
-    podman run -d --name "$NAME" $USERNS $SECRET_ARGS \
+    # IBM Granite Embedding runs inside the API container and picks the topic of a question. Read-only, offline, no token needed.
+    INTENT_ARGS=""
+    if [ -f "$INTENT_DIR/config.json" ] && [ "${NEXUSZ_CHAT_INTENT:-on}" != off ]; then
+      INTENT_ARGS="-v $INTENT_DIR:/srv/nexusz/granite-embedding:ro,z -e NEXUSZ_CHAT_INTENT_MODEL=/srv/nexusz/granite-embedding -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1 -e HF_HOME=/tmp/hf -e OMP_NUM_THREADS=2"
+    fi
+    podman run -d --name "$NAME" $USERNS $SECRET_ARGS $INTENT_ARGS \
       -p "127.0.0.1:$PORT:8000" \
       --read-only --tmpfs /tmp --cap-drop=ALL --security-opt no-new-privileges --memory "${NEXUSZ_MEMORY:-5g}" --pids-limit 512 \
       -v "$REPO:/srv/nexusz/repo:ro,z" -v "$DATA_DIR:/srv/nexusz/data:ro,z" -v "$BUNDLE:/srv/nexusz/bundle:ro,z" \
@@ -97,6 +103,7 @@ case "${1:-}" in
     echo "== assistant (never prints the token)"
     if podman secret exists "$CHAT_SECRET" 2>/dev/null; then echo "token secret: stored, mounted read-only for the container user"; else echo "token secret: none (the assistant answers by rules)"; fi
     podman exec "$NAME" sh -c 'ls -l /run/secrets/nexusz_hf_token 2>/dev/null || echo "not mounted in the container"'
+    if [ -f "$INTENT_DIR/config.json" ]; then echo "Granite Embedding: $INTENT_DIR (mounted read-only, offline)"; else echo "Granite Embedding: not downloaded (run infra/prepare_granite_embedding.sh)"; fi
     curl -fsS "http://127.0.0.1:$PORT/chat/status" || echo "chat status unavailable"
     echo
     echo "== resources"; podman stats --no-stream --format '{{.Name}} memory={{.MemUsage}} cpu={{.CPUPerc}}' "$NAME"
