@@ -279,6 +279,20 @@ Read these with care:
 - **Look-alike hubs** (merchants, payroll, landlords, charities, new customers) rarely end up inside a detected ring: 6 of 360 in the 24 h window and 3 of 360 in the 48 h window across the four draws, all in two of the draws. That is a count of hubs touching a detected ring, not a measured false-alarm rate on real customers.
 - This bundle is for the demo and the typology evidence. **The headline benchmark numbers in sections 1 to 6 are for the IBM-only bundle**, which is unchanged.
 
+### A variant trained with more aged rings (tried, not adopted)
+
+Aged rings (accounts with earlier ordinary history) are the shape the demo bundle misses most, so we trained a second bundle on the same data with 60% of the rings aged instead of 25% (`python -m ml.bundle HI-Small <folder> payment 0 aged_share=0.6`, 22 minutes on the VM; the payment model stopped early at 581 trees where the first one reached the 800-tree cap) and scored it on the same four unseen draws with the default ring mix (`python -m ml.pig_eval HI-Small <folder> <seed>`, seeds 1 to 4, pooled):
+
+| Measure | Demo bundle (25% aged in training) | Variant (60% aged in training) |
+|---|---|---|
+| Rings recovered, last 24 h | 36 of 43 (84%) | 35 of 43 (81%) |
+| Rings recovered, last 48 h | 61 of 89 (69%) | 61 of 89 (69%) |
+| Aged rings recovered, 48 h | 3 of 9 | 3 of 9 |
+| Of the 10 riskiest rings, with injected accounts: 24 h / 48 h | 21 of 40 / 35 of 40 | 13 of 40 / 14 of 40 |
+| Look-alike hubs inside a detected ring: 24 h / 48 h | 6 of 360 / 3 of 360 | 2 of 360 / 0 of 360 |
+
+**The aged-ring weakness is not a training-mix problem**: recovery is the same and the aged rings are still 3 of 9. The variant also puts injected rings lower in the risk ranking (14 of 40 against 35 of 40 among the riskiest in 48 h), which matters for a demo whose first screen is the riskiest rings, and it raises fewer false alarms on look-alike hubs. We kept the first bundle. One training seed each; the counts are small.
+
 ### Explanations now say when a signal is absent
 
 SHAP says which features pushed a score up, not whether the feature was high or low. The first labels ("Many transfers to itself") assumed high, so an injected ring, which has no self-transfers at all, was explained with "Receiver: many transfers to itself": the opposite of the data. Each reason now checks the feature's value against the typical value in the scored window, and when the label is not true it adds "(absent)" (`ml/explain.py: label_holds`; `ml/tests/test_explain.py`). A ring's reasons use the members' mean values, and a one-hot or a share counts as true only at 0.5 or more. The ring headline leads with the first signal that is really present. Reasons that have no direction (time of day, payment size) are never marked.
