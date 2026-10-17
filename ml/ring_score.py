@@ -15,6 +15,7 @@ from .rings import Ring
 FEATURES = ["log_size", "density", "concentration", "log_tx_per_member",
             "mean_score", "min_score", "max_score", "top3_score"]
 PURE_AT = 0.5  # share of members that must touch laundering for a ring to count as real
+MIN_SHARE = 0.15  # fit only when at least this share of the training rings are real, and at least this share are not
 
 
 def vector(r: Ring) -> list[float]:
@@ -30,7 +31,10 @@ def fit(rings: list[Ring], is_real: np.ndarray) -> dict | None:
     """Fit on rings with known outcomes. Returns None when there is nothing to learn from."""
     from sklearn.linear_model import LogisticRegression  # training only
 
-    if len(rings) < 20 or is_real.min() == is_real.max():
+    share = float(np.mean(is_real)) if len(is_real) else 0.0
+    # With almost no negatives (or almost no positives) there is nothing to learn and the fitted score saturates,
+    # so every ring would show the same top risk. Keep the plain top-account score instead.
+    if len(rings) < 30 or not MIN_SHARE <= share <= 1 - MIN_SHARE:
         return None
     X = np.array([vector(r) for r in rings])
     mean, scale = X.mean(axis=0), X.std(axis=0) + 1e-9

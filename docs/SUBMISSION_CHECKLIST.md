@@ -19,7 +19,7 @@ Source: the Participant Guidebook. Times are India hub (IST) and region-specific
 |---|---|---|---|
 | Demo video | **At most 3 minutes.** Problem, data supporting the problem, solution, and how it uses IBM Z: tech stack, **show the LinuxONE instance and the model** | Tushar (pitch), Ramana (ML segment) | Not started |
 | Code | GitHub link | Ramana | Repo is public |
-| Project title | Must contain the team name: `[Team Name_IBM Z Datathon 2026 Project]` | Ramana | **Team name unknown** |
+| Project title | Must contain the team name. Ours: **`Big Iron_IBM Z Datathon 2026 Project`** | Ramana | Team name is Big Iron |
 | Open-source links | Links to every open-source resource used | Ramana | In `README.md`; re-check before submitting |
 | Event code | Put `SSF2026` in the project description | Ramana | Not done |
 | Flowchart (optional) | Design flowchart | Ramana | Mermaid diagram in `README.md`; team artifact exists |
@@ -27,7 +27,7 @@ Source: the Participant Guidebook. Times are India hub (IST) and region-specific
 
 ## Before building (per the guidebook)
 
-The two platform labs are described as mandatory before a team builds its own solution: **predictive AI hybrid (multi-model)** and **predictive AI plus generative AI**, both in `linuxone-community-cloud/jupyter-lab-ml` (notebooks include `Fraud_LSTM_Keras_TF`, `Churn_Scikit_PyTorch`, `Digit_Class_TensorFlow`, `Loan_Approval_Demo`). **Not done yet.** They run in the Jupyter Lab container already set up on the VM (`ml/LINUXONE.md`). Needs an owner and screenshots.
+The two platform labs are described as mandatory before a team builds its own solution: **predictive AI hybrid (multi-model)** and **predictive AI plus generative AI**, both in `linuxone-community-cloud/jupyter-lab-ml` (notebooks include `Fraud_LSTM_Keras_TF`, `Churn_Scikit_PyTorch`, `Digit_Class_TensorFlow`, `Loan_Approval_Demo`). **Run on Oct 17 (all four notebooks, no errors); see `docs/LAB_EVIDENCE.md`.** Still needed: screenshots from the Jupyter Lab interface, and confirmation from the organizers of which two notebooks count.
 
 ## Judging (10 points each, 40 total)
 
@@ -42,12 +42,12 @@ Screenshots worth taking: the VM and its specs, `podman ps` with the container, 
 
 ## Rules to keep in mind
 
-- All code is to be created during the event window. Planning, research and the abstract before Oct 17 are fine. **Confirm with the organizers how pre-kickoff work counts** (owner: Ramana; Discord #helpdesk, or stemprograms@sstarsfoundation.org).
+- The guidebook says code is to be created during the event window; planning, research and the abstract before Oct 17 are fine. **The organizers confirmed to Ramana (Oct 17) that pre-kickoff code is acceptable.** Keep their reply (screenshot or email) as evidence.
 - Open-source libraries and public datasets are allowed with links and licenses. Elliptic is CC BY-NC-ND 4.0.
 - No reuse of another team's code or ideas. No political or hateful content. Friendly competition only.
 
 ## Open questions
 
-- Was the abstract (due Oct 15) submitted, and has the team been created on the Hack2Skill platform?
+- Abstract (due Oct 15): **submitted**. Has the team been created on the Hack2Skill platform?
 - Which track: an in-person hub (India) or virtual?
-- Team name.
+- Confirm the exact title format on the Hack2Skill form (the guidebook shows `[Team Name_IBM Z Datathon 2026 Project]`).

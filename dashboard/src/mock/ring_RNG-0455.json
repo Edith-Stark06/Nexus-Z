@@ -1,0 +1,250 @@
+{
+  "ring_id": "RNG-0455",
+  "risk": 73,
+  "accounts": 13,
+  "victims": 9,
+  "headline": "Night-time bursts, then a transfer to a crypto exchange.",
+  "first_seen": "2026-10-14T02:36:00Z",
+  "flagged_at": "2026-10-14T20:36:00Z",
+  "total_amount": 31850.0,
+  "members": [
+    {
+      "id": "ACC-C3B9",
+      "role": "collector",
+      "score": 0.97
+    },
+    {
+      "id": "ACC-76F4",
+      "role": "mule",
+      "score": 0.87
+    },
+    {
+      "id": "ACC-5CE4",
+      "role": "mule",
+      "score": 0.92
+    },
+    {
+      "id": "ACC-7751",
+      "role": "cashout",
+      "score": 0.92
+    },
+    {
+      "id": "ACC-446A",
+      "role": "victim",
+      "score": 0.15
+    },
+    {
+      "id": "ACC-EFA7",
+      "role": "victim",
+      "score": 0.14
+    },
+    {
+      "id": "ACC-46BF",
+      "role": "victim",
+      "score": 0.13
+    },
+    {
+      "id": "ACC-316E",
+      "role": "victim",
+      "score": 0.08
+    },
+    {
+      "id": "ACC-C219",
+      "role": "victim",
+      "score": 0.09
+    },
+    {
+      "id": "ACC-5607",
+      "role": "victim",
+      "score": 0.1
+    },
+    {
+      "id": "ACC-808C",
+      "role": "victim",
+      "score": 0.06
+    },
+    {
+      "id": "ACC-255F",
+      "role": "victim",
+      "score": 0.1
+    },
+    {
+      "id": "ACC-E4CC",
+      "role": "victim",
+      "score": 0.14
+    }
+  ],
+  "edges": [
+    {
+      "src": "ACC-5607",
+      "dst": "ACC-C3B9",
+      "amount": 2700.0,
+      "ts": "2026-10-14T02:36:00Z"
+    },
+    {
+      "src": "ACC-E4CC",
+      "dst": "ACC-C3B9",
+      "amount": 4250.0,
+      "ts": "2026-10-14T04:47:00Z"
+    },
+    {
+      "src": "ACC-C219",
+      "dst": "ACC-C3B9",
+      "amount": 2150.0,
+      "ts": "2026-10-14T05:46:00Z"
+    },
+    {
+      "src": "ACC-C3B9",
+      "dst": "ACC-76F4",
+      "amount": 8190.0,
+      "ts": "2026-10-14T05:52:00Z"
+    },
+    {
+      "src": "ACC-76F4",
+      "dst": "ACC-5CE4",
+      "amount": 7735.0,
+      "ts": "2026-10-14T05:55:00Z"
+    },
+    {
+      "src": "ACC-5CE4",
+      "dst": "ACC-7751",
+      "amount": 7280.0,
+      "ts": "2026-10-14T06:01:00Z"
+    },
+    {
+      "src": "ACC-808C",
+      "dst": "ACC-C3B9",
+      "amount": 1300.0,
+      "ts": "2026-10-14T12:55:00Z"
+    },
+    {
+      "src": "ACC-EFA7",
+      "dst": "ACC-C3B9",
+      "amount": 4800.0,
+      "ts": "2026-10-14T14:04:00Z"
+    },
+    {
+      "src": "ACC-46BF",
+      "dst": "ACC-C3B9",
+      "amount": 1250.0,
+      "ts": "2026-10-14T20:08:00Z"
+    },
+    {
+      "src": "ACC-C3B9",
+      "dst": "ACC-76F4",
+      "amount": 6615.0,
+      "ts": "2026-10-14T20:19:00Z"
+    },
+    {
+      "src": "ACC-76F4",
+      "dst": "ACC-5CE4",
+      "amount": 6247.5,
+      "ts": "2026-10-14T20:30:00Z"
+    },
+    {
+      "src": "ACC-5CE4",
+      "dst": "ACC-7751",
+      "amount": 5880.0,
+      "ts": "2026-10-14T20:44:00Z"
+    },
+    {
+      "src": "ACC-446A",
+      "dst": "ACC-C3B9",
+      "amount": 2350.0,
+      "ts": "2026-10-14T21:10:00Z"
+    },
+    {
+      "src": "ACC-316E",
+      "dst": "ACC-C3B9",
+      "amount": 1450.0,
+      "ts": "2026-10-15T01:38:00Z"
+    },
+    {
+      "src": "ACC-C219",
+      "dst": "ACC-C3B9",
+      "amount": 3550.0,
+      "ts": "2026-10-15T04:39:00Z"
+    },
+    {
+      "src": "ACC-C3B9",
+      "dst": "ACC-76F4",
+      "amount": 6615.0,
+      "ts": "2026-10-15T04:52:00Z"
+    },
+    {
+      "src": "ACC-76F4",
+      "dst": "ACC-5CE4",
+      "amount": 6247.5,
+      "ts": "2026-10-15T05:04:00Z"
+    },
+    {
+      "src": "ACC-255F",
+      "dst": "ACC-C3B9",
+      "amount": 3050.0,
+      "ts": "2026-10-15T05:18:00Z"
+    },
+    {
+      "src": "ACC-5CE4",
+      "dst": "ACC-7751",
+      "amount": 5880.0,
+      "ts": "2026-10-15T05:18:00Z"
+    },
+    {
+      "src": "ACC-808C",
+      "dst": "ACC-C3B9",
+      "amount": 4100.0,
+      "ts": "2026-10-15T06:09:00Z"
+    },
+    {
+      "src": "ACC-446A",
+      "dst": "ACC-C3B9",
+      "amount": 900.0,
+      "ts": "2026-10-15T07:18:00Z"
+    },
+    {
+      "src": "ACC-C3B9",
+      "dst": "ACC-76F4",
+      "amount": 7245.0,
+      "ts": "2026-10-15T07:25:00Z"
+    },
+    {
+      "src": "ACC-76F4",
+      "dst": "ACC-5CE4",
+      "amount": 6842.5,
+      "ts": "2026-10-15T07:27:00Z"
+    },
+    {
+      "src": "ACC-5CE4",
+      "dst": "ACC-7751",
+      "amount": 6440.0,
+      "ts": "2026-10-15T07:30:00Z"
+    }
+  ],
+  "top_reasons": [
+    {
+      "feature": "fan_in_ratio",
+      "label": "Many payers, few receivers",
+      "contribution": 0.21
+    },
+    {
+      "feature": "pass_through_minutes",
+      "label": "Money leaves within minutes",
+      "contribution": 0.24
+    },
+    {
+      "feature": "account_age_days",
+      "label": "Accounts opened recently",
+      "contribution": 0.1
+    },
+    {
+      "feature": "burst_timing",
+      "label": "Deposits arrive in bursts",
+      "contribution": 0.18
+    },
+    {
+      "feature": "account_history",
+      "label": "One mule has a long history",
+      "contribution": -0.06
+    }
+  ]
+}
