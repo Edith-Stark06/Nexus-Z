@@ -78,5 +78,6 @@ class Alert(BaseModel):
     severity: Literal["high", "medium", "low"]
     ring_id: str
     account_id: str | None
+    recipient_id: str | None = None  # victim_warning only: the ring account that was paid; GET /accounts/<it> is the pre-check
     message: str
     ts: datetime
