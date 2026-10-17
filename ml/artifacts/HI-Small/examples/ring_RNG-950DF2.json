@@ -1,0 +1,623 @@
+{
+  "ring_id": "RNG-950DF2",
+  "risk": 87,
+  "accounts": 24,
+  "victims": 9,
+  "headline": "24 linked accounts, 77 payments between them, 40% reaching one account. Top signal: Paid by ACH.",
+  "first_seen": "2022-09-01T07:03:00Z",
+  "flagged_at": "2022-09-10T23:59:00Z",
+  "total_amount": 436152.97,
+  "members": [
+    {
+      "id": "ACC-000429",
+      "role": "victim",
+      "score": 0.874
+    },
+    {
+      "id": "ACC-000FFA",
+      "role": "victim",
+      "score": 0.8399
+    },
+    {
+      "id": "ACC-00117A",
+      "role": "cashout",
+      "score": 0.8613
+    },
+    {
+      "id": "ACC-001C77",
+      "role": "mule",
+      "score": 0.0651
+    },
+    {
+      "id": "ACC-002BCC",
+      "role": "mule",
+      "score": 0.4506
+    },
+    {
+      "id": "ACC-00D2C5",
+      "role": "victim",
+      "score": 0.7302
+    },
+    {
+      "id": "ACC-016C9E",
+      "role": "cashout",
+      "score": 0.1941
+    },
+    {
+      "id": "ACC-016CA3",
+      "role": "mule",
+      "score": 0.1941
+    },
+    {
+      "id": "ACC-016D80",
+      "role": "victim",
+      "score": 0.3312
+    },
+    {
+      "id": "ACC-016DE2",
+      "role": "victim",
+      "score": 0.0487
+    },
+    {
+      "id": "ACC-016DFC",
+      "role": "mule",
+      "score": 0.874
+    },
+    {
+      "id": "ACC-016EDE",
+      "role": "collector",
+      "score": 0.8294
+    },
+    {
+      "id": "ACC-018607",
+      "role": "mule",
+      "score": 0.722
+    },
+    {
+      "id": "ACC-03DA00",
+      "role": "victim",
+      "score": 0.0848
+    },
+    {
+      "id": "ACC-04623F",
+      "role": "mule",
+      "score": 0.4703
+    },
+    {
+      "id": "ACC-048EC1",
+      "role": "mule",
+      "score": 0.8253
+    },
+    {
+      "id": "ACC-04C219",
+      "role": "victim",
+      "score": 0.1789
+    },
+    {
+      "id": "ACC-04DDD8",
+      "role": "mule",
+      "score": 0.3803
+    },
+    {
+      "id": "ACC-050CE1",
+      "role": "victim",
+      "score": 0.8383
+    },
+    {
+      "id": "ACC-055B8E",
+      "role": "cashout",
+      "score": 0.0487
+    },
+    {
+      "id": "ACC-05807E",
+      "role": "cashout",
+      "score": 0.5452
+    },
+    {
+      "id": "ACC-05913A",
+      "role": "victim",
+      "score": 0.8613
+    },
+    {
+      "id": "ACC-05EFEF",
+      "role": "mule",
+      "score": 0.7851
+    },
+    {
+      "id": "ACC-07CF29",
+      "role": "cashout",
+      "score": 0.722
+    }
+  ],
+  "edges": [
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-01T07:03:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-01T07:10:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-01T07:29:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 17.98,
+      "ts": "2022-09-01T18:15:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 3.23,
+      "ts": "2022-09-01T18:15:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-02T04:42:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-02T04:44:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-02T04:55:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 17.98,
+      "ts": "2022-09-02T10:40:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 3.23,
+      "ts": "2022-09-02T10:53:00Z"
+    },
+    {
+      "src": "ACC-000FFA",
+      "dst": "ACC-05807E",
+      "amount": 83495.71,
+      "ts": "2022-09-02T22:07:00Z"
+    },
+    {
+      "src": "ACC-000FFA",
+      "dst": "ACC-05807E",
+      "amount": 10519.74,
+      "ts": "2022-09-02T22:26:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-03T11:38:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-03T11:40:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-03T11:53:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-04T02:35:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-04T02:43:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-04T02:45:00Z"
+    },
+    {
+      "src": "ACC-016CA3",
+      "dst": "ACC-016C9E",
+      "amount": 8033.1,
+      "ts": "2022-09-04T09:36:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-05T05:00:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-05T05:12:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-05T05:12:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 3.23,
+      "ts": "2022-09-05T08:43:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 17.98,
+      "ts": "2022-09-05T08:54:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-06T09:03:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-06T09:04:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-06T09:16:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 17.98,
+      "ts": "2022-09-06T17:32:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 3.23,
+      "ts": "2022-09-06T17:44:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-04DDD8",
+      "amount": 9863.48,
+      "ts": "2022-09-07T03:15:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 17.98,
+      "ts": "2022-09-07T05:58:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 3.23,
+      "ts": "2022-09-07T05:58:00Z"
+    },
+    {
+      "src": "ACC-04623F",
+      "dst": "ACC-07CF29",
+      "amount": 2807.29,
+      "ts": "2022-09-07T08:08:00Z"
+    },
+    {
+      "src": "ACC-04623F",
+      "dst": "ACC-07CF29",
+      "amount": 17840.31,
+      "ts": "2022-09-07T08:08:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-018607",
+      "amount": 15802.78,
+      "ts": "2022-09-07T12:22:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-002BCC",
+      "amount": 19189.53,
+      "ts": "2022-09-07T14:59:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-07T15:01:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-07T15:04:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-07T15:12:00Z"
+    },
+    {
+      "src": "ACC-05EFEF",
+      "dst": "ACC-07CF29",
+      "amount": 4623.06,
+      "ts": "2022-09-07T15:30:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 3.23,
+      "ts": "2022-09-08T00:55:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 17.98,
+      "ts": "2022-09-08T00:59:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-001C77",
+      "amount": 3640.97,
+      "ts": "2022-09-08T12:57:00Z"
+    },
+    {
+      "src": "ACC-016EDE",
+      "dst": "ACC-07CF29",
+      "amount": 5232.49,
+      "ts": "2022-09-08T14:24:00Z"
+    },
+    {
+      "src": "ACC-00D2C5",
+      "dst": "ACC-016DFC",
+      "amount": 6357.09,
+      "ts": "2022-09-08T16:41:00Z"
+    },
+    {
+      "src": "ACC-000FFA",
+      "dst": "ACC-016DFC",
+      "amount": 7528.06,
+      "ts": "2022-09-08T17:12:00Z"
+    },
+    {
+      "src": "ACC-050CE1",
+      "dst": "ACC-016DFC",
+      "amount": 4996.37,
+      "ts": "2022-09-08T18:59:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-08T23:10:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-05EFEF",
+      "amount": 4172.21,
+      "ts": "2022-09-08T23:18:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-08T23:21:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-08T23:22:00Z"
+    },
+    {
+      "src": "ACC-016DFC",
+      "dst": "ACC-055B8E",
+      "amount": 1094.15,
+      "ts": "2022-09-09T06:08:00Z"
+    },
+    {
+      "src": "ACC-016DE2",
+      "dst": "ACC-055B8E",
+      "amount": 3113.28,
+      "ts": "2022-09-09T06:25:00Z"
+    },
+    {
+      "src": "ACC-016CA3",
+      "dst": "ACC-016C9E",
+      "amount": 7445.88,
+      "ts": "2022-09-09T06:31:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 3.23,
+      "ts": "2022-09-09T07:08:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016CA3",
+      "amount": 17.98,
+      "ts": "2022-09-09T07:29:00Z"
+    },
+    {
+      "src": "ACC-001C77",
+      "dst": "ACC-07CF29",
+      "amount": 4352.24,
+      "ts": "2022-09-09T08:47:00Z"
+    },
+    {
+      "src": "ACC-000FFA",
+      "dst": "ACC-05807E",
+      "amount": 10519.74,
+      "ts": "2022-09-09T11:34:00Z"
+    },
+    {
+      "src": "ACC-000FFA",
+      "dst": "ACC-05807E",
+      "amount": 83495.71,
+      "ts": "2022-09-09T11:37:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-048EC1",
+      "amount": 3228.2,
+      "ts": "2022-09-09T12:56:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-016EDE",
+      "amount": 3959.45,
+      "ts": "2022-09-09T14:17:00Z"
+    },
+    {
+      "src": "ACC-03DA00",
+      "dst": "ACC-016DFC",
+      "amount": 746.53,
+      "ts": "2022-09-09T14:25:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-00117A",
+      "amount": 18888.26,
+      "ts": "2022-09-09T16:01:00Z"
+    },
+    {
+      "src": "ACC-048EC1",
+      "dst": "ACC-07CF29",
+      "amount": 4000.42,
+      "ts": "2022-09-09T17:38:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016DFC",
+      "amount": 11521.69,
+      "ts": "2022-09-09T18:59:00Z"
+    },
+    {
+      "src": "ACC-018607",
+      "dst": "ACC-07CF29",
+      "amount": 15480.79,
+      "ts": "2022-09-09T19:53:00Z"
+    },
+    {
+      "src": "ACC-04DDD8",
+      "dst": "ACC-07CF29",
+      "amount": 11996.2,
+      "ts": "2022-09-09T21:54:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-09T23:34:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-09T23:40:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-09T23:45:00Z"
+    },
+    {
+      "src": "ACC-016D80",
+      "dst": "ACC-016DFC",
+      "amount": 9319.23,
+      "ts": "2022-09-10T00:52:00Z"
+    },
+    {
+      "src": "ACC-000429",
+      "dst": "ACC-016DFC",
+      "amount": 6526.22,
+      "ts": "2022-09-10T02:05:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 0.1,
+      "ts": "2022-09-10T06:00:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 203.76,
+      "ts": "2022-09-10T06:11:00Z"
+    },
+    {
+      "src": "ACC-04C219",
+      "dst": "ACC-016EDE",
+      "amount": 1.72,
+      "ts": "2022-09-10T06:24:00Z"
+    },
+    {
+      "src": "ACC-002BCC",
+      "dst": "ACC-07CF29",
+      "amount": 16318.21,
+      "ts": "2022-09-10T12:25:00Z"
+    },
+    {
+      "src": "ACC-05913A",
+      "dst": "ACC-04623F",
+      "amount": 17840.31,
+      "ts": "2022-09-10T23:31:00Z"
+    }
+  ],
+  "top_reasons": [
+    {
+      "feature": "ch_ACH",
+      "label": "Paid by ACH",
+      "contribution": 2.418
+    },
+    {
+      "feature": "s_cross_ccy_share",
+      "label": "Sender: often changes currency",
+      "contribution": 1.067
+    },
+    {
+      "feature": "d_n_in_cp",
+      "label": "Receiver: paid by many different accounts",
+      "contribution": 0.342
+    },
+    {
+      "feature": "s_out_share_ACH",
+      "label": "S out share ach",
+      "contribution": 0.304
+    },
+    {
+      "feature": "d_in_share_ACH",
+      "label": "D in share ach",
+      "contribution": 0.303
+    }
+  ]
+}

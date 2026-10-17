@@ -21,8 +21,8 @@ People lose their savings this way. A system that flags the ring early, explains
 
 It treats the transaction network as a graph and looks for **rings** (coordinated groups) instead of single bad payments.
 
-- Scores each account from 48 features: transaction, timing (pass-through), graph (fan-in, PageRank, neighbors, 2-hop reach) and structure (k-core, clustering, components).
-- Groups the highest-risk accounts into rings (connected by their payments, split with Louvain community detection) and gives each ring a risk score.
+- Scores every recent **payment** from its own amount and channel, the money flow around it (how soon the sender received money before sending it, how soon the receiver passes it on) and both endpoints' account features: transaction, timing, graph (fan-in, PageRank, neighbors, 2-hop reach), structure (k-core, clustering), and burst and motif signals. An account's risk is its riskiest payment.
+- Groups the highest-risk accounts into rings (connected by their payments, grown through weaker linked accounts, split with Louvain community detection) and gives each ring a risk score.
 - Explains every flag with exact per-feature contributions (TreeSHAP, computed by XGBoost).
 - Marks accounts that recently paid into a flagged ring as likely victims and raises a warning.
 
@@ -32,18 +32,19 @@ IBM synthetic AML data, test window (details, seeds and caveats in [docs/ML_RESU
 
 | Result | Measured |
 |---|---|
-| Graph features vs transaction-only, account PR-AUC (HI-Small) | 0.110 to 0.135 (up to 0.160 with k-core and clustering), the same on a Kaggle run and on the LinuxONE VM |
+| Account-level PR-AUC (HI-Small, test window, 3 training seeds) | account model 0.153; **payment-level model 0.428** (precision about 0.74, recall about 0.31) |
+| Graph features vs transaction-only, account model only | 0.110 to 0.135 (up to 0.160 with k-core and clustering), the same on a Kaggle run and on the LinuxONE VM |
 | Same comparison at 6 times the size (32M transactions) | 0.122 to 0.158 |
-| Laundering groups recovered as rings | graph model about 20 to 30%; transaction-only 3 to 12% depending on the run |
-| Time to detect a ring (graph model, replayed in 6-hour steps) | median 4.9 hours, but only 20% of groups were detected |
-| Full rescore of 48 hours (863K transactions) on the LinuxONE VM | 2.3 to 2.5 s, about 5 to 8 ms per account with explanation |
+| Laundering groups recovered as rings (payment model, rings grown to 2%) | 34%, with 70% of rings real (account model: 20 to 30% recovered, 31 to 46% real) |
+| Groups detected in a replay of the test window in 6-hour steps | **55%** (36 of 65) with the committed model, against 20% for its account model; median 9.7 hours; 45% not detected |
+| Full rescore on the LinuxONE VM (3 vCPUs) | 0.28 s for 6 hours of data, 3.2 s for 48 hours (863K transactions), 15.7 s for all 5.1M transactions |
 
-**What these do not show:** accuracy is low (about 30% precision at 20% recall on HI-Small, about 5% precision on the lower-fraud LI-Small); graph features added nothing on the Elliptic Bitcoin data; the injected pig-butchering rings are easy and were designed by the same side that designed the features, so results on them are optimistic.
+**What these do not show:** most laundering groups are still missed (a third recovered as rings, 45% never detected in the replay); the payment-level figures are on one dataset (HI-Small) and one time split, and the lower-fraud LI-Small was only run with the account model (about 5% precision); graph features added nothing on the Elliptic Bitcoin data; the injected pig-butchering rings are easy and were designed by the same side that designed the features, so results on them are optimistic.
 
 ## How it uses IBM LinuxONE
 
 - **Platform:** the datathon's LinuxONE Community Cloud VM (RHEL 9.8, s390x, 3 vCPUs, 7.5 GB RAM).
-- **Training and scoring both run on the VM**, inside the platform's Jupyter Lab ML container (Podman), on CPU. Training the final model takes about 2.5 minutes; see [ml/LINUXONE.md](ml/LINUXONE.md).
+- **Training and scoring both run on the VM**, inside the platform's Jupyter Lab ML container (Podman), on CPU. Training the final payment-level model takes about 15 minutes; see [ml/LINUXONE.md](ml/LINUXONE.md).
 - **Security:** Jupyter is bound to the VM's loopback and reached through an SSH tunnel with a random token. The platform README's public port and published default token are deliberately not used.
 - **Big-endian check:** a model trained on a little-endian laptop gives identical predictions on the s390x VM (largest difference 9e-16).
 - **Not used:** no on-chip AI accelerator. We make no accelerator claims.
