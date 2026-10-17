@@ -1,0 +1,12 @@
+{
+ "variant": "HI-Small",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "scenario": "default",
+ "inject": {},
+ "step_hours": 6,
+ "replay": true
+}
