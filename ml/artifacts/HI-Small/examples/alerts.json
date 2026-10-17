@@ -1,0 +1,308 @@
+[
+  {
+    "alert_id": "AL-6603B4-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-6603B4",
+    "account_id": null,
+    "message": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-EFEA32-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-EFEA32",
+    "account_id": null,
+    "message": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-AB775E-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-AB775E",
+    "account_id": null,
+    "message": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-E77D93-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-E77D93",
+    "account_id": null,
+    "message": "5 linked accounts, 6 payments between them, 33% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-E78176-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-E78176",
+    "account_id": null,
+    "message": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-7F8DD3-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-7F8DD3",
+    "account_id": null,
+    "message": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-F0731A-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-F0731A",
+    "account_id": null,
+    "message": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-4D4BA6-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-4D4BA6",
+    "account_id": null,
+    "message": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-E769FC-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-E769FC",
+    "account_id": null,
+    "message": "4 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-9CE752-R",
+    "type": "ring",
+    "severity": "high",
+    "ring_id": "RNG-9CE752",
+    "account_id": null,
+    "message": "5 linked accounts, 4 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "ts": "2022-09-10T23:59:00Z"
+  },
+  {
+    "alert_id": "AL-EFEA32-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-EFEA32",
+    "account_id": "ACC-02462E",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-10T14:59:00Z"
+  },
+  {
+    "alert_id": "AL-9CE752-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-9CE752",
+    "account_id": "ACC-04D943",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-10T08:54:00Z"
+  },
+  {
+    "alert_id": "AL-7F8DD3-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-7F8DD3",
+    "account_id": "ACC-030F81",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-10T05:12:00Z"
+  },
+  {
+    "alert_id": "AL-9CE752-V1",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-9CE752",
+    "account_id": "ACC-00AE6B",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-10T00:22:00Z"
+  },
+  {
+    "alert_id": "AL-E78176-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-E78176",
+    "account_id": "ACC-0387F2",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-10T00:14:00Z"
+  },
+  {
+    "alert_id": "AL-F0731A-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-F0731A",
+    "account_id": "ACC-0100F9",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-10T00:00:00Z"
+  },
+  {
+    "alert_id": "AL-E769FC-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-E769FC",
+    "account_id": "ACC-02CECC",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T21:57:00Z"
+  },
+  {
+    "alert_id": "AL-F0731A-V1",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-F0731A",
+    "account_id": "ACC-06C36C",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T21:53:00Z"
+  },
+  {
+    "alert_id": "AL-E78176-V1",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-E78176",
+    "account_id": "ACC-06AD4F",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T21:41:00Z"
+  },
+  {
+    "alert_id": "AL-AB775E-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-AB775E",
+    "account_id": "ACC-005FA7",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T20:35:00Z"
+  },
+  {
+    "alert_id": "AL-4D4BA6-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-4D4BA6",
+    "account_id": "ACC-06D51C",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T20:27:00Z"
+  },
+  {
+    "alert_id": "AL-E769FC-V1",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-E769FC",
+    "account_id": "ACC-06869B",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T20:02:00Z"
+  },
+  {
+    "alert_id": "AL-EFEA32-V1",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-EFEA32",
+    "account_id": "ACC-06992B",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T19:39:00Z"
+  },
+  {
+    "alert_id": "AL-E77D93-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-E77D93",
+    "account_id": "ACC-0434B0",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T18:55:00Z"
+  },
+  {
+    "alert_id": "AL-F0731A-V2",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-F0731A",
+    "account_id": "ACC-031D05",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T16:55:00Z"
+  },
+  {
+    "alert_id": "AL-9CE752-V2",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-9CE752",
+    "account_id": "ACC-006B3C",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T12:07:00Z"
+  },
+  {
+    "alert_id": "AL-E77D93-V1",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-E77D93",
+    "account_id": "ACC-02706E",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T11:38:00Z"
+  },
+  {
+    "alert_id": "AL-EFEA32-V2",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-EFEA32",
+    "account_id": "ACC-009335",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T08:59:00Z"
+  },
+  {
+    "alert_id": "AL-AB775E-V1",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-AB775E",
+    "account_id": "ACC-06C7ED",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T08:30:00Z"
+  },
+  {
+    "alert_id": "AL-E78176-V2",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-E78176",
+    "account_id": "ACC-03733C",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T06:35:00Z"
+  },
+  {
+    "alert_id": "AL-6603B4-V0",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-6603B4",
+    "account_id": "ACC-075D28",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T05:48:00Z"
+  },
+  {
+    "alert_id": "AL-4D4BA6-V1",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-4D4BA6",
+    "account_id": "ACC-008013",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T05:44:00Z"
+  },
+  {
+    "alert_id": "AL-E77D93-V2",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-E77D93",
+    "account_id": "ACC-025C86",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T04:07:00Z"
+  },
+  {
+    "alert_id": "AL-AB775E-V2",
+    "type": "victim_warning",
+    "severity": "medium",
+    "ring_id": "RNG-AB775E",
+    "account_id": "ACC-071660",
+    "message": "Recent payment went to an account in a flagged ring.",
+    "ts": "2022-09-09T02:18:00Z"
+  }
+]
