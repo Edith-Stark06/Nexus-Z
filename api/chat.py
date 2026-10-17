@@ -233,6 +233,10 @@ def rules_answer(question: str, tools: Tools, used: list[ToolUse]) -> str:
         why = "; ".join(f"{x['label']} ({x['contribution']:+.2f})" for x in a["reasons"][:3])
         where = f"in ring {a['ring_id']} as an estimated {a['estimated_role']}" if a["ring_id"] else "not in a flagged ring"
         return f"Account {a['account_id']} has risk {a['risk']:.2f} and is {where}." + (f" Main reasons: {why}." if why else "")
+    if any(w in q for w in ("why", "explain", "flagged")) and any(w in q for w in ("top", "riskiest", "highest", "first", "worst")):
+        top = use("list_rings", limit=1)["rings"]       # "the top ring": find it, then explain it
+        if top:
+            return rules_answer(f"Explain {top[0]['ring_id']}", tools, used)
     if any(w in q for w in ("victim", "pay in", "paid", "next person", "may pay")):
         al = use("list_alerts", limit=5, kind="victim_warning")["alerts"]
         if not al:
