@@ -71,4 +71,4 @@ Each workstream owns its own folder, so nobody edits the same files. Streams mee
 - Team lead (Ramana) merges PRs, keeps `main` working, and makes the final Hack2Skill submission.
 - No real personal data anywhere. Report only measured results.
 - Scope stays: one typology (pig-butchering), one model family (XGBoost). GNN and consortium mode are future scope.
-- Open questions to settle early: judging criteria, submission deadline, and whether the datathon supplies a dataset (decides how much of A can be skipped).
+- Judging criteria, deadline and submission format are in the Participant Guidebook; the summary is in `docs/SUBMISSION_CHECKLIST.md`. No dataset is supplied, so the data workstream is needed.
