@@ -29,17 +29,26 @@ def load_with_index(variant: str = "HI-Small", nrows: int | None = None):
         IBM_AML_DIR / f"{variant}_Trans.csv",
         header=0,
         names=RAW_COLUMNS,
-        dtype={"from_bank": "str", "to_bank": "str", "from_account": "str", "to_account": "str"},
+        dtype={c: "category" for c in ("from_bank", "to_bank", "from_account", "to_account")},
         nrows=nrows,
     )
     raw["ts"] = pd.to_datetime(raw["ts"], format="%Y/%m/%d %H:%M")
     for col in CATEGORICAL:
         raw[col] = raw[col].astype("category")
 
-    # Bank id plus account number identifies an account; factorize both ends together.
-    src_key = raw["from_bank"] + ":" + raw["from_account"]
-    dst_key = raw["to_bank"] + ":" + raw["to_account"]
-    codes, keys = pd.factorize(pd.concat([src_key, dst_key], ignore_index=True))
+    # Bank id plus account number identifies an account. Work on integer codes instead of building
+    # 10 million strings, which matters on machines with little memory.
+    banks = raw["from_bank"].cat.categories.union(raw["to_bank"].cat.categories)
+    accounts = raw["from_account"].cat.categories.union(raw["to_account"].cat.categories)
+
+    def pair_codes(bank_col: str, account_col: str) -> np.ndarray:
+        bank = raw[bank_col].cat.set_categories(banks).cat.codes.to_numpy().astype(np.int64)
+        account = raw[account_col].cat.set_categories(accounts).cat.codes.to_numpy().astype(np.int64)
+        return bank * len(accounts) + account
+
+    codes, pairs = pd.factorize(np.concatenate([pair_codes("from_bank", "from_account"),
+                                                pair_codes("to_bank", "to_account")]))
+    keys = pd.Index(banks.take(pairs // len(accounts)).astype(str) + ":" + accounts.take(pairs % len(accounts)).astype(str))
     n = len(raw)
     pseudo = pd.Index(["ACC-%06X" % c for c in range(codes.max() + 1)])
 
@@ -56,7 +65,7 @@ def load_with_index(variant: str = "HI-Small", nrows: int | None = None):
     })
     tx = tx.sort_values("ts", kind="stable", ignore_index=True)
     tx.insert(0, "tx_id", tx.index.astype("int64"))
-    return tx, pd.Index(keys)
+    return tx, keys
 
 
 def load_patterns(variant: str, keys: pd.Index) -> list[dict]:
