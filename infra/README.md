@@ -11,7 +11,7 @@ Nothing marked "not yet run on the VM" has been verified.
 | Benchmark | `infra/bench.py` | run locally; **VM run pending**: needs an idle VM (`docs/PLATFORM_RESULTS.md`) |
 | VM environment script | `infra/setup_vm.sh` | **`--check --tests` run on the VM: environment OK, 102 passed / 4 skipped, parity identical.** The install path (dnf, pandas and XGBoost builds) has **not** been exercised: the environment already existed |
 | API without a container | `infra/run_api.sh`, `infra/nexusz-api.service` | **`run_api.sh` run on the VM (foreground): `/health` answered, model backend served rings, replay worked.** The systemd unit has **not** been installed or tested |
-| API in Podman | `infra/Containerfile`, `infra/podman_api.sh` | **not yet built or run on the VM. Do not claim containers until it has been** |
+| API in Podman | `infra/podman_api.sh` | **run on the VM (2026-10-18): hardened rootless container from the platform image serving the model; security settings checked inside it** (see `docs/PLATFORM_RESULTS.md`). `infra/Containerfile` does **not** build on this VM (podman storage error before any step runs) and is not used |
 
 ## Target environment (from the handoff)
 
@@ -117,8 +117,9 @@ If you use this, **do not claim Docker or containers.**
 
 **B. Podman, on the LinuxONE Jupyter image.**
 ```bash
-bash infra/podman_api.sh build && bash infra/podman_api.sh start
+bash infra/podman_api.sh deps && bash infra/podman_api.sh start      # `deps` once; no image build (see the header of the script)
 bash infra/podman_api.sh status         # also curls /health
+bash infra/podman_api.sh check          # security settings, from inside and outside the container
 bash infra/podman_api.sh logs; bash infra/podman_api.sh stop
 ```
 Binds the VM's loopback only (`127.0.0.1:$NEXUSZ_PORT`), mounts the repo, data and model read-only, and touches only the
