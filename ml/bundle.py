@@ -14,13 +14,14 @@ from data.ibm_aml import load_transactions, primary_period, time_split
 from data.paths import DATA_DIR
 
 from .dataset import currency_medians, make_snapshots
-from .features import BEHAVIOR_COLS, FEATURE_VERSION, GRAPH_COLS, STRUCTURE_COLS, TX_COLS
+from .features import BEHAVIOR_COLS, FEATURE_VERSION, GRAPH_COLS, MOTIF_COLS, STRUCTURE_COLS, TX_COLS
 from .model import calibrated, fit_calibration, fit_model, score
 from .neighbors import NEIGHBOR_COLS
 from .ring_score import fit as fit_ring_scorer, purity
 from .rings import detect_rings
 
-ALL_COLS = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS
+# The burst and motif columns did not help the account model but did help the payment model (docs/ML_RESULTS.md).
+ALL_COLS = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS + MOTIF_COLS
 # Share of accounts flagged before grouping into rings, per scorer; chosen on validation ring recovery and purity.
 TOP_FRACTIONS = {"payment": 0.0025, "two_stage": 0.01, "account": 0.01}
 # Wider net rings may grow into, from ring_grow_eval on validation: strict 0.25% with growth to 2% beat no growth

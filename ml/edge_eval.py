@@ -24,7 +24,7 @@ from .rings import detect_rings
 from .stack_eval import account_row
 
 TOP_FRACTIONS = [0.005, 0.01, 0.02, 0.05]
-FEATURES = "+ k-core, clustering, components"
+FEATURES = "+ bursts and motifs"
 
 
 def platt(margin: np.ndarray, y: np.ndarray) -> tuple:
