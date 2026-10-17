@@ -8,6 +8,12 @@
 #   bash infra/podman_api.sh logs
 #   bash infra/podman_api.sh stop      # stop and remove the container (repo, data and model are untouched)
 #
+# The dashboard runs on the VM too, in its own container (same hardening), so the laptop only needs the tunnel and a browser:
+#   bash infra/podman_api.sh dash-start   # serves $NEXUSZ_DASHBOARD_DIST (default ~/nexusz-dashboard-dist) on 127.0.0.1:3000 of the VM
+#   bash infra/podman_api.sh dash-stop
+# The dashboard is built where Node is installed (cd dashboard && npm ci && npm run build) and its dist folder is copied to the VM.
+# From the laptop: ssh -N -L 8000:127.0.0.1:8000 -L 3000:127.0.0.1:3000 <user>@<vm>, then open http://localhost:3000.
+#
 # It runs the platform's own image (the one the Jupyter container uses), which already has numpy, pandas, XGBoost and scipy
 # built for s390x. There is no image build: `podman build` on top of that image fails on this VM with "unsupported MIME type for
 # compression" (a podman storage problem with the pulled image, before any of our steps run), so infra/Containerfile is kept
@@ -29,6 +35,9 @@ BUNDLE="${NEXUSZ_BUNDLE:-$REPO/ml/artifacts/HI-Small-pig}"
 PYLIBS="${NEXUSZ_PYLIBS:-$HOME/nexusz-pylibs}"
 BACKEND="${NEXUSZ_BACKEND:-model}"
 SLICE="${NEXUSZ_SLICE:-HI-Pig-Slice}"
+DASH_NAME="${NEXUSZ_DASHBOARD_CONTAINER:-nexusz-dashboard}"
+DASH_DIST="${NEXUSZ_DASHBOARD_DIST:-$HOME/nexusz-dashboard-dist}"
+DASH_PORT="${NEXUSZ_DASHBOARD_PORT:-3000}"
 PY=/opt/venv/bin/python      # the platform image's interpreter (the default `python` is the system one, without the packages)
 USERNS="--userns=keep-id:uid=1000,gid=1000"   # the image's own user, as in ml/LINUXONE.md
 
@@ -58,8 +67,17 @@ case "${1:-}" in
       "$PY" -m uvicorn api.main:app --host 0.0.0.0 --port 8000 >/dev/null     # 0.0.0.0 is inside the container only
     echo "started $NAME; wait about 30 s (model mode builds its first state), then: curl -fsS http://127.0.0.1:$PORT/health"
     ;;
+  dash-start)
+    [ -f "$DASH_DIST/index.html" ] || { echo "no built dashboard in $DASH_DIST; build it and copy dist there (see the header of this script)" >&2; exit 1; }
+    podman rm -f "$DASH_NAME" >/dev/null 2>&1 || true
+    podman run -d --name "$DASH_NAME" $USERNS -p "127.0.0.1:$DASH_PORT:3000"       --read-only --tmpfs /tmp --cap-drop=ALL --security-opt no-new-privileges --memory 256m --pids-limit 64       -v "$DASH_DIST:/srv/dash:ro,z" -v "$REPO/infra/serve_dashboard.py:/srv/serve_dashboard.py:ro,z"       -e PYTHONDONTWRITEBYTECODE=1 -w /srv "$IMAGE"       "$PY" /srv/serve_dashboard.py /srv/dash --host 0.0.0.0 --port 3000 >/dev/null
+    echo "started $DASH_NAME on 127.0.0.1:$DASH_PORT of this machine; reach it with an SSH tunnel (see the header)"
+    ;;
+  dash-stop)
+    podman rm -f "$DASH_NAME"
+    ;;
   check)
-    echo "== sockets listening on the API port (must be loopback only)"; ss -ltn | grep ":$PORT " || echo "none"
+    echo "== sockets listening on the API and dashboard ports (must be loopback only)"; ss -ltn | grep -E ":($PORT|$DASH_PORT) " || echo "none"
     echo "== container settings"
     podman inspect "$NAME" --format 'user={{.Config.User}} readonly_rootfs={{.HostConfig.ReadonlyRootfs}} privileged={{.HostConfig.Privileged}} security_opt={{.HostConfig.SecurityOpt}} memory={{.HostConfig.Memory}} pids_limit={{.HostConfig.PidsLimit}}'
     podman inspect "$NAME" --format 'dropped capabilities: {{.HostConfig.CapDrop}}'

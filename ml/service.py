@@ -15,6 +15,7 @@ from .bundle import Bundle
 from .model import calibrated
 from .explain import shap_values, top_reasons
 from .narrative import case_summary
+from .ring_ids import stable_ids
 from .edge_model import account_scores, payment_features
 from .features import build_features_with_edges
 from .neighbors import stage2_inputs
@@ -58,7 +59,8 @@ def infer_roles(members: list[str], inside: pd.DataFrame) -> dict[str, str]:
 
 class Scorer:
     def __init__(self, bundle: Bundle, X: pd.DataFrame, tx: pd.DataFrame, as_of: pd.Timestamp,
-                 all_X: pd.DataFrame | None = None, edges: tuple | None = None, window: pd.DataFrame | None = None):
+                 all_X: pd.DataFrame | None = None, edges: tuple | None = None, window: pd.DataFrame | None = None,
+                 previous_rings: dict | None = None):
         self.bundle, self.X, self.tx, self.as_of = bundle, X, tx, as_of
         self._payment_mode = bundle.payment is not None and all_X is not None and window is not None
         if self._payment_mode:  # score every payment in the window, then each account by its riskiest payment
@@ -72,7 +74,9 @@ class Scorer:
             self._score_accounts(X, all_X, edges)
         self.rings: list[Ring] = apply_ring_scorer(
             detect_rings(self.scores, tx, bundle.top_fraction, grow_fraction=bundle.grow_fraction), bundle.ring_scorer)
-        self._by_id = {ring_id(r.members): r for r in self.rings}
+        hashed = {ring_id(r.members): r for r in self.rings}
+        ids = stable_ids({h: frozenset(r.members) for h, r in hashed.items()}, previous_rings or {})  # keep ids as rings grow
+        self._by_id = {ids[h]: r for h, r in hashed.items()}
         self._ring_of = {m: rid for rid, r in self._by_id.items() for m in r.members}
         self._ring_cache: dict[str, dict] = {}  # a ring is described once per Scorer, then reused
         self._ring_tx: pd.DataFrame | None = None  # payments between any two ring members, built on first use
@@ -117,14 +121,20 @@ class Scorer:
         return shap_values(self._booster, frame), self._cols, frame.to_numpy(dtype=float)
 
     @classmethod
-    def from_transactions(cls, bundle: Bundle, tx: pd.DataFrame, active_since: pd.Timestamp | None = None):
+    def from_transactions(cls, bundle: Bundle, tx: pd.DataFrame, active_since: pd.Timestamp | None = None,
+                          previous_rings: dict | None = None):
         """Build features from `tx` (nothing after the scoring time), then score accounts active since."""
         feats, edges = build_features_with_edges(tx, bundle.ccy_median)
         if active_since is None and bundle.payment is not None:
             active_since = tx["ts"].max() - pd.Timedelta(hours=PAYMENT_WINDOW_HOURS)
         recent = tx if active_since is None else tx[tx["ts"] > active_since]
         active = pd.unique(pd.concat([recent["src"], recent["dst"]], ignore_index=True))
-        return cls(bundle, feats.loc[active], tx, tx["ts"].max(), all_X=feats, edges=edges, window=recent)
+        return cls(bundle, feats.loc[active], tx, tx["ts"].max(), all_X=feats, edges=edges, window=recent,
+                   previous_rings=previous_rings)
+
+    def ring_members(self) -> dict[str, frozenset]:
+        """The ids being served and their members, for the next rebuild to keep them stable."""
+        return {rid: frozenset(r.members) for rid, r in self._by_id.items()}
 
     # -- internals
     def _inside(self, members: list[str]) -> pd.DataFrame:

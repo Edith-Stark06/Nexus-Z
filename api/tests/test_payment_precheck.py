@@ -87,3 +87,15 @@ def test_stub_precheck_for_the_demo_collector():
     c = TestClient(app)
     acc = c.get("/accounts/ACC-7F3A").json()
     assert acc["ring_id"] == "RNG-0417" and c.get("/accounts/ACC-NOPE").status_code == 404
+
+
+def test_a_ring_keeps_its_id_through_a_refresh(client):
+    """The dashboard holds a ring id while data streams in; the next rebuild must not rename the ring."""
+    c, backend = client
+    before = {r["ring_id"]: set(m["id"] for m in c.get(f"/rings/{r['ring_id']}").json()["members"]) for r in c.get("/rings").json()}
+    backend.ingest([api_tx("W2", "B17", "C0", T0 + pd.Timedelta(hours=12, minutes=40))])
+    assert backend.refresh_now(wait=True)
+    after = {r["ring_id"]: set(m["id"] for m in c.get(f"/rings/{r['ring_id']}").json()["members"]) for r in c.get("/rings").json()}
+    carrier = next(r for r, m in before.items() if "C0" in m)
+    assert carrier in after and "C0" in after[carrier]          # the ring with C0 is still reachable under its old id
+    assert c.get(f"/rings/{carrier}").status_code == 200
