@@ -263,17 +263,20 @@ The committed IBM-only model (sections 1 to 6) learned IBM's own laundering patt
 |---|---|---|---|---|---|
 | IBM-only model, seed 1 | 24 h | 10 | 0 (0%) | 0 | 0 of 90 |
 | IBM-only model, seed 1 | 48 h | 20 | 0 (0%) | 0 | 0 of 90 |
-| **Demo bundle, seed 1 (not trained on)** | 24 h | 10 | **8 (80%)** | 5 | 0 of 90 |
-| **Demo bundle, seed 1 (not trained on)** | 48 h | 20 | **11 (55%)** | 8 | 0 of 90 |
+| **Demo bundle, seeds 1 to 4 pooled (rings it never saw)** | 24 h | 43 | **36 (84%)** | 21 of 40 | 6 of 360 |
+| **Demo bundle, seeds 1 to 4 pooled (rings it never saw)** | 48 h | 89 | **61 (69%)** | 35 of 40 | 3 of 360 |
 | Demo bundle, seed 0 (trained on, but these are later payments than it trained on) | 24 h | 9 | 7 (78%) | 4 | 0 of 90 |
 | Demo bundle, seed 0 | 48 h | 19 | 14 (74%) | 9 | 0 of 90 |
 
+The four unseen draws one by one, 24 h / 48 h window: seed 1: 8 of 10 / 11 of 20; seed 2: 5 of 6 / 11 of 16; seed 3: 7 of 9 / 20 of 25; seed 4: 16 of 18 / 19 of 28. Look-alike hubs inside a detected ring, per draw of 90: seed 1: 0 / 0; seed 2: 3 / 2; seed 3: 3 / 1; seed 4: 0 / 0.
+
 Read these with care:
 
-- **The counts are small** (9 to 20 rings per row), so each percentage moves by 5 to 10 points per ring. Shapes are too few to compare: in the 48 h window, seed 1 missed its aged rings (0 of 2) and recovered 2 of 4 delayed ones, while seed 0 recovered all 3 aged rings and 0 of 4 delayed ones, so no shape is reliably easy or hard here.
+- **The counts are still modest** (6 to 28 rings per draw, 43 and 89 pooled), so a percentage moves by 1 to 3 points per ring when pooled and by 5 to 15 points in a single draw. The spread between draws (55% to 80% in the 48 h window) is the honest measure of how much to trust any one number.
+- **By shape, pooled over the four draws in the 48 h window:** fan-in 10 of 10, chain 10 of 11, split 9 of 10, dispersed 9 of 11, delayed 10 of 18, batched 5 of 10, mixed 5 of 10, **aged 3 of 9**. Rings whose accounts already have ordinary history and rings that hold money for hours are the weak spots, which matches what the model keys on (next bullet).
 - **Same generator for training and testing.** The injected rings in training and in the demo come from the same code, written by the team that wrote the features. This shows the model can learn this typology, not that it detects real pig-butchering. The IBM-only rows are the honest measure of what a model that has not seen the typology does: nothing.
-- **What the model keys on.** After the explanation fix below, the top reasons for fully injected rings are mostly *absences*: no transfers to itself, no payments flowing back and forth, no long activity history, no repeated amounts. The one positive cue is money leaving within minutes. The model is largely recognising brand-new accounts with simple one-way flows. The generator's "aged" rings (accounts with earlier history) and "new-customer" look-alikes exist to break that shortcut, and aged rings were missed in one of the two draws.
-- **Look-alike hubs** (merchants, payroll, landlords, charities, new customers) never ended up inside a detected ring in these runs (0 of 90). That is a statement about this window only.
+- **What the model keys on.** After the explanation fix below, the top reasons for fully injected rings are mostly *absences*: no transfers to itself, no payments flowing back and forth, no long activity history, no repeated amounts. The one positive cue is money leaving within minutes. The model is largely recognising brand-new accounts with simple one-way flows. The generator's "aged" rings and "new-customer" look-alikes exist to break that shortcut, and aged rings are the shape it misses most.
+- **Look-alike hubs** (merchants, payroll, landlords, charities, new customers) rarely end up inside a detected ring: 6 of 360 in the 24 h window and 3 of 360 in the 48 h window across the four draws, all in two of the draws. That is a count of hubs touching a detected ring, not a measured false-alarm rate on real customers.
 - This bundle is for the demo and the typology evidence. **The headline benchmark numbers in sections 1 to 6 are for the IBM-only bundle**, which is unchanged.
 
 ### Explanations now say when a signal is absent
