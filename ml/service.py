@@ -204,13 +204,14 @@ class Scorer:
             out.append({k: full[k] for k in keys})
         return sorted(out, key=lambda d: d["risk"], reverse=True)
 
-    def likely_victims(self, rid: str, limit: int = 3) -> list[tuple[str, pd.Timestamp]]:
-        """Accounts outside the ring that paid into it recently, newest first."""
+    def likely_victims(self, rid: str, limit: int = 3) -> list[tuple[str, pd.Timestamp, str]]:
+        """Accounts outside the ring that paid into it recently, newest first, with the ring account each one paid."""
         members = set(self._by_id[rid].members)
         recent = self.tx[(self.tx["dst"].isin(members)) & (~self.tx["src"].isin(members))
                          & (self.tx["ts"] > self.as_of - pd.Timedelta(hours=VICTIM_LOOKBACK_HOURS))]
-        latest = recent.groupby("src")["ts"].max().sort_values(ascending=False).head(limit)
-        return list(latest.items())
+        latest = recent.sort_values("ts", kind="stable").groupby("src")[["ts", "dst"]].last()
+        latest = latest.sort_values("ts", ascending=False, kind="stable").head(limit)
+        return [(src, row.ts, row.dst) for src, row in latest.iterrows()]
 
     def list_alerts(self, limit: int = 50, top_rings: int = 10) -> list[dict]:
         alerts = []
@@ -219,9 +220,9 @@ class Scorer:
             alerts.append({"alert_id": f"AL-{s['ring_id'][4:]}-R", "type": "ring", "severity": sev,
                            "ring_id": s["ring_id"], "account_id": None, "message": s["headline"],
                            "ts": s["flagged_at"]})
-            for i, (acc, ts) in enumerate(self.likely_victims(s["ring_id"])):
+            for i, (acc, ts, paid) in enumerate(self.likely_victims(s["ring_id"])):
                 alerts.append({"alert_id": f"AL-{s['ring_id'][4:]}-V{i}", "type": "victim_warning",
-                               "severity": "medium", "ring_id": s["ring_id"], "account_id": acc,
+                               "severity": "medium", "ring_id": s["ring_id"], "account_id": acc, "recipient_id": paid,
                                "message": "Recent payment went to an account in a flagged ring.",
                                "ts": ts.isoformat() + "Z"})
         return sorted(alerts, key=lambda a: a["ts"], reverse=True)[:limit]
