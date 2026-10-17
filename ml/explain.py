@@ -24,10 +24,37 @@ LABELS = {
     "reciprocity": "Payments flow back and forth", "kcore": "Sits in a tightly connected core",
     "clustering": "Its neighbors also pay each other", "comp_size": "Part of a large connected group",
     "comp_avg_deg": "Densely connected group",
+    "s1": "Its own first-pass risk score",
+    "nb_in_mean": "Accounts that pay it look risky", "nb_in_max": "A very risky account pays it",
+    "nb_out_mean": "Accounts it pays look risky", "nb_out_max": "It pays a very risky account",
+    "nb_in_high": "Many high-risk accounts pay it", "nb_out_high": "It pays many high-risk accounts",
+    "nb_in_high_share": "Most of its payers are high-risk", "nb_out_high_share": "Most of its payees are high-risk",
+    "nb_in_mean2": "Its payers are paid by risky accounts", "nb_out_mean2": "Its payees pay risky accounts",
+    "fanin_1h": "Many different payers within an hour", "fanin_6h": "Many different payers within six hours",
+    "fanin_24h": "Many different payers within a day", "fanout_1h": "Pays many different accounts within an hour",
+    "fanout_6h": "Pays many different accounts within six hours", "fanout_24h": "Pays many different accounts within a day",
+    "cyc3": "Money goes round in a triangle", "ffl": "Pays two accounts that also pay each other",
+    "dup_amount_share": "Repeats the same amounts",
+}
+
+
+PAYMENT_LABELS = {
+    "amount_norm": "Unusually large payment", "log_amount": "Payment size", "cross_ccy": "Payment changes currency",
+    "hour": "Time of day of the payment", "self_transfer": "Transfer to the same account",
+    "prev_in_gap": "Sender received money shortly before sending", "prev_in_ratio": "Payment is close to what the sender just received",
+    "next_out_gap": "Receiver passes the money on quickly", "next_out_ratio": "Receiver forwards about the same amount",
 }
 
 
 def label(feature: str) -> str:
+    if feature in PAYMENT_LABELS:
+        return PAYMENT_LABELS[feature]
+    if feature.startswith("ch_"):
+        return "Paid by " + feature[3:]
+    if feature.startswith("s_") and feature[2:] in LABELS:
+        return "Sender: " + LABELS[feature[2:]][0].lower() + LABELS[feature[2:]][1:]
+    if feature.startswith("d_") and feature[2:] in LABELS:
+        return "Receiver: " + LABELS[feature[2:]][0].lower() + LABELS[feature[2:]][1:]
     if feature in LABELS:
         return LABELS[feature]
     for prefix, text in (("out_share_", "Sends mostly by "), ("in_share_", "Receives mostly by ")):

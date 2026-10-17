@@ -66,3 +66,29 @@ def test_features_ignore_transactions_not_passed_in():
     full = build_features(tx, {"US Dollar": 100.0})
     assert early.loc["B", "pt_min"] == full.loc["B", "pt_min"] == 5
     assert "D" not in early.index and "D" in full.index
+
+
+def test_burst_cycle_loop_and_duplicate_amount_features():
+    from ml.features import MOTIF_COLS
+
+    t0 = pd.Timestamp("2022-09-01 00:00")
+    rows = []
+    for i, minute in enumerate((0, 10, 20)):                 # three payers inside one hour
+        rows.append((t0 + pd.Timedelta(minutes=minute), f"P{i}", "HUB", 50.0))
+    rows.append((t0 + pd.Timedelta(hours=10), "P3", "HUB", 50.0))   # a fourth, ten hours later
+    rows += [(t0 + pd.Timedelta(minutes=1), "X", "Y", 10.0), (t0 + pd.Timedelta(minutes=2), "Y", "Z", 11.0),
+             (t0 + pd.Timedelta(minutes=3), "Z", "X", 12.0)]         # a directed 3-cycle
+    rows += [(t0 + pd.Timedelta(minutes=4), "A", "B", 5.0), (t0 + pd.Timedelta(minutes=5), "B", "C", 6.0),
+             (t0 + pd.Timedelta(minutes=6), "A", "C", 7.0)]          # a feed-forward loop A->B->C and A->C
+    rows += [(t0 + pd.Timedelta(minutes=7), "S", "R1", 99.0), (t0 + pd.Timedelta(minutes=8), "S", "R2", 99.0),
+             (t0 + pd.Timedelta(minutes=9), "S", "R3", 12.5)]        # S repeats an amount twice out of three
+    tx = pd.DataFrame(rows, columns=["ts", "src", "dst", "amount"])
+    tx["currency"] = tx["receiving_currency"] = "US Dollar"
+    tx["channel"] = "ACH"
+    f = build_features(tx, {"US Dollar": 100.0})
+    assert all(c in f.columns for c in MOTIF_COLS)
+    assert (f.loc["HUB", "fanin_1h"], f.loc["HUB", "fanin_6h"], f.loc["HUB", "fanin_24h"]) == (3, 3, 4)
+    assert f.loc["P0", "fanout_1h"] == 1
+    assert f.loc[["X", "Y", "Z"], "cyc3"].tolist() == [1, 1, 1] and f.loc["A", "cyc3"] == 0
+    assert f.loc["A", "ffl"] == 1 and f.loc["B", "ffl"] == 0
+    assert f.loc["S", "dup_amount_share"] == 2 / 3 and f.loc["A", "dup_amount_share"] == 0

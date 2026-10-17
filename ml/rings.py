@@ -39,12 +39,17 @@ def _split(graph: nx.Graph, max_size: int, seed: int, resolution: float = 1.0, d
 
 
 def detect_rings(scores: pd.Series, tx: pd.DataFrame, top_fraction: float, min_size: int = 3,
-                 max_size: int = 40, seed: int = 0) -> list[Ring]:
+                 max_size: int = 40, seed: int = 0, grow_fraction: float | None = None) -> list[Ring]:
     """Rings among the top `top_fraction` of accounts by score, using payments in `tx`.
+
+    With `grow_fraction` (larger than `top_fraction`) a ring must still contain at least one account from the
+    strict top share, but it may also take in linked accounts from the wider top `grow_fraction`. Strict seeds
+    keep the rings real; the wider net lets a ring gather its weaker members.
 
     `tx` must only contain transactions up to the scoring time.
     """
-    cutoff = scores.quantile(1 - top_fraction)
+    strict = scores.quantile(1 - top_fraction)
+    cutoff = scores.quantile(1 - max(grow_fraction or top_fraction, top_fraction))
     top = scores.index[scores >= cutoff]
     pair = tx[tx["src"].isin(top) & tx["dst"].isin(top) & (tx["src"] != tx["dst"])]
     edges = pair.groupby(["src", "dst"], observed=True).size().rename("n").reset_index()
@@ -52,6 +57,7 @@ def detect_rings(scores: pd.Series, tx: pd.DataFrame, top_fraction: float, min_s
         return []
 
     nodes = pd.Index(pd.unique(pd.concat([edges["src"], edges["dst"]], ignore_index=True)))
+    seed_node = (scores.reindex(nodes).to_numpy() >= strict)  # strict accounts; every node when not growing
     r, c = nodes.get_indexer(edges["src"]), nodes.get_indexer(edges["dst"])
     n_pay = edges["n"].to_numpy()
     adj = sparse.csr_matrix((np.ones(len(r)), (r, c)), shape=(len(nodes), len(nodes)))
@@ -61,7 +67,7 @@ def detect_rings(scores: pd.Series, tx: pd.DataFrame, top_fraction: float, min_s
     n_rings = 0
     for lab in np.unique(comp):
         members = np.flatnonzero(comp == lab)
-        if len(members) < min_size:
+        if len(members) < min_size or not seed_node[members].any():
             continue
         if len(members) <= max_size:
             ring_of[members] = n_rings
@@ -71,7 +77,7 @@ def detect_rings(scores: pd.Series, tx: pd.DataFrame, top_fraction: float, min_s
         sub = nx.Graph()
         sub.add_edges_from(zip(r[keep].tolist(), c[keep].tolist()))
         for community in _split(sub, max_size, seed):
-            if len(community) >= min_size:
+            if len(community) >= min_size and seed_node[list(community)].any():
                 ring_of[list(community)] = n_rings
                 n_rings += 1
     if n_rings == 0:

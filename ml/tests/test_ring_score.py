@@ -38,6 +38,9 @@ def test_scorer_needs_both_outcomes_and_enough_rings():
     assert fit(rings, real) is None                    # too few rings
     rings, _ = make_rings(60, seed=0)
     assert fit(rings, np.ones(60, bool)) is None       # nothing to contrast
+    almost_all = np.ones(60, bool)
+    almost_all[:2] = False
+    assert fit(rings, almost_all) is None              # 97% real: the score would saturate, so do not fit
     assert apply(rings, None) is rings                 # no scorer: ring risk unchanged
 
 

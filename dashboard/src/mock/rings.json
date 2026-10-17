@@ -1,0 +1,29 @@
+[
+  {
+    "ring_id": "RNG-0417",
+    "risk": 94,
+    "accounts": 29,
+    "victims": 21,
+    "headline": "21 people paid three accounts within 36 hours. Most of it left within 15 minutes.",
+    "first_seen": "2026-10-14T08:55:00Z",
+    "flagged_at": "2026-10-15T06:31:00Z"
+  },
+  {
+    "ring_id": "RNG-0392",
+    "risk": 81,
+    "accounts": 18,
+    "victims": 12,
+    "headline": "Five new accounts share one device and feed one cash-out.",
+    "first_seen": "2026-10-14T13:08:00Z",
+    "flagged_at": "2026-10-15T17:56:00Z"
+  },
+  {
+    "ring_id": "RNG-0455",
+    "risk": 73,
+    "accounts": 13,
+    "victims": 9,
+    "headline": "Night-time bursts, then a transfer to a crypto exchange.",
+    "first_seen": "2026-10-14T02:36:00Z",
+    "flagged_at": "2026-10-14T20:36:00Z"
+  }
+]
