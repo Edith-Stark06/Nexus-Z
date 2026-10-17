@@ -38,7 +38,23 @@ LABELS = {
 }
 
 
+PAYMENT_LABELS = {
+    "amount_norm": "Unusually large payment", "log_amount": "Payment size", "cross_ccy": "Payment changes currency",
+    "hour": "Time of day of the payment", "self_transfer": "Transfer to the same account",
+    "prev_in_gap": "Sender received money shortly before sending", "prev_in_ratio": "Payment is close to what the sender just received",
+    "next_out_gap": "Receiver passes the money on quickly", "next_out_ratio": "Receiver forwards about the same amount",
+}
+
+
 def label(feature: str) -> str:
+    if feature in PAYMENT_LABELS:
+        return PAYMENT_LABELS[feature]
+    if feature.startswith("ch_"):
+        return "Paid by " + feature[3:]
+    if feature.startswith("s_") and feature[2:] in LABELS:
+        return "Sender: " + LABELS[feature[2:]][0].lower() + LABELS[feature[2:]][1:]
+    if feature.startswith("d_") and feature[2:] in LABELS:
+        return "Receiver: " + LABELS[feature[2:]][0].lower() + LABELS[feature[2:]][1:]
     if feature in LABELS:
         return LABELS[feature]
     for prefix, text in (("out_share_", "Sends mostly by "), ("in_share_", "Receives mostly by ")):
