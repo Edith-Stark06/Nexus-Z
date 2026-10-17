@@ -4,7 +4,7 @@ Workstream C. These are **new measurements of the API**, taken with `infra/bench
 model measurements in `docs/ML_RESULTS.md` (accuracy, and the 2.4 to 2.5 s full rescore on the VM). Nothing here is
 copied from there.
 
-**Status: the clean LinuxONE benchmark with the current (payment-level) model is done: section 3b.** Sections 1, 2 and 3 are older: the laptop benchmark and the contended VM check were taken with the earlier account-level model, so do not quote their freshness or rebuild figures for the current model. Do not quote the laptop numbers as LinuxONE performance either.
+**Status: the clean LinuxONE benchmark with the payment-level model is done (section 3b), and the final deployment, the API in a hardened container with the demo bundle, is measured in section 3c.** Sections 1, 2 and 3 are older: the laptop benchmark and the contended VM check were taken with the earlier account-level model, so do not quote their freshness or rebuild figures for the current model. Do not quote the laptop numbers as LinuxONE performance either.
 
 **Update after the merge (checked by Ramana on 2026-10-17, one run).** Every measurement below was taken with the earlier account-level model that was in `ml/artifacts/HI-Small` at the time. The committed model is now the payment-level one (see `docs/ML_RESULTS.md`), which is heavier to rebuild. On the laptop, with the merged code, the real slice and the same 24-hour history (654,467 rows): the API started in 42 s, the first state took **32.9 s** to build and the rebuild after a 20,000-row replay took **32.7 s**, against about 15 s below. So a transaction becomes visible after about 33 s on that laptop, not about 15 s, and longer under sustained ingest. Single requests answered in 3 to 5 ms (70 ms for the first lookup of a ring member); this was not a benchmark. Part of that time was avoidable: describing all 174 rings took 16.6 s of it, because each ring rescanned the whole history and made its own SHAP call. PR #17 filters the history once and explains all members in one call (same output, checked on all 174 rings): that step now takes 1.8 s. The rebuild was not re-timed end to end on the laptop after the change. The idle-VM benchmark with the payment model is section 3b.
 
@@ -186,6 +186,38 @@ The 761 errors on `GET /rings/{id}` are all HTTP 404 (counted in the server log;
 Under load the server used about 113% of one core on average. **Resources:** RSS 956 MB after the first state (peak 2,382 MB while building it); 1,685 MB at the end with a peak of 3,255 MB (the old and the new state are held at once while a rebuild finishes), out of 7.5 GB.
 
 Limits: one run, three freshness probes, client and server on the same 3 vCPUs. Under sustained ingest a transaction waits for the rebuild in progress and then for the next one, so about 12 s idle is the best case and the oldest state seen under load was 36 s.
+
+## 3c. LinuxONE VM: the final deployment, the API in a hardened container
+
+Run by Ramana on 2026-10-18, one run, idle VM (load 0.06, nothing else running). `bash infra/podman_api.sh start` runs the platform's own image in a rootless Podman container: the demo bundle `ml/artifacts/HI-Small-pig`, `HI-Pig-Slice`, 24 h of history (656,743 rows), the API's default refresh settings. Same benchmark and the same four phases as section 3b (`infra/bench.py`, client on the same VM over loopback, replay of 209,126 payments). Python 3.12, pandas 3.0.6, XGBoost 3.4.1 inside the image (section 3b's bare process used pandas 2.2.3).
+
+**Why not a built image:** `podman build` on top of the platform image fails on this VM with "unsupported MIME type for compression" before any build step runs, so the script runs the image itself and mounts the three web packages the image lacks (fastapi, uvicorn, pydantic) from a host folder. `infra/Containerfile` stays in the repo as a record and is not used.
+
+**Security settings, read back from the running container** (`bash infra/podman_api.sh check`):
+
+| Property | Evidence |
+|---|---|
+| Reachable from the VM's loopback only | `ss -ltn`: `127.0.0.1:8000` is the only listener on the port |
+| Not root | process user is the image's `ibm-user` (uid 1000), rootless Podman |
+| No privileges | `CapEff: 0000000000000000` (all Linux capabilities dropped), `NoNewPrivs: 1`, seccomp filter active (`Seccomp: 2`), not privileged |
+| Read-only | root filesystem and the repo, data, model and package mounts are read-only; writing to the repo, the data and `/usr` is refused, only a small tmpfs at `/tmp` accepts writes |
+| Limits | memory 5 GB, at most 512 processes. A CPU limit is not possible: the user's cgroup has no cpu controller |
+| SELinux | enforcing on the VM; mounts carry the `:z` label |
+
+**Results**
+
+| Measure | Result |
+|---|---|
+| First state after start (656,743 rows) | 12.1 s |
+| `last_rebuild_seconds` at the end of the run (773,746 rows) | 9.8 s |
+| Freshness, 3 idle probes (accepted until visible) | 9.63, 9.66, 9.91 s |
+| Idle latency, p50 (p95) in ms | `/health` 0.77 (0.94), `/rings` 1.68 (2.45), `/rings/{id}` 0.89 (1.02), `/accounts/{id}` 0.76 (1.04), `/alerts` 0.84 (1.04), `POST /transactions` of 500 rows 7.0 (26.8) |
+| Ingest into the queue | 50,000 rows in 0.8 s, about 60,600 rows/s (not scored yet) |
+| Under load (60 s, 4 reader threads, about 950 rows/s ingested, 57,000 accepted, 0 rejected) | reads p50 2.9 to 4.0 ms, p95 12 to 14 ms; `POST` p50 9.1 ms, p95 95 ms; 3 refreshes completed; the oldest served state was 36.0 s old; server CPU about 181% of one core |
+| Memory (server process) | 798 MB after the first state (peak 1.7 GB); 1.57 GB at the end, peak 2.6 GB, against the 5 GB limit |
+| Errors | 0 responses in the 5xx range, no tracebacks. 4,453 `GET /rings/{id}` calls returned 404: the benchmark asks for one fixed ring id and a ring id is a hash of its members, so it stops existing when a rebuild regrows the ring (the same effect as in section 3b). A further 482 404s are the freshness probe polling for a new account until it appears |
+
+Compared with section 3b (bare process, older config): freshness 9.6 to 9.9 s against 12.3 to 12.6 s, idle p95 1 to 2.5 ms against 18 to 32 ms. The runs differ in more than the container (pandas 3.0.6 against 2.2.3, a different bundle and slice), so this does not show that the container makes it faster. One run, three freshness probes, client and server share the 3 vCPUs. Under sustained ingest a payment waits for the rebuild in progress and then for the next one, so about 10 s idle is the best case and 36 s the worst seen.
 
 ## 4. Checks that the served results change (local, real model)
 

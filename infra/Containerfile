@@ -1,7 +1,8 @@
 # NEXUS Z API on top of the LinuxONE Community Cloud Jupyter image (s390x). Build and run with
 # infra/podman_api.sh. The image already has numpy, pandas and XGBoost built for s390x; this adds only the
 # API packages. The repo, the model and the data are mounted at run time, not copied in.
-# NOT YET TESTED ON THE VM: it needs a podman build on the LinuxONE machine (see infra/README.md).
+# DOES NOT BUILD ON THE VM (2026-10-18): podman fails with "unsupported MIME type for compression" while preparing the pulled base image, before
+# any step here runs. infra/podman_api.sh therefore runs the platform image directly and mounts the web packages. Kept as a record only.
 FROM registry.linuxone.cloud.marist.edu/l1cc/jupyterlab-image-s390x:latest
 
 USER root

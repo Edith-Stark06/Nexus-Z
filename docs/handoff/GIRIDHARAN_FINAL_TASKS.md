@@ -22,13 +22,14 @@ Take them on the VM with the real model running. Ask Ramana for the VM address a
 |---|---|---|
 | `01_jupyter_container.png` | The platform Jupyter Lab ML container running under rootless Podman | `podman ps` |
 | `02_loopback_only.png` | Jupyter and the API listen on 127.0.0.1 only | `ss -ltn` |
-| `03_default_token_403.png` | The platform's published default token is rejected (HTTP 403) | `curl -s -o /dev/null -w "%{http_code}
-" "http://127.0.0.1:38888/api/status?token=Your_Token1"` should print 403 (never show the real token in `~/.jupyter_token`) |
+| `03_default_token_403.png` | The platform's published default token is rejected (HTTP 403) | `curl -s -o /dev/null -w "%{http_code}\n" "http://127.0.0.1:38888/api/status?token=Your_Token1"` should print 403 (never show the real token in `~/.jupyter_token`) |
 | `04_tests_on_vm.png` | Tests pass on s390x | `bash infra/setup_vm.sh --check --tests` or `python -m pytest ml/tests api/tests infra/tests -q` in `~/nexusz-venv` |
-| `05_api_running.png` | The API serving the real model | `bash infra/run_api.sh` with `NEXUSZ_BACKEND=model` (see `infra/api.env.example`), then `curl -s http://127.0.0.1:8000/health` |
+| `05_api_running.png` | The API serving the real model, in its container | `bash infra/podman_api.sh start`, wait 30 s, then `bash infra/podman_api.sh status` (it prints `/health`: `backend: model`) |
 | `06_rings_and_reasons.png` | A ring with its reasons from the API | `curl -s http://127.0.0.1:8000/rings` and one `/rings/{id}` |
 | `07_bench_result.png` | The idle-VM numbers | `cat` of the section 3b table in `docs/PLATFORM_RESULTS.md` (do not re-run `bench.py`) |
 | `08_training_log.png` | Payment model trained on the VM (882 s) | the saved log under `~/shared` if it still exists; otherwise skip and say so |
+| `09_container_security.png` | The API container is locked down: loopback only, non-root, read-only filesystem and mounts, no capabilities, memory limit, writes refused | `bash infra/podman_api.sh check` (one screen; take it as is) |
+| `10_accelerator_counters.png` | The processor's own counters: trees use the accelerator 0 times, a neural network and Granite thousands | stop any replay, then `bash infra/accel_counters.sh` (about 3 minutes; the VM must be idle). This measures the platform; it does **not** mean NEXUS Z detection runs on it |
 
 Write `docs/evidence/README.md` listing each file with the exact command and the date. If a command fails or the output differs from what the docs say, **tell Ramana; do not edit the numbers in the docs**.
 
@@ -38,9 +39,9 @@ Required content: the problem, the data behind it, the solution, how it uses IBM
 
 Use only claims the repo supports. Take every number from `docs/ML_RESULTS.md`, `docs/PLATFORM_RESULTS.md` or `docs/TECHNICAL_DESIGN.md`, and name the source next to it in the script's notes column.
 
-### 3. Optional, only if tasks 1 and 2 are done and the VM is free
+### 3. Already done by Ramana: the API in a container
 
-Run the API **in a container** with `infra/podman_api.sh` (the Containerfile you wrote has not been exercised with the payment model on the VM). If it builds and answers `/health` with `backend: model`, take a screenshot (`09_api_in_podman.png`) and add two lines to `docs/PLATFORM_RESULTS.md` under a new heading "Container" with what you saw (build time, first state time). If it fails, write what failed and do not claim containerized serving anywhere. Skip the systemd install unless Ramana asks.
+`infra/podman_api.sh` now runs the API in a hardened rootless container from the platform image (the Containerfile cannot be built on this VM; the script explains why). It is verified: first state 12 s, the security settings are checked from inside by `check`. The numbers are in `docs/PLATFORM_RESULTS.md`. Your job is only the screenshots 05 and 09.
 
 ## Claims we must not make
 
