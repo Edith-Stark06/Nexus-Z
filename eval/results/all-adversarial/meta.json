@@ -1,0 +1,14 @@
+{
+ "variant": "HI-Small",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "scenario": "all-adversarial",
+ "inject": {
+  "adversarial": 1.0
+ },
+ "step_hours": 6,
+ "replay": false
+}
