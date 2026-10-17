@@ -2,7 +2,7 @@
 
 Written for: Tushar (pitch and deck). Every number below comes from `python -m eval.run` on IBM AML HI-Small with rings
 injected by `data/rings.py`, mean ± standard deviation over 3 seeds (0, 1, 2), test window, thresholds chosen on validation.
-Full tables: `eval/results/RESULTS.md`. Time to detection ran on the default scenario only.
+Full tables: `eval/results/RESULTS.md`. Time to detection ran on the default scenario only. Default scenario re-run on the current `ml/` (five feature sets) reproduces the four older rows exactly; the robustness scenarios were measured on the older `ml/` (four feature sets).
 
 **Say "synthetic" every time.** The background is IBM's synthetic AML data. The pig-butchering rings are our own synthetic
 injection, designed by the same team that designed the features. This shows the method works on rings of this kind. It
@@ -30,6 +30,7 @@ is not evidence of accuracy on real fraud.
 - **Landlords are the worst false alarm.** About 55% of landlord hubs are flagged by the graph models; payroll, merchants and charities are
   flagged close to 0% of the time.
 - **Few rings break it.** With only 30 injected rings, PR-AUC falls to 0.02 (recall 0.26). The model needs many ring examples to train on.
+- **Burst and motif features add nothing here** (PR-AUC 0.396 vs 0.407 without them, inside the noise). Do not claim they help on this evidence.
 - **Seed noise is large.** Only 18 to 27 true rings fall in each test window; differences of a few hundredths are inside the noise.
 
 ## Do not claim

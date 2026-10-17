@@ -11,7 +11,13 @@ import numpy as np
 import pandas as pd
 
 RESULTS = Path(__file__).parent / "results"
-ORDER = ["transaction-only", "+ behavioral", "+ graph", "+ k-core, clustering, components"]
+CANON = ["transaction-only", "+ behavioral", "+ graph", "+ k-core, clustering, components", "+ bursts and motifs"]
+
+
+def order_of(r: dict) -> list:
+    """The feature sets present in a results folder, in ablation order (older runs have four, newer five)."""
+    present = set(r["account"]["model"])
+    return [m for m in CANON if m in present]
 
 
 def ms(x: pd.Series, digits: int = 3) -> str:
@@ -43,6 +49,7 @@ def load(scenario: str) -> dict:
 
 
 def account_section(r: dict) -> str:
+    ORDER = order_of(r)
     a, rows, diffs = r["account"], [], []
     for scope in ("all candidates", "new accounts only", "all labels (IBM + injected)"):
         sub = a[a["scope"] == scope]
@@ -58,6 +65,7 @@ def account_section(r: dict) -> str:
 
 
 def ring_section(r: dict) -> str:
+    ORDER = order_of(r)
     g = r["rings"]
     g = g[(g["split"] == "test") & g["chosen_on_val"]]
     kinds = [c for c in g.columns if c.startswith("rec_")]
@@ -72,6 +80,7 @@ def ring_section(r: dict) -> str:
 
 
 def hub_section(r: dict) -> str:
+    ORDER = order_of(r)
     h = r["hubs"]
     if h.empty:
         return "No look-alike hub was active in the test window."
@@ -89,6 +98,7 @@ def hub_section(r: dict) -> str:
 
 
 def detection_section(r: dict) -> str:
+    ORDER = order_of(r)
     d = r.get("detection")
     if d is None or d.empty:
         return "Not run."
@@ -107,7 +117,8 @@ def robustness_section(scenarios: list) -> str:
         g = r["rings"]
         g = g[(g["split"] == "test") & g["chosen_on_val"]]
         h = r["hubs"]
-        for m in (ORDER[0], ORDER[-1]):
+        order = order_of(r)
+        for m in (order[0], order[-1]):
             s, t = a[a["model"] == m], g[g["model"] == m]
             rows.append({"scenario": sc, "features": m, "PR-AUC": ms(s["pr_auc"]), "recall": ms(s["recall"]),
                          "ring recovery": ms(t["recovery"]),

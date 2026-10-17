@@ -71,4 +71,13 @@ Run through a wrapper that renames the cache tag (see above), seeds 0, 1, 2, HI-
 | + k-core, clustering, components | 0.413 / 0.396 / 0.411 | 4 of 64 / 7 of 81 / 7 of 72 |
 
 These agree with `eval.run` (full set 0.407 ± 0.010 over the same seeds). Ring recovery at the flagged fraction chosen on val, full set: 0.667, 0.625, 0.889
-(18 to 24 true rings per seed, so one ring moves recovery by 4 to 6 points). `ml/` has since moved on (FEATURE_VERSION 4, a "+ bursts and motifs" row); see the follow-up in RESULTS.md.
+(18 to 24 true rings per seed, so one ring moves recovery by 4 to 6 points). `ml/` has since moved on (FEATURE_VERSION 4, a "+ bursts and motifs" row); see the follow-up below.
+
+## Re-run on the merged `ml/` (origin/main at 6cda3d5 merged into `verona-ann`, FEATURE_VERSION 4)
+
+Default scenario, 3 seeds, with replay, five feature sets. **The four older rows reproduce the earlier run exactly** (every value in
+the account, ring, hub and detection tables is identical), so the `ml/` changes did not alter them. New row, "+ bursts and motifs":
+PR-AUC 0.396 ± 0.025 on injected fraud accounts (0.407 ± 0.010 for + k-core), ring recovery 0.704 ± 0.076 (0.727 ± 0.142), median time to detect
+6.2 hours (5.8). The paired difference against + k-core is -0.010 ± 0.015, inside the noise. **On this data and these rings the motif features did not help**, which differs from
+your result on the payment-level model; I did not test that model here.
+The six robustness scenarios were not re-run; they were measured at FEATURE_VERSION 2 (first four feature sets only).
