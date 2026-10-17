@@ -1,43 +1,7 @@
 [
   {
-    "ring_id": "RNG-6603B4",
-    "risk": 99,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-07T02:25:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-EFEA32",
-    "risk": 98,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-06T06:29:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-AB775E",
-    "risk": 96,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-08T17:23:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-E77D93",
-    "risk": 94,
-    "accounts": 5,
-    "victims": 1,
-    "headline": "5 linked accounts, 6 payments between them, 33% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-09T06:48:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
     "ring_id": "RNG-E78176",
-    "risk": 91,
+    "risk": 97,
     "accounts": 3,
     "victims": 1,
     "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
@@ -45,35 +9,62 @@
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-7F8DD3",
-    "risk": 89,
+    "ring_id": "RNG-73101D",
+    "risk": 94,
     "accounts": 3,
     "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-03T03:12:00Z",
+    "headline": "3 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-08T16:58:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-F0731A",
-    "risk": 89,
+    "ring_id": "RNG-21AA15",
+    "risk": 94,
     "accounts": 3,
     "victims": 1,
     "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-03T19:30:00Z",
+    "first_seen": "2022-09-07T09:34:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-4D4BA6",
-    "risk": 89,
+    "ring_id": "RNG-389317",
+    "risk": 92,
+    "accounts": 4,
+    "victims": 1,
+    "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-08T17:23:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-EEFB13",
+    "risk": 91,
+    "accounts": 5,
+    "victims": 1,
+    "headline": "5 linked accounts, 4 payments between them, 25% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-03T22:30:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-313F49",
+    "risk": 91,
     "accounts": 3,
     "victims": 1,
     "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-05T04:04:00Z",
+    "first_seen": "2022-09-05T15:47:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-3CA13F",
+    "risk": 89,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 3 payments between them, 67% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T16:38:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
     "ring_id": "RNG-E769FC",
-    "risk": 87,
+    "risk": 88,
     "accounts": 4,
     "victims": 1,
     "headline": "4 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Often changes currency.",
@@ -81,66 +72,129 @@
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-9CE752",
-    "risk": 86,
-    "accounts": 5,
-    "victims": 4,
-    "headline": "5 linked accounts, 4 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-07T03:04:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-7FAFA7",
-    "risk": 86,
-    "accounts": 5,
+    "ring_id": "RNG-35F4EB",
+    "risk": 88,
+    "accounts": 3,
     "victims": 1,
-    "headline": "5 linked accounts, 4 payments between them, 25% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-02T16:05:00Z",
+    "headline": "3 linked accounts, 3 payments between them, 67% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T17:11:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-CC40EB",
-    "risk": 83,
-    "accounts": 6,
-    "victims": 5,
-    "headline": "6 linked accounts, 5 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "ring_id": "RNG-51A3A4",
+    "risk": 87,
+    "accounts": 7,
+    "victims": 6,
+    "headline": "7 linked accounts, 6 payments between them, 100% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-06T12:30:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-44EA06",
-    "risk": 81,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 3 payments between them, 67% reaching one account. Top signal: Sends mostly by ACH.",
-    "first_seen": "2022-09-08T09:25:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-CB7BC3",
-    "risk": 81,
+    "ring_id": "RNG-55B590",
+    "risk": 86,
     "accounts": 3,
     "victims": 1,
     "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-09T19:21:00Z",
+    "first_seen": "2022-09-03T23:37:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-01611F",
-    "risk": 81,
+    "ring_id": "RNG-94DD9E",
+    "risk": 86,
     "accounts": 3,
     "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-09T08:46:00Z",
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T09:14:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-02DAA3",
+    "risk": 86,
+    "accounts": 4,
+    "victims": 1,
+    "headline": "4 linked accounts, 5 payments between them, 40% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-04T04:05:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-089440",
+    "risk": 86,
+    "accounts": 4,
+    "victims": 1,
+    "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-07T02:25:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-FA4927",
+    "risk": 86,
+    "accounts": 7,
+    "victims": 1,
+    "headline": "7 linked accounts, 6 payments between them, 17% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-08T06:58:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-82E5B0",
+    "risk": 85,
+    "accounts": 4,
+    "victims": 1,
+    "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-08T23:49:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
     "ring_id": "RNG-B9416A",
-    "risk": 81,
+    "risk": 85,
     "accounts": 9,
     "victims": 1,
     "headline": "9 linked accounts, 8 payments between them, 12% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-06T17:24:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-A9A601",
+    "risk": 84,
+    "accounts": 4,
+    "victims": 1,
+    "headline": "4 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-07T01:51:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-14F801",
+    "risk": 83,
+    "accounts": 4,
+    "victims": 0,
+    "headline": "4 linked accounts, 5 payments between them, 40% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-02T09:31:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-9156B9",
+    "risk": 83,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-09T05:01:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-96CAA4",
+    "risk": 82,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-09T08:33:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-EA6F1F",
+    "risk": 81,
+    "accounts": 3,
+    "victims": 2,
+    "headline": "3 linked accounts, 2 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-09T08:33:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
@@ -153,179 +207,8 @@
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-96CAA4",
-    "risk": 79,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-09T08:33:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-B5C16A",
-    "risk": 78,
-    "accounts": 4,
-    "victims": 3,
-    "headline": "4 linked accounts, 3 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-10T12:42:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-35F4EB",
-    "risk": 78,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 3 payments between them, 67% reaching one account. Top signal: Sends mostly by ACH.",
-    "first_seen": "2022-09-05T17:11:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-02DAA3",
-    "risk": 77,
-    "accounts": 4,
-    "victims": 1,
-    "headline": "4 linked accounts, 5 payments between them, 40% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-04T04:05:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-E503BA",
-    "risk": 76,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 5 payments between them, 60% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-03T02:08:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-7C2426",
-    "risk": 73,
-    "accounts": 4,
-    "victims": 1,
-    "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-03T22:30:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-AFF77E",
-    "risk": 72,
-    "accounts": 5,
-    "victims": 1,
-    "headline": "5 linked accounts, 6 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-08T10:04:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-2A9086",
-    "risk": 71,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-10T11:14:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-B32D06",
-    "risk": 69,
-    "accounts": 4,
-    "victims": 2,
-    "headline": "4 linked accounts, 5 payments between them, 60% reaching one account. Top signal: Sends mostly by ACH.",
-    "first_seen": "2022-09-08T16:58:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-4759E5",
-    "risk": 68,
-    "accounts": 4,
-    "victims": 1,
-    "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-06T20:25:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-828028",
-    "risk": 67,
-    "accounts": 7,
-    "victims": 5,
-    "headline": "7 linked accounts, 6 payments between them, 83% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-02T22:54:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-CE2E1B",
-    "risk": 67,
-    "accounts": 4,
-    "victims": 1,
-    "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-07T04:49:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-2EAB4A",
-    "risk": 66,
-    "accounts": 4,
-    "victims": 3,
-    "headline": "4 linked accounts, 3 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-05T10:21:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-856EBD",
-    "risk": 66,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-06T19:15:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-55B590",
-    "risk": 63,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-03T23:37:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-7A9C27",
-    "risk": 61,
-    "accounts": 6,
-    "victims": 1,
-    "headline": "6 linked accounts, 5 payments between them, 20% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-08T11:14:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-8E2FA3",
-    "risk": 59,
-    "accounts": 7,
-    "victims": 6,
-    "headline": "7 linked accounts, 7 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-07T02:39:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-4004CB",
-    "risk": 59,
-    "accounts": 5,
-    "victims": 4,
-    "headline": "5 linked accounts, 4 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-05T18:12:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-6DFC9F",
-    "risk": 58,
-    "accounts": 4,
-    "victims": 3,
-    "headline": "4 linked accounts, 3 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-08T19:02:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
     "ring_id": "RNG-812AD3",
-    "risk": 56,
+    "risk": 80,
     "accounts": 4,
     "victims": 1,
     "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Often changes currency.",
@@ -333,80 +216,116 @@
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-3438DF",
-    "risk": 55,
-    "accounts": 5,
-    "victims": 1,
-    "headline": "5 linked accounts, 6 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-07T12:22:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-2FCC26",
-    "risk": 52,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-04T12:49:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-96AC4F",
-    "risk": 49,
+    "ring_id": "RNG-4D4BA6",
+    "risk": 80,
     "accounts": 3,
     "victims": 1,
     "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-02T23:00:00Z",
+    "first_seen": "2022-09-05T04:04:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-180205",
-    "risk": 48,
-    "accounts": 6,
-    "victims": 4,
-    "headline": "6 linked accounts, 5 payments between them, 80% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-04T02:54:00Z",
+    "ring_id": "RNG-7FAFA7",
+    "risk": 79,
+    "accounts": 5,
+    "victims": 1,
+    "headline": "5 linked accounts, 4 payments between them, 25% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-02T16:05:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-BFF3BA",
-    "risk": 46,
-    "accounts": 7,
-    "victims": 6,
-    "headline": "7 linked accounts, 6 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-03T19:23:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-E490E8",
-    "risk": 46,
+    "ring_id": "RNG-20E5BC",
+    "risk": 79,
     "accounts": 3,
     "victims": 1,
-    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-04T16:23:00Z",
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Sends mostly by ACH.",
+    "first_seen": "2022-09-08T12:46:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-4E7973",
-    "risk": 44,
+    "ring_id": "RNG-45CE6F",
+    "risk": 79,
+    "accounts": 5,
+    "victims": 3,
+    "headline": "5 linked accounts, 4 payments between them, 75% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T18:12:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-1C35EE",
+    "risk": 79,
     "accounts": 4,
     "victims": 3,
-    "headline": "4 linked accounts, 4 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-03T17:21:00Z",
+    "headline": "4 linked accounts, 3 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-04T10:41:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-8B65D5",
-    "risk": 42,
-    "accounts": 9,
-    "victims": 6,
-    "headline": "9 linked accounts, 8 payments between them, 75% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-08T10:45:00Z",
+    "ring_id": "RNG-7F0F69",
+    "risk": 75,
+    "accounts": 4,
+    "victims": 1,
+    "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-04T10:34:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-F0731A",
+    "risk": 74,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-03T19:30:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-A6C509",
+    "risk": 74,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T12:04:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-E503BA",
+    "risk": 74,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 5 payments between them, 60% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-03T02:08:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-EFEA32",
+    "risk": 73,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-06T06:29:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-E77D93",
+    "risk": 73,
+    "accounts": 5,
+    "victims": 1,
+    "headline": "5 linked accounts, 6 payments between them, 33% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-09T06:48:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-AFF77E",
+    "risk": 72,
+    "accounts": 5,
+    "victims": 1,
+    "headline": "5 linked accounts, 6 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-08T10:04:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
     "ring_id": "RNG-27000D",
-    "risk": 41,
+    "risk": 72,
     "accounts": 5,
     "victims": 1,
     "headline": "5 linked accounts, 4 payments between them, 25% reaching one account. Top signal: Often changes currency.",
@@ -414,143 +333,260 @@
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-4D793D",
-    "risk": 39,
+    "ring_id": "RNG-2A9086",
+    "risk": 72,
     "accounts": 3,
     "victims": 1,
-    "headline": "3 linked accounts, 5 payments between them, 60% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-01T21:05:00Z",
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-10T11:14:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-761AC4",
-    "risk": 39,
-    "accounts": 3,
+    "ring_id": "RNG-7BB148",
+    "risk": 70,
+    "accounts": 4,
     "victims": 1,
-    "headline": "3 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Sends mostly by ACH.",
-    "first_seen": "2022-09-07T20:02:00Z",
+    "headline": "4 linked accounts, 3 payments between them, 33% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-02T10:50:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-CA09B6",
-    "risk": 37,
-    "accounts": 10,
+    "ring_id": "RNG-E490E8",
+    "risk": 70,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-04T16:23:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-E77593",
+    "risk": 69,
+    "accounts": 4,
+    "victims": 1,
+    "headline": "4 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Sends mostly by ACH.",
+    "first_seen": "2022-09-08T19:09:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-828028",
+    "risk": 68,
+    "accounts": 7,
+    "victims": 5,
+    "headline": "7 linked accounts, 6 payments between them, 83% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-02T22:54:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-214FE2",
+    "risk": 67,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 3 payments between them, 67% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T06:47:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-96AC4F",
+    "risk": 63,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-02T23:00:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-129FE8",
+    "risk": 63,
+    "accounts": 6,
+    "victims": 5,
+    "headline": "6 linked accounts, 5 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-07T03:04:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-B7BB7E",
+    "risk": 63,
+    "accounts": 9,
+    "victims": 1,
+    "headline": "9 linked accounts, 14 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T01:54:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-F82B4C",
+    "risk": 56,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 3 payments between them, 67% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-10T11:12:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-0E9500",
+    "risk": 51,
+    "accounts": 4,
+    "victims": 1,
+    "headline": "4 linked accounts, 17 payments between them, 82% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-01T21:06:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-8B65D5",
+    "risk": 51,
+    "accounts": 9,
     "victims": 6,
-    "headline": "10 linked accounts, 9 payments between them, 67% reaching one account. Top signal: Receives mostly by ACH.",
+    "headline": "9 linked accounts, 8 payments between them, 75% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-08T10:45:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-1EA8CC",
+    "risk": 50,
+    "accounts": 6,
+    "victims": 2,
+    "headline": "6 linked accounts, 6 payments between them, 33% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T22:55:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-AC0356",
+    "risk": 50,
+    "accounts": 8,
+    "victims": 3,
+    "headline": "8 linked accounts, 7 payments between them, 43% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-02T08:08:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-8A95D6",
+    "risk": 47,
+    "accounts": 5,
+    "victims": 3,
+    "headline": "5 linked accounts, 24 payments between them, 88% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-01T12:36:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-A1EF8D",
+    "risk": 46,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-03T09:23:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-D6D110",
+    "risk": 45,
+    "accounts": 6,
+    "victims": 1,
+    "headline": "6 linked accounts, 8 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-07T03:15:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-FBBEFE",
+    "risk": 45,
+    "accounts": 5,
+    "victims": 1,
+    "headline": "5 linked accounts, 4 payments between them, 25% reaching one account. Top signal: Wide reach two hops out.",
+    "first_seen": "2022-09-02T07:42:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-9970F0",
+    "risk": 44,
+    "accounts": 6,
+    "victims": 4,
+    "headline": "6 linked accounts, 5 payments between them, 80% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-09T23:11:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-9C37A4",
+    "risk": 43,
+    "accounts": 21,
+    "victims": 6,
+    "headline": "21 linked accounts, 32 payments between them, 41% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-04T10:41:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-B1B57C",
-    "risk": 37,
-    "accounts": 5,
-    "victims": 1,
-    "headline": "5 linked accounts, 4 payments between them, 25% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-07T09:17:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-707DC5",
-    "risk": 35,
-    "accounts": 9,
-    "victims": 8,
-    "headline": "9 linked accounts, 8 payments between them, 100% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-03T01:13:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-CDD3F8",
-    "risk": 33,
+    "ring_id": "RNG-BFF3BA",
+    "risk": 41,
     "accounts": 7,
+    "victims": 6,
+    "headline": "7 linked accounts, 6 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-03T19:23:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-E39CCE",
+    "risk": 40,
+    "accounts": 3,
     "victims": 1,
-    "headline": "7 linked accounts, 6 payments between them, 17% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-05T04:27:00Z",
+    "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-07T17:39:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-203365",
-    "risk": 33,
+    "ring_id": "RNG-3C5FBD",
+    "risk": 39,
+    "accounts": 6,
+    "victims": 1,
+    "headline": "6 linked accounts, 8 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-02T23:06:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-B9BA75",
+    "risk": 38,
     "accounts": 12,
-    "victims": 10,
-    "headline": "12 linked accounts, 11 payments between them, 91% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T21:09:00Z",
+    "victims": 9,
+    "headline": "12 linked accounts, 11 payments between them, 82% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-02T01:32:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-57312D",
-    "risk": 32,
+    "ring_id": "RNG-08C2FB",
+    "risk": 38,
     "accounts": 9,
-    "victims": 5,
-    "headline": "9 linked accounts, 8 payments between them, 62% reaching one account. Top signal: Often changes currency.",
+    "victims": 4,
+    "headline": "9 linked accounts, 8 payments between them, 50% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-03T06:08:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-7E05C9",
-    "risk": 31,
-    "accounts": 3,
-    "victims": 2,
-    "headline": "3 linked accounts, 2 payments between them, 100% reaching one account. Top signal: Sends mostly by ACH.",
-    "first_seen": "2022-09-10T02:31:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-5500BE",
-    "risk": 31,
-    "accounts": 3,
-    "victims": 1,
-    "headline": "3 linked accounts, 3 payments between them, 67% reaching one account. Top signal: Sends mostly by ACH.",
-    "first_seen": "2022-09-01T07:13:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-4F683F",
-    "risk": 29,
+    "ring_id": "RNG-42239E",
+    "risk": 38,
     "accounts": 11,
     "victims": 6,
-    "headline": "11 linked accounts, 10 payments between them, 60% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-05T00:57:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-213DB4",
-    "risk": 28,
-    "accounts": 12,
-    "victims": 8,
-    "headline": "12 linked accounts, 13 payments between them, 62% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T00:12:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-BB7903",
-    "risk": 27,
-    "accounts": 9,
-    "victims": 7,
-    "headline": "9 linked accounts, 8 payments between them, 88% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-06T02:29:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-FAD728",
-    "risk": 26,
-    "accounts": 9,
-    "victims": 6,
-    "headline": "9 linked accounts, 8 payments between them, 75% reaching one account. Top signal: Often changes currency.",
+    "headline": "11 linked accounts, 10 payments between them, 60% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-02T03:26:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-D2268F",
-    "risk": 24,
-    "accounts": 14,
-    "victims": 1,
-    "headline": "14 linked accounts, 26 payments between them, 54% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T07:57:00Z",
+    "ring_id": "RNG-6843C5",
+    "risk": 33,
+    "accounts": 10,
+    "victims": 5,
+    "headline": "10 linked accounts, 9 payments between them, 56% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-03T00:57:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-843E4F",
+    "risk": 33,
+    "accounts": 5,
+    "victims": 4,
+    "headline": "5 linked accounts, 4 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T10:21:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
     "ring_id": "RNG-E85E29",
-    "risk": 24,
+    "risk": 33,
     "accounts": 4,
     "victims": 1,
     "headline": "4 linked accounts, 4 payments between them, 50% reaching one account. Top signal: Sends mostly by ACH.",
@@ -558,156 +594,273 @@
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-5450C5",
-    "risk": 21,
-    "accounts": 5,
-    "victims": 2,
-    "headline": "5 linked accounts, 7 payments between them, 57% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T06:46:00Z",
+    "ring_id": "RNG-1EE456",
+    "risk": 33,
+    "accounts": 14,
+    "victims": 9,
+    "headline": "14 linked accounts, 15 payments between them, 60% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-01T00:12:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-FDA8DF",
-    "risk": 21,
-    "accounts": 9,
+    "ring_id": "RNG-CEB0AB",
+    "risk": 33,
+    "accounts": 3,
     "victims": 2,
-    "headline": "9 linked accounts, 76 payments between them, 28% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "headline": "3 linked accounts, 2 payments between them, 100% reaching one account. Top signal: Receives mostly by ACH.",
+    "first_seen": "2022-09-03T13:30:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-D6CC1E",
+    "risk": 31,
+    "accounts": 11,
+    "victims": 2,
+    "headline": "11 linked accounts, 91 payments between them, 23% reaching one account. Top signal: Paid by accounts that pay many others.",
     "first_seen": "2022-09-01T02:48:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-A7CC2F",
-    "risk": 21,
-    "accounts": 7,
+    "ring_id": "RNG-D2268F",
+    "risk": 31,
+    "accounts": 14,
+    "victims": 1,
+    "headline": "14 linked accounts, 26 payments between them, 54% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-01T07:57:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-4F683F",
+    "risk": 30,
+    "accounts": 11,
+    "victims": 6,
+    "headline": "11 linked accounts, 10 payments between them, 60% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-05T00:57:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-E1C661",
+    "risk": 30,
+    "accounts": 10,
+    "victims": 9,
+    "headline": "10 linked accounts, 9 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-06T17:35:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-3A5D8D",
+    "risk": 26,
+    "accounts": 11,
+    "victims": 10,
+    "headline": "11 linked accounts, 10 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-03T12:58:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-BB7903",
+    "risk": 26,
+    "accounts": 9,
+    "victims": 7,
+    "headline": "9 linked accounts, 8 payments between them, 88% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-06T02:29:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-5500BE",
+    "risk": 26,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 3 payments between them, 67% reaching one account. Top signal: Sends mostly by ACH.",
+    "first_seen": "2022-09-01T07:13:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-F8AE7E",
+    "risk": 25,
+    "accounts": 18,
+    "victims": 13,
+    "headline": "18 linked accounts, 17 payments between them, 53% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-03T01:13:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-5795A9",
+    "risk": 24,
+    "accounts": 11,
+    "victims": 10,
+    "headline": "11 linked accounts, 12 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-08T20:32:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-8BD057",
+    "risk": 22,
+    "accounts": 11,
+    "victims": 1,
+    "headline": "11 linked accounts, 155 payments between them, 17% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T00:26:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-9AA7EF",
+    "risk": 20,
+    "accounts": 3,
+    "victims": 1,
+    "headline": "3 linked accounts, 18 payments between them, 94% reaching one account. Top signal: Sends mostly by ACH.",
+    "first_seen": "2022-09-01T14:00:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-63A6BA",
+    "risk": 19,
+    "accounts": 6,
     "victims": 2,
-    "headline": "7 linked accounts, 11 payments between them, 36% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-05T22:55:00Z",
+    "headline": "6 linked accounts, 8 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-01T06:46:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
     "ring_id": "RNG-037246",
-    "risk": 20,
+    "risk": 18,
     "accounts": 4,
     "victims": 1,
-    "headline": "4 linked accounts, 22 payments between them, 91% reaching one account. Top signal: Receives mostly by ACH.",
+    "headline": "4 linked accounts, 22 payments between them, 91% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-01T18:37:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-1A56F6",
-    "risk": 15,
-    "accounts": 20,
-    "victims": 6,
-    "headline": "20 linked accounts, 88 payments between them, 24% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T00:17:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-95F3DE",
-    "risk": 14,
-    "accounts": 17,
-    "victims": 3,
-    "headline": "17 linked accounts, 77 payments between them, 27% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T12:40:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-ACABF6",
-    "risk": 10,
-    "accounts": 14,
-    "victims": 2,
-    "headline": "14 linked accounts, 99 payments between them, 30% reaching one account. Top signal: Often changes currency.",
+    "ring_id": "RNG-372A7B",
+    "risk": 17,
+    "accounts": 24,
+    "victims": 9,
+    "headline": "24 linked accounts, 135 payments between them, 22% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-01T01:57:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-AF294C",
-    "risk": 9,
-    "accounts": 32,
-    "victims": 17,
-    "headline": "32 linked accounts, 121 payments between them, 17% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T01:02:00Z",
+    "ring_id": "RNG-875BCD",
+    "risk": 16,
+    "accounts": 5,
+    "victims": 4,
+    "headline": "5 linked accounts, 5 payments between them, 100% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-03T17:21:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-ED733E",
-    "risk": 8,
-    "accounts": 16,
+    "ring_id": "RNG-F30549",
+    "risk": 15,
+    "accounts": 3,
     "victims": 1,
-    "headline": "16 linked accounts, 153 payments between them, 14% reaching one account. Top signal: Paid by accounts that pay many others.",
-    "first_seen": "2022-09-01T00:05:00Z",
+    "headline": "3 linked accounts, 15 payments between them, 93% reaching one account. Top signal: Sends mostly by ACH.",
+    "first_seen": "2022-09-01T15:30:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-2ECF0D",
-    "risk": 8,
-    "accounts": 29,
+    "ring_id": "RNG-3A5155",
+    "risk": 15,
+    "accounts": 33,
+    "victims": 7,
+    "headline": "33 linked accounts, 206 payments between them, 15% reaching one account. Top signal: Often changes currency.",
+    "first_seen": "2022-09-01T00:17:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-08F2CE",
+    "risk": 14,
+    "accounts": 3,
     "victims": 2,
-    "headline": "29 linked accounts, 231 payments between them, 19% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T00:00:00Z",
+    "headline": "3 linked accounts, 2 payments between them, 100% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-08T13:30:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-850BED",
-    "risk": 6,
-    "accounts": 37,
-    "victims": 15,
-    "headline": "37 linked accounts, 149 payments between them, 15% reaching one account. Top signal: Receives mostly by ACH.",
-    "first_seen": "2022-09-01T00:01:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-05D5E8",
-    "risk": 5,
-    "accounts": 31,
-    "victims": 10,
-    "headline": "31 linked accounts, 124 payments between them, 17% reaching one account. Top signal: Often changes currency.",
+    "ring_id": "RNG-B681E2",
+    "risk": 13,
+    "accounts": 26,
+    "victims": 2,
+    "headline": "26 linked accounts, 166 payments between them, 13% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-01T00:02:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   },
   {
-    "ring_id": "RNG-0063DE",
-    "risk": 5,
-    "accounts": 33,
-    "victims": 10,
-    "headline": "33 linked accounts, 236 payments between them, 13% reaching one account. Top signal: Sends mostly by ACH.",
-    "first_seen": "2022-09-01T00:25:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-D0BDD1",
-    "risk": 5,
-    "accounts": 28,
-    "victims": 2,
-    "headline": "28 linked accounts, 268 payments between them, 9% reaching one account. Top signal: Sends mostly by ACH.",
-    "first_seen": "2022-09-01T00:04:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-776AF8",
-    "risk": 5,
-    "accounts": 30,
-    "victims": 10,
-    "headline": "30 linked accounts, 216 payments between them, 15% reaching one account. Top signal: Often changes currency.",
-    "first_seen": "2022-09-01T02:31:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-90EBAD",
-    "risk": 4,
-    "accounts": 27,
-    "victims": 1,
-    "headline": "27 linked accounts, 229 payments between them, 9% reaching one account. Top signal: Paid by accounts that pay many others.",
-    "first_seen": "2022-09-01T00:06:00Z",
-    "flagged_at": "2022-09-10T23:59:00Z"
-  },
-  {
-    "ring_id": "RNG-69B4D3",
-    "risk": 3,
-    "accounts": 16,
-    "victims": 1,
-    "headline": "16 linked accounts, 147 payments between them, 20% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "ring_id": "RNG-E8308C",
+    "risk": 11,
+    "accounts": 37,
+    "victims": 3,
+    "headline": "37 linked accounts, 218 payments between them, 21% reaching one account. Top signal: Often changes currency.",
     "first_seen": "2022-09-01T00:00:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-83249F",
+    "risk": 11,
+    "accounts": 17,
+    "victims": 1,
+    "headline": "17 linked accounts, 146 payments between them, 14% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T01:09:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-8FCB32",
+    "risk": 10,
+    "accounts": 15,
+    "victims": 1,
+    "headline": "15 linked accounts, 168 payments between them, 18% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T00:37:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-A5A08C",
+    "risk": 9,
+    "accounts": 18,
+    "victims": 1,
+    "headline": "18 linked accounts, 255 payments between them, 12% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T03:00:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-5B45F2",
+    "risk": 9,
+    "accounts": 34,
+    "victims": 6,
+    "headline": "34 linked accounts, 269 payments between them, 12% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T00:03:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-DEA4BA",
+    "risk": 7,
+    "accounts": 21,
+    "victims": 1,
+    "headline": "21 linked accounts, 310 payments between them, 10% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T00:20:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-AD4815",
+    "risk": 7,
+    "accounts": 23,
+    "victims": 1,
+    "headline": "23 linked accounts, 331 payments between them, 13% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T00:24:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-DEE0E0",
+    "risk": 7,
+    "accounts": 37,
+    "victims": 4,
+    "headline": "37 linked accounts, 399 payments between them, 8% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T00:11:00Z",
+    "flagged_at": "2022-09-10T23:59:00Z"
+  },
+  {
+    "ring_id": "RNG-C47ACE",
+    "risk": 6,
+    "accounts": 33,
+    "victims": 2,
+    "headline": "33 linked accounts, 300 payments between them, 8% reaching one account. Top signal: Paid by accounts that pay many others.",
+    "first_seen": "2022-09-01T00:04:00Z",
     "flagged_at": "2022-09-10T23:59:00Z"
   }
 ]
