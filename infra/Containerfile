@@ -1,0 +1,16 @@
+# NEXUS Z API on top of the LinuxONE Community Cloud Jupyter image (s390x). Build and run with
+# infra/podman_api.sh. The image already has numpy, pandas and XGBoost built for s390x; this adds only the
+# API packages. The repo, the model and the data are mounted at run time, not copied in.
+# NOT YET TESTED ON THE VM: it needs a podman build on the LinuxONE machine (see infra/README.md).
+FROM registry.linuxone.cloud.marist.edu/l1cc/jupyterlab-image-s390x:latest
+
+USER root
+RUN python -m pip install --no-cache-dir "fastapi>=0.141" "uvicorn>=0.52" "pydantic>=2.13" "httpx>=0.28" "pytest>=9.1" "networkx>=3.0"
+# the image's own user (uid 1000, as used in ml/LINUXONE.md)
+USER 1000
+
+WORKDIR /srv/nexusz/repo
+ENV PYTHONUNBUFFERED=1 NEXUSZ_DATA_DIR=/srv/nexusz/data NEXUSZ_BUNDLE=/srv/nexusz/bundle
+EXPOSE 8000
+# 0.0.0.0 is inside the container only; podman_api.sh publishes the port on the VM's loopback
+CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
