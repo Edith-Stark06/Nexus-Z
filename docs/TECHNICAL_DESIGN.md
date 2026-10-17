@@ -72,5 +72,5 @@ python -m ml.export_scores HI-Small <folder> <out>           # real model output
 
 - One dataset family (IBM AML) and one time split. The payment model also ranks accounts about three times better than the account model on LI-Small (PR-AUC 0.093 against 0.031, one seed), but there it recovers fewer laundering groups as rings (6.8% against 10.2%, without ring growth); see ML_RESULTS.md. The payment-level numbers are three seeds for the first feature set and one seed for the committed 57-feature model.
 - Most laundering groups are still missed: a third recovered as rings, 45% never detected in the replay.
-- The injected pig-butchering rings used to test the typology are a stand-in written by the modelling side, so those results are optimistic.
+- The injected pig-butchering rings used to test the typology are synthetic and written by our own team, so those results are optimistic. On the more varied generator (`data/rings.py`, 3 seeds) the account models reach PR-AUC about 0.4 and recover 70 to 74% of rings, and most of the gain over transaction-only comes from timing features, not graph features. The committed payment-level model has not been tested on those rings.
 - Roles (victim, collector, mule, cash-out) are guessed from position in a ring; the data has no role labels.
