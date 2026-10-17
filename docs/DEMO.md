@@ -21,13 +21,22 @@ export NEXUSZ_DATA_DIR=$HOME/data
 ~/nexusz-venv/bin/python -m infra.simulator prepare --slice HI-Pig-Slice --history-hours 24 --out ~/pig-replay.csv --force
 bash infra/podman_api.sh deps        # once: the three web packages the platform image lacks go in ~/nexusz-pylibs
 bash infra/podman_api.sh start       # the API in a hardened container; wait about 30 s, then: bash infra/podman_api.sh status
+bash infra/podman_api.sh dash-start  # the dashboard in a second hardened container (needs the built dashboard in ~/nexusz-dashboard-dist, see below)
 bash infra/podman_api.sh check       # optional on camera: loopback only, non-root, read-only, no capabilities, memory limit
 ```
-On your laptop:
+Everything now runs on the VM, so the laptop only needs a tunnel and a browser:
 ```
-ssh -i <key> -N -L 8000:127.0.0.1:8000 <user>@<vm address>                   # the API stays on the VM's loopback
-cd dashboard && npm ci && npm run dev                                         # http://localhost:3000, badge must say LIVE API
+ssh -i <key> -o ServerAliveInterval=30 -N -L 8000:127.0.0.1:8000 -L 3000:127.0.0.1:3000 <user>@<vm address>
 ```
+then open http://localhost:3000 (the badge must say LIVE API). Both ports stay on the VM's loopback; nothing is exposed.
+
+**The dashboard is built where Node is installed, then copied to the VM** (once, and again whenever the dashboard changes):
+```
+cd dashboard && npm ci && npm run build
+tar -czf dist.tgz dist && scp -i <key> dist.tgz <user>@<vm address>:        # on Windows Git Bash add --force-local to tar
+ssh <user>@<vm address> 'rm -rf ~/nexusz-dashboard-dist && mkdir ~/nexusz-dashboard-dist && tar -xzf ~/dist.tgz -C ~/nexusz-dashboard-dist --strip-components=1'
+```
+Fallback if the VM container fails: `cd dashboard && npm run dev` on the laptop serves the same pages on http://localhost:3000 (stop the tunnel's port 3000 first).
 Start the stream when you are ready to show it (a second terminal on the VM):
 ```
 ~/nexusz-venv/bin/python -m infra.simulator replay --input ~/pig-replay.csv --speed 600 --batch-size 500
@@ -52,7 +61,7 @@ Start the stream when you are ready to show it (a second terminal on the VM):
 
 ## Between takes
 
-Restart the API (the replay adds payments to its history): `bash infra/podman_api.sh stop && bash infra/podman_api.sh start`. Ring ids are the same on a fresh start.
+Restart the API (the replay adds payments to its history): `bash infra/podman_api.sh stop && bash infra/podman_api.sh start`. Ring ids are the same on a fresh start. A ring keeps its id while it grows during the stream; one that dissolves or leaves the 24 hour window is gone, and its page says so.
 
 ## If something breaks
 
