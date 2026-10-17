@@ -73,13 +73,14 @@ def case_summary(ring: dict, payments: int | None = None) -> str:
              f"{ring['risk']} of 100.")
     parts = [first]
     if present:
-        parts.append(f"The main signal is that {clean_reason(present[0]['label'])}.")
+        parts.append(f"The main signal is: {clean_reason(present[0]['label'])}.")
         meaning = meaning_for(present[0]["feature"])
         if meaning:
             parts.append(meaning)
-    shape = [f"{roles[r]} {name}" for r, name in (("victim", "likely victims"), ("collector", "collectors"), ("mule", "mules"),
-                                                    ("cashout", "cash-outs")) if roles.get(r)]
+    shape = [f"{roles[r]} {one if roles[r] == 1 else many}" for r, one, many in (
+        ("victim", "likely victim", "likely victims"), ("collector", "collector", "collectors"), ("mule", "mule", "mules"),
+        ("cashout", "cash-out", "cash-outs")) if roles.get(r)]
     if shape:
-        parts.append("Estimated roles: " + ", ".join(shape) + ".")
+        parts.append("Estimated roles: " + ", ".join(shape[:-1]) + (" and " if len(shape) > 1 else "") + shape[-1] + ".")
     parts.append(CLOSING)
     return " ".join(parts)
