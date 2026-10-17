@@ -150,6 +150,45 @@ Ring level, flagged fraction chosen on validation: the graph model recovered 96%
 
 What would make this convincing: rings from an independent generator, more varied timing (including rings that deliberately delay forwarding), and real or adversarially built look-alikes.
 
+## 6. Better models: payment-level scoring, two stages, ring growth
+
+Sections 1 to 4 describe the first model, which scores accounts. Later work on HI-Small (all on the LinuxONE VM, same time split and protocol, 3 training seeds each) tried three improvements. Test window, account level, PR-AUC:
+
+| Model | PR-AUC | Precision | Recall | PR-AUC on accounts never flagged before |
+|---|---|---|---|---|
+| Account model (graph, structure features) | 0.153 (0.147 to 0.160) | 0.30 | 0.20 | 0.18 |
+| **Two-stage account model** (a second stage that also sees the first stage's scores for each account's payers and payees) | 0.184 (0.180 to 0.189) | 0.35 | 0.28 | 0.26 |
+| **Payment-level model** (score every payment; an account's risk is its riskiest payment) | **0.428** (0.425 to 0.432) | **0.74** (0.66 to 0.80) | **0.31** | **0.39** |
+
+Precision and recall are at the threshold that maximized F1 on validation. At payment level the model scores 0.434 PR-AUC where chance is 0.0011.
+
+**The payment-level model is the one in the committed bundle.** Each payment is described by its own amount, channel, hour and currency change; by how soon the sender received money before sending it (and how much), and how soon the receiver passes it on; and by the account features of both endpoints. The gain over the account model is large and steady across seeds. Training keeps every laundering payment and 5% of the rest.
+
+### Rings from the payment model
+
+Laundering groups recovered, rings that are real, and mean purity, test window, with the settings chosen on validation (strict share of accounts that may start a ring; wider share a ring may grow into):
+
+| Rings formed from | Groups recovered | Rings that are real | Mean purity |
+|---|---|---|---|
+| Account model, no growth | 20 to 30% | 31 to 46% | 29 to 44% |
+| Two-stage account model, no growth | 42% | 40% | 36% |
+| Payment model, strict 0.5%, no growth | 25 to 27% | 82 to 88% | 75 to 81% |
+| Payment model, strict 0.25%, no growth | 23% | 98% | 92% |
+| **Payment model, strict 0.25%, grown to 2% (committed setting)** | **34%** | **70%** | **62%** |
+| Payment model, strict 0.25%, grown to 5% | 35% | 46% | 42% |
+
+Growth is a dial between catching more of each group and keeping rings clean. The committed setting recovers a third of the laundering groups with seven in ten rings real. Without growth the rings are almost all real but a fifth of the groups are found. The validation-chosen setting also holds on test.
+
+### What did not help
+
+- **Burst and motif features** (distinct payers within an hour, six hours or a day; directed triangles; feed-forward loops; repeated amounts): PR-AUC 0.149 against 0.160 without them. Not adopted.
+
+### Caveats specific to this section
+
+- One dataset (IBM AML HI-Small), one time split, three training seeds. Seeds measure training noise, not split noise.
+- The payment model looks at payments in a window together with the history up to the cutoff, including the receiver's next payment. A payment is therefore flagged once the evidence appears (for example when the money is forwarded), which is why detection time is replayed separately.
+- Precision and recall are at one validation-chosen threshold; other thresholds trade them off.
+
 ## Caveats that apply to everything above
 
 - Single time split per dataset. Seeds measure training noise, not split noise.
