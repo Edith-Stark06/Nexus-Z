@@ -38,6 +38,7 @@ SLICE="${NEXUSZ_SLICE:-HI-Pig-Slice}"
 DASH_NAME="${NEXUSZ_DASHBOARD_CONTAINER:-nexusz-dashboard}"
 DASH_DIST="${NEXUSZ_DASHBOARD_DIST:-$HOME/nexusz-dashboard-dist}"
 DASH_PORT="${NEXUSZ_DASHBOARD_PORT:-3000}"
+CHAT_SECRET="${NEXUSZ_CHAT_SECRET:-nexusz_hf_token}"
 PY=/opt/venv/bin/python      # the platform image's interpreter (the default `python` is the system one, without the packages)
 USERNS="--userns=keep-id:uid=1000,gid=1000"   # the image's own user, as in ml/LINUXONE.md
 
@@ -54,7 +55,11 @@ case "${1:-}" in
       [ -f "$BUNDLE/model.json" ] || { echo "model bundle not found at $BUNDLE" >&2; exit 1; }
     fi
     podman rm -f "$NAME" >/dev/null 2>&1 || true   # only our own container
-    podman run -d --name "$NAME" $USERNS \
+    # The assistant's Hugging Face token is a podman secret (infra/set_chat_token.sh), mounted as a read-only file for the container user only.
+    # Without it the assistant answers from its built-in rules. The token is never an environment variable, so `podman inspect` cannot show it.
+    SECRET_ARGS=""
+    if podman secret exists "$CHAT_SECRET" 2>/dev/null; then SECRET_ARGS="--secret $CHAT_SECRET,type=mount,uid=1000,gid=1000,mode=0400"; fi
+    podman run -d --name "$NAME" $USERNS $SECRET_ARGS \
       -p "127.0.0.1:$PORT:8000" \
       --read-only --tmpfs /tmp --cap-drop=ALL --security-opt no-new-privileges --memory "${NEXUSZ_MEMORY:-5g}" --pids-limit 512 \
       -v "$REPO:/srv/nexusz/repo:ro,z" -v "$DATA_DIR:/srv/nexusz/data:ro,z" -v "$BUNDLE:/srv/nexusz/bundle:ro,z" \
@@ -63,6 +68,7 @@ case "${1:-}" in
       -e NEXUSZ_BACKEND="$BACKEND" -e NEXUSZ_DATA_DIR=/srv/nexusz/data -e NEXUSZ_BUNDLE=/srv/nexusz/bundle -e NEXUSZ_SLICE="$SLICE" \
       -e NEXUSZ_HISTORY_HOURS="${NEXUSZ_HISTORY_HOURS:-24}" -e NEXUSZ_ACTIVE_HOURS="${NEXUSZ_ACTIVE_HOURS:-24}" \
       -e NEXUSZ_MIN_REFRESH_SECONDS="${NEXUSZ_MIN_REFRESH_SECONDS:-5}" -e NEXUSZ_CORS_ORIGINS="${NEXUSZ_CORS_ORIGINS:-}" \
+      -e NEXUSZ_CHAT="${NEXUSZ_CHAT:-auto}" -e NEXUSZ_CHAT_MODELS="${NEXUSZ_CHAT_MODELS:-}" \
       -w /srv/nexusz/repo "$IMAGE" \
       "$PY" -m uvicorn api.main:app --host 0.0.0.0 --port 8000 >/dev/null     # 0.0.0.0 is inside the container only
     echo "started $NAME; wait about 30 s (model mode builds its first state), then: curl -fsS http://127.0.0.1:$PORT/health"
@@ -88,6 +94,11 @@ case "${1:-}" in
     for p in /srv/nexusz/repo/x /srv/nexusz/data/x /usr/x /tmp/x; do
       if podman exec "$NAME" sh -c "touch $p" 2>/dev/null; then echo "$p: written"; else echo "$p: refused"; fi
     done
+    echo "== assistant (never prints the token)"
+    if podman secret exists "$CHAT_SECRET" 2>/dev/null; then echo "token secret: stored, mounted read-only for the container user"; else echo "token secret: none (the assistant answers by rules)"; fi
+    podman exec "$NAME" sh -c 'ls -l /run/secrets/ 2>/dev/null | tail -n +2' || true
+    curl -fsS "http://127.0.0.1:$PORT/chat/status" || echo "chat status unavailable"
+    echo
     echo "== resources"; podman stats --no-stream --format '{{.Name}} memory={{.MemUsage}} cpu={{.CPUPerc}}' "$NAME"
     ;;
   status)
