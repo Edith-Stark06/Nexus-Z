@@ -1,0 +1,461 @@
+seed,model,type,adversarial,flagged
+0,transaction-only,merchant,True,False
+0,transaction-only,new-customer,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,new-customer,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,new-customer,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,payroll,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,payroll,True,False
+0,transaction-only,charity,True,False
+0,transaction-only,merchant,True,True
+0,transaction-only,payroll,True,False
+0,transaction-only,new-customer,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,new-customer,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,payroll,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,charity,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,new-customer,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,landlord,True,False
+0,transaction-only,new-customer,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,landlord,True,True
+0,transaction-only,merchant,True,False
+0,transaction-only,merchant,True,False
+0,transaction-only,charity,True,True
+0,transaction-only,new-customer,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,new-customer,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,new-customer,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,new-customer,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,payroll,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,payroll,True,False
+0,+ behavioral,charity,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,payroll,True,False
+0,+ behavioral,new-customer,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,new-customer,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,payroll,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,charity,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,new-customer,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,landlord,True,False
+0,+ behavioral,new-customer,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,landlord,True,True
+0,+ behavioral,merchant,True,False
+0,+ behavioral,merchant,True,False
+0,+ behavioral,charity,True,False
+0,+ behavioral,new-customer,True,False
+0,+ graph,merchant,True,False
+0,+ graph,new-customer,True,False
+0,+ graph,merchant,True,False
+0,+ graph,new-customer,True,False
+0,+ graph,merchant,True,False
+0,+ graph,merchant,True,False
+0,+ graph,merchant,True,False
+0,+ graph,new-customer,True,False
+0,+ graph,merchant,True,False
+0,+ graph,payroll,True,False
+0,+ graph,merchant,True,False
+0,+ graph,payroll,True,False
+0,+ graph,charity,True,False
+0,+ graph,merchant,True,False
+0,+ graph,payroll,True,False
+0,+ graph,new-customer,True,False
+0,+ graph,merchant,True,False
+0,+ graph,new-customer,True,False
+0,+ graph,merchant,True,False
+0,+ graph,payroll,True,False
+0,+ graph,merchant,True,False
+0,+ graph,charity,True,False
+0,+ graph,merchant,True,False
+0,+ graph,new-customer,True,False
+0,+ graph,merchant,True,False
+0,+ graph,merchant,True,False
+0,+ graph,landlord,True,False
+0,+ graph,new-customer,True,False
+0,+ graph,merchant,True,False
+0,+ graph,merchant,True,False
+0,+ graph,landlord,True,False
+0,+ graph,merchant,True,False
+0,+ graph,merchant,True,False
+0,+ graph,charity,True,False
+0,+ graph,new-customer,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",new-customer,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",new-customer,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",new-customer,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",payroll,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",payroll,True,False
+0,"+ k-core, clustering, components",charity,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",payroll,True,False
+0,"+ k-core, clustering, components",new-customer,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",new-customer,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",payroll,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",charity,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",new-customer,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",landlord,True,False
+0,"+ k-core, clustering, components",new-customer,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",landlord,True,True
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",merchant,True,False
+0,"+ k-core, clustering, components",charity,True,False
+0,"+ k-core, clustering, components",new-customer,True,False
+1,transaction-only,merchant,True,True
+1,transaction-only,charity,True,False
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,new-customer,True,True
+1,transaction-only,merchant,True,False
+1,transaction-only,landlord,True,True
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,True
+1,transaction-only,new-customer,True,True
+1,transaction-only,merchant,True,True
+1,transaction-only,merchant,True,True
+1,transaction-only,payroll,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,payroll,True,False
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,payroll,True,False
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,payroll,True,False
+1,transaction-only,merchant,True,True
+1,transaction-only,landlord,True,True
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,payroll,True,False
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,charity,True,False
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,payroll,True,False
+1,transaction-only,landlord,True,False
+1,transaction-only,new-customer,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,merchant,True,False
+1,transaction-only,payroll,True,False
+1,transaction-only,charity,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,charity,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,new-customer,True,True
+1,+ behavioral,merchant,True,False
+1,+ behavioral,landlord,True,True
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,payroll,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,payroll,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,payroll,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,payroll,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,landlord,True,True
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,payroll,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,charity,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,payroll,True,False
+1,+ behavioral,landlord,True,False
+1,+ behavioral,new-customer,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,merchant,True,False
+1,+ behavioral,payroll,True,False
+1,+ behavioral,charity,True,False
+1,+ graph,merchant,True,False
+1,+ graph,charity,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,merchant,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,landlord,True,True
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,merchant,True,False
+1,+ graph,payroll,True,False
+1,+ graph,merchant,True,False
+1,+ graph,payroll,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,payroll,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,payroll,True,False
+1,+ graph,merchant,True,False
+1,+ graph,landlord,True,True
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,payroll,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,charity,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,payroll,True,False
+1,+ graph,landlord,True,False
+1,+ graph,new-customer,True,False
+1,+ graph,merchant,True,False
+1,+ graph,merchant,True,False
+1,+ graph,payroll,True,False
+1,+ graph,charity,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",charity,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",landlord,True,True
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",payroll,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",payroll,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",payroll,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",payroll,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",landlord,True,True
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",payroll,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",charity,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",payroll,True,False
+1,"+ k-core, clustering, components",landlord,True,False
+1,"+ k-core, clustering, components",new-customer,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",merchant,True,False
+1,"+ k-core, clustering, components",payroll,True,False
+1,"+ k-core, clustering, components",charity,True,False
+2,transaction-only,merchant,True,True
+2,transaction-only,landlord,True,True
+2,transaction-only,new-customer,True,False
+2,transaction-only,merchant,True,False
+2,transaction-only,payroll,True,False
+2,transaction-only,landlord,True,True
+2,transaction-only,charity,True,False
+2,transaction-only,merchant,True,False
+2,transaction-only,merchant,True,True
+2,transaction-only,landlord,True,True
+2,transaction-only,merchant,True,True
+2,transaction-only,merchant,True,True
+2,transaction-only,landlord,True,False
+2,transaction-only,merchant,True,False
+2,transaction-only,payroll,True,False
+2,transaction-only,new-customer,True,False
+2,transaction-only,merchant,True,False
+2,transaction-only,landlord,True,True
+2,transaction-only,merchant,True,False
+2,transaction-only,new-customer,True,False
+2,transaction-only,merchant,True,True
+2,transaction-only,new-customer,True,False
+2,transaction-only,merchant,True,True
+2,transaction-only,new-customer,True,False
+2,transaction-only,merchant,True,True
+2,transaction-only,payroll,True,False
+2,transaction-only,landlord,True,True
+2,transaction-only,merchant,True,True
+2,transaction-only,merchant,True,True
+2,transaction-only,payroll,True,False
+2,transaction-only,merchant,True,True
+2,transaction-only,payroll,True,False
+2,transaction-only,merchant,True,True
+2,transaction-only,new-customer,True,False
+2,transaction-only,merchant,True,False
+2,transaction-only,merchant,True,True
+2,transaction-only,payroll,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,landlord,True,False
+2,+ behavioral,new-customer,True,True
+2,+ behavioral,merchant,True,False
+2,+ behavioral,payroll,True,False
+2,+ behavioral,landlord,True,False
+2,+ behavioral,charity,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,landlord,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,landlord,True,True
+2,+ behavioral,merchant,True,False
+2,+ behavioral,payroll,True,False
+2,+ behavioral,new-customer,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,landlord,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,new-customer,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,new-customer,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,new-customer,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,payroll,True,False
+2,+ behavioral,landlord,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,payroll,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,payroll,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,new-customer,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,merchant,True,False
+2,+ behavioral,payroll,True,False
+2,+ graph,merchant,True,False
+2,+ graph,landlord,True,False
+2,+ graph,new-customer,True,False
+2,+ graph,merchant,True,False
+2,+ graph,payroll,True,False
+2,+ graph,landlord,True,True
+2,+ graph,charity,True,False
+2,+ graph,merchant,True,False
+2,+ graph,merchant,True,False
+2,+ graph,landlord,True,False
+2,+ graph,merchant,True,False
+2,+ graph,merchant,True,False
+2,+ graph,landlord,True,True
+2,+ graph,merchant,True,False
+2,+ graph,payroll,True,False
+2,+ graph,new-customer,True,False
+2,+ graph,merchant,True,False
+2,+ graph,landlord,True,True
+2,+ graph,merchant,True,False
+2,+ graph,new-customer,True,False
+2,+ graph,merchant,True,False
+2,+ graph,new-customer,True,False
+2,+ graph,merchant,True,False
+2,+ graph,new-customer,True,False
+2,+ graph,merchant,True,False
+2,+ graph,payroll,True,False
+2,+ graph,landlord,True,True
+2,+ graph,merchant,True,False
+2,+ graph,merchant,True,False
+2,+ graph,payroll,True,False
+2,+ graph,merchant,True,False
+2,+ graph,payroll,True,False
+2,+ graph,merchant,True,False
+2,+ graph,new-customer,True,False
+2,+ graph,merchant,True,False
+2,+ graph,merchant,True,False
+2,+ graph,payroll,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",landlord,True,False
+2,"+ k-core, clustering, components",new-customer,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",payroll,True,False
+2,"+ k-core, clustering, components",landlord,True,True
+2,"+ k-core, clustering, components",charity,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",landlord,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",landlord,True,True
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",payroll,True,False
+2,"+ k-core, clustering, components",new-customer,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",landlord,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",new-customer,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",new-customer,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",new-customer,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",payroll,True,False
+2,"+ k-core, clustering, components",landlord,True,True
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",payroll,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",payroll,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",new-customer,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",merchant,True,False
+2,"+ k-core, clustering, components",payroll,True,False
