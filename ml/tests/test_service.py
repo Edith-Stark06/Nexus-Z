@@ -59,3 +59,33 @@ def test_ring_is_described_once_and_reused(scorer):
     assert scorer.get_ring(rid) is scorer.get_ring(rid)       # same object: no recomputation
     scorer.list_rings(), scorer.list_alerts()                  # these reuse the cache as well
     assert rid in scorer._ring_cache
+
+
+def test_two_stage_bundle_scores_explains_and_matches_the_api_schema(tx_and_two_stage_bundle):
+    from ml.neighbors import NEIGHBOR_COLS
+
+    tx, bundle = tx_and_two_stage_bundle
+    scorer = Scorer.from_transactions(bundle, tx)
+    assert scorer._booster is bundle.stage2 and set(NEIGHBOR_COLS) <= set(scorer._frame.columns)
+    rings = scorer.list_rings()
+    assert rings
+    for s in rings:
+        RingSummary(**s)
+    ring = scorer.get_ring(rings[0]["ring_id"])
+    Ring(**ring)
+    member = ring["members"][0]["id"]
+    AccountScore(**scorer.score_account(member))
+    reasons = {r["feature"] for r in scorer.explain(member, k=len(bundle.cols2))}
+    assert reasons <= set(bundle.cols2) and all(isinstance(r, str) for r in reasons)
+
+
+def test_two_stage_bundle_survives_save_and_load(tx_and_two_stage_bundle, tmp_path):
+    import numpy as np
+    from ml.bundle import load_bundle, save_bundle
+
+    tx, bundle = tx_and_two_stage_bundle
+    save_bundle(bundle, tmp_path)
+    loaded = load_bundle(tmp_path)
+    assert loaded.stage2 is not None and loaded.high_quantile == 0.9 and loaded.cols2 == bundle.cols2
+    a, b = Scorer.from_transactions(bundle, tx), Scorer.from_transactions(loaded, tx)
+    assert np.allclose(a.scores.to_numpy(), b.scores.to_numpy())

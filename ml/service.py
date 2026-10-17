@@ -6,13 +6,16 @@ the rings found among the highest-risk accounts, and the payments they are built
 """
 import hashlib
 
+import xgboost as xgb
+
 import numpy as np
 import pandas as pd
 
 from .bundle import Bundle
 from .model import calibrated
 from .explain import shap_values, top_reasons
-from .features import build_features
+from .features import build_features_with_edges
+from .neighbors import stage2_inputs
 from .ring_score import apply as apply_ring_scorer
 from .rings import Ring, detect_rings
 
@@ -49,9 +52,17 @@ def infer_roles(members: list[str], inside: pd.DataFrame) -> dict[str, str]:
 
 
 class Scorer:
-    def __init__(self, bundle: Bundle, X: pd.DataFrame, tx: pd.DataFrame, as_of: pd.Timestamp):
+    def __init__(self, bundle: Bundle, X: pd.DataFrame, tx: pd.DataFrame, as_of: pd.Timestamp,
+                 all_X: pd.DataFrame | None = None, edges: tuple | None = None):
         self.bundle, self.X, self.tx, self.as_of = bundle, X, tx, as_of
-        self.scores = pd.Series(calibrated(bundle.margin(X), bundle.calibration), index=X.index)
+        # a two-stage bundle also needs every account's features and the payment pairs, to summarize neighbors
+        if bundle.stage2 is not None and all_X is not None:
+            frame = stage2_inputs(X, bundle.cols, all_X.index, bundle.stage1_scores(all_X), edges, bundle.high_quantile)
+            self._booster, self._frame, self._cols = bundle.stage2, frame, bundle.cols2
+        else:
+            self._booster, self._frame, self._cols = bundle.model, X, bundle.cols
+        margin = self._booster.predict(xgb.DMatrix(self._frame[self._cols]), output_margin=True)
+        self.scores = pd.Series(calibrated(margin, bundle.calibration), index=X.index)
         self.rings: list[Ring] = apply_ring_scorer(detect_rings(self.scores, tx, bundle.top_fraction), bundle.ring_scorer)
         self._by_id = {ring_id(r.members): r for r in self.rings}
         self._ring_of = {m: rid for rid, r in self._by_id.items() for m in r.members}
@@ -60,10 +71,10 @@ class Scorer:
     @classmethod
     def from_transactions(cls, bundle: Bundle, tx: pd.DataFrame, active_since: pd.Timestamp | None = None):
         """Build features from `tx` (nothing after the scoring time), then score accounts active since."""
-        feats = build_features(tx, bundle.ccy_median)
+        feats, edges = build_features_with_edges(tx, bundle.ccy_median)
         recent = tx if active_since is None else tx[tx["ts"] > active_since]
         active = pd.unique(pd.concat([recent["src"], recent["dst"]], ignore_index=True))
-        return cls(bundle, feats.loc[active], tx, tx["ts"].max())
+        return cls(bundle, feats.loc[active], tx, tx["ts"].max(), all_X=feats, edges=edges)
 
     # -- internals
     def _inside(self, members: list[str]) -> pd.DataFrame:
@@ -71,8 +82,8 @@ class Scorer:
         return self.tx[self.tx["src"].isin(m) & self.tx["dst"].isin(m) & (self.tx["src"] != self.tx["dst"])]
 
     def _reasons(self, ids: list[str], k: int = 5) -> list[dict]:
-        contrib = shap_values(self.bundle.model, self.X.loc[ids, self.bundle.cols])
-        return top_reasons(contrib.mean(axis=0), self.bundle.cols, k)
+        contrib = shap_values(self._booster, self._frame.loc[ids, self._cols])
+        return top_reasons(contrib.mean(axis=0), self._cols, k)
 
     def _headline(self, r: Ring, reasons: list[dict]) -> str:
         lead = next((x["label"] for x in reasons if x["contribution"] > 0), "Unusual payment pattern")
@@ -83,8 +94,8 @@ class Scorer:
     def explain(self, account_id: str, k: int = 5) -> list[dict] | None:
         if account_id not in self.X.index:
             return None
-        contrib = shap_values(self.bundle.model, self.X.loc[[account_id], self.bundle.cols])[0]
-        return top_reasons(contrib, self.bundle.cols, k)
+        contrib = shap_values(self._booster, self._frame.loc[[account_id], self._cols])[0]
+        return top_reasons(contrib, self._cols, k)
 
     def score_account(self, account_id: str) -> dict | None:
         if account_id not in self.X.index:
