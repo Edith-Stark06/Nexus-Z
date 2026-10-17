@@ -73,7 +73,39 @@ def shap_values(model, X: pd.DataFrame) -> np.ndarray:
     return contrib[:, :-1]  # the last column is the base value
 
 
-def top_reasons(contrib: np.ndarray, cols: list[str], k: int = 5) -> list[dict]:
+# Most labels describe a HIGH value ("Many payments sent"); these describe a LOW one ("Money leaves within minutes"), and
+# these have no direction ("Time of day of the payment").
+LABEL_IS_LOW = {"pt_min", "pt_median", "prev_in_gap", "next_out_gap"}
+LABEL_HAS_NO_DIRECTION = {"log_amount", "hour", "prev_in_ratio", "next_out_ratio"}
+
+
+def label_holds(feature: str, value: float, typical: float) -> bool | None:
+    """Whether the feature's value really is what its label says, or None when the label has no direction.
+
+    A feature can raise the risk by being LOW (an account with no self-transfers looks different from the many IBM
+    accounts that have them), and the label would then claim the opposite of what the data shows.
+    """
+    base = feature[2:] if feature[:2] in ("s_", "d_") else feature
+    if base in LABEL_HAS_NO_DIRECTION or value is None or not np.isfinite(value):
+        return None
+    if feature.startswith(("ch_", "out_share_", "in_share_")):  # a one-hot or a share: true when it is the main case
+        return bool(value >= 0.5)
+    return bool(value < typical) if base in LABEL_IS_LOW else bool(value > typical)
+
+
+def top_reasons(contrib: np.ndarray, cols: list[str], k: int = 5, values: np.ndarray | None = None,
+                typical: dict | None = None) -> list[dict]:
+    """The k biggest contributions with readable labels. With `values` (the feature values behind the contributions)
+    and `typical` (a typical value per feature), a reason whose label is not actually true gets " (absent)" and
+    "holds": false, so the text never says "many transfers to itself" about an account that has none."""
     order = np.argsort(-np.abs(contrib))[:k]
-    return [{"feature": cols[i], "label": label(cols[i]), "contribution": round(float(contrib[i]), 3)}
-            for i in order]
+    out = []
+    for i in order:
+        item = {"feature": cols[i], "label": label(cols[i]), "contribution": round(float(contrib[i]), 3)}
+        if values is not None and typical is not None:
+            holds = label_holds(cols[i], float(values[i]), float(typical.get(cols[i], np.nan)))
+            if holds is False:
+                item["label"] += " (absent)"
+            item["holds"] = holds
+        out.append(item)
+    return out
