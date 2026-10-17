@@ -1,0 +1,18 @@
+{
+ "variant": "HI-Small",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "scenario": "fast-rings-only",
+ "inject": {
+  "kinds": [
+   "fan-in",
+   "dispersed",
+   "chain"
+  ]
+ },
+ "step_hours": 6,
+ "replay": false
+}
