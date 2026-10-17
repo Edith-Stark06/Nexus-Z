@@ -25,6 +25,7 @@ PAYMENT_WINDOW_HOURS = 24  # payments scored by a payment-level model
 KEEP_TOP_SHARE = 0.05      # share of accounts whose riskiest payment is kept ready for explanations
 HIGH_RISK, MEDIUM_RISK = 50, 25  # ring risk (0 to 100) cut-offs for alert severity
 MAX_EDGES = 500
+TYPICAL_SAMPLE = 50_000    # payments sampled to find the typical value of each feature (a reason must be really true)
 
 
 def ring_id(members: list[str]) -> str:
@@ -64,6 +65,7 @@ class Scorer:
             rows = payment_features(self._window, tx, all_X, bundle.cols, bundle.ccy_median)
             p = calibrated(bundle.payment.predict(xgb.DMatrix(rows), output_margin=True), bundle.payment_calibration)
             self.scores = account_scores(self._window, p).reindex(X.index).fillna(0.0)
+            self._typical = rows.sample(min(len(rows), TYPICAL_SAMPLE), random_state=0).median().to_dict()
             self._keep_payment_rows(rows, p)
         else:
             self._score_accounts(X, all_X, edges)
@@ -75,6 +77,7 @@ class Scorer:
         self._ring_tx: pd.DataFrame | None = None  # payments between any two ring members, built on first use
         self._contrib: dict[str, np.ndarray] = {}  # per-account explanations filled by list_rings in one batch
         self._contrib_cols: list[str] = []
+        self._values: dict[str, np.ndarray] = {}  # the feature values behind those explanations
 
     def _score_accounts(self, X, all_X, edges) -> None:
         bundle = self.bundle
@@ -86,6 +89,7 @@ class Scorer:
             self._booster, self._frame, self._cols = bundle.model, X, bundle.cols
         margin = self._booster.predict(xgb.DMatrix(self._frame[self._cols]), output_margin=True)
         self.scores = pd.Series(calibrated(margin, bundle.calibration), index=X.index)
+        self._typical = self._frame[self._cols].median().to_dict()
 
     def _keep_payment_rows(self, rows: pd.DataFrame, p: np.ndarray) -> None:
         """Remember each account's riskiest payment, and keep its features for the accounts most likely to be asked about."""
@@ -104,11 +108,12 @@ class Scorer:
         return self._payment_rows.loc[[pos]]
 
     def _explanation_matrix(self, ids: list[str]):
-        """SHAP contributions (accounts x features) and the feature names they refer to."""
+        """SHAP contributions (accounts x features), the feature names they refer to, and the feature values."""
         if self._payment_mode:
             rows = pd.concat([self._payment_row(a) for a in ids])
-            return shap_values(self.bundle.payment, rows), list(rows.columns)
-        return shap_values(self._booster, self._frame.loc[ids, self._cols]), self._cols
+            return shap_values(self.bundle.payment, rows), list(rows.columns), rows.to_numpy(dtype=float)
+        frame = self._frame.loc[ids, self._cols]
+        return shap_values(self._booster, frame), self._cols, frame.to_numpy(dtype=float)
 
     @classmethod
     def from_transactions(cls, bundle: Bundle, tx: pd.DataFrame, active_since: pd.Timestamp | None = None):
@@ -131,19 +136,22 @@ class Scorer:
 
     def _reasons(self, ids: list[str], k: int = 5) -> list[dict]:
         if all(a in self._contrib for a in ids):
-            return top_reasons(np.mean([self._contrib[a] for a in ids], axis=0), self._contrib_cols, k)
-        contrib, cols = self._explanation_matrix(ids)
-        return top_reasons(contrib.mean(axis=0), cols, k)
+            return top_reasons(np.mean([self._contrib[a] for a in ids], axis=0), self._contrib_cols, k,
+                               np.mean([self._values[a] for a in ids], axis=0), self._typical)
+        contrib, cols, values = self._explanation_matrix(ids)
+        return top_reasons(contrib.mean(axis=0), cols, k, values.mean(axis=0), self._typical)
 
     def _prefetch_contributions(self, ids: list[str]) -> None:
         """Explain many accounts in one model call; describing each ring separately repeats the call's fixed cost."""
         ids = [a for a in dict.fromkeys(ids) if a not in self._contrib]
         if ids:
-            contrib, self._contrib_cols = self._explanation_matrix(ids)
+            contrib, self._contrib_cols, values = self._explanation_matrix(ids)
             self._contrib.update(zip(ids, contrib))
+            self._values.update(zip(ids, values))
 
     def _headline(self, r: Ring, reasons: list[dict]) -> str:
-        lead = next((x["label"] for x in reasons if x["contribution"] > 0), "Unusual payment pattern")
+        up = [x for x in reasons if x["contribution"] > 0]  # lead with a signal that is really present, if there is one
+        lead = next((x["label"] for x in up if x.get("holds") is not False), up[0]["label"] if up else "Unusual payment pattern")
         return (f"{r.size} linked accounts, {r.n_tx} payments between them, "
                 f"{r.concentration:.0%} reaching one account. Top signal: {lead}.")
 
@@ -151,8 +159,8 @@ class Scorer:
     def explain(self, account_id: str, k: int = 5) -> list[dict] | None:
         if account_id not in self.X.index:
             return None
-        contrib, cols = self._explanation_matrix([account_id])
-        return top_reasons(contrib[0], cols, k)
+        contrib, cols, values = self._explanation_matrix([account_id])
+        return top_reasons(contrib[0], cols, k, values[0], self._typical)
 
     def score_account(self, account_id: str) -> dict | None:
         if account_id not in self.X.index:
