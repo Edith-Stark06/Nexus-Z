@@ -23,10 +23,17 @@ async function mockModule() {
   return _mockPromise;
 }
 
+// An HTTP answer (even an error) proves the API is up, so callers can tell "no such ring" from "API down".
+function httpError(status, path) {
+  const err = new Error(`HTTP ${status} on ${path}`);
+  err.status = status;
+  return err;
+}
+
 async function _get(path) {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status} on ${path}`);
+    throw httpError(res.status, path);
   }
   return res.json();
 }
@@ -39,7 +46,7 @@ export class ApiClient {
   async _get(path) {
     const res = await fetch(`${this.baseUrl}${path}`);
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status} on ${path}`);
+      throw httpError(res.status, path);
     }
     return res.json();
   }
@@ -65,14 +72,19 @@ export class ApiClient {
   }
 }
 
-// Try the API; fall back to the provided mock value on any failure.
+// Try the API; fall back to the provided mock value when the API cannot be reached or fails.
 // The mock value may be a plain value or a promise that resolves to one.
+// A 404 is an answer, not a failure: it means "no such ring or account" (ring ids change when a ring is rebuilt),
+// so it returns { data: null, usingMock: false, notFound: true } and never shows sample data in its place.
 // Returns { data, usingMock }.
 export async function withFallback(apiCall, mockValue) {
   try {
     const data = await apiCall();
     return { data, usingMock: false };
-  } catch {
+  } catch (err) {
+    if (err && err.status === 404) {
+      return { data: null, usingMock: false, notFound: true };
+    }
     const data = await mockValue;
     return { data, usingMock: true };
   }

@@ -50,3 +50,32 @@ describe("fallback to mock on fetch failure", () => {
     expect(await api.checkApiReachable()).toBe(false);
   });
 });
+
+describe("a 404 is an answer, not an outage", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const answer = (status) =>
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status, json: async () => ({}) })));
+
+  it("a ring that no longer exists comes back empty and not as sample data", async () => {
+    answer(404);
+    const res = await api.getRing("RNG-GONE");
+    expect(res).toEqual({ data: null, usingMock: false, notFound: true });
+  });
+
+  it("an unknown account comes back empty and not as sample data", async () => {
+    answer(404);
+    const res = await api.getAccount("ACC-UNKNOWN");
+    expect(res.data).toBeNull();
+    expect(res.usingMock).toBe(false);
+  });
+
+  it("a server error still falls back to the sample data and says so", async () => {
+    answer(500);
+    const res = await api.listRings();
+    expect(res.usingMock).toBe(true);
+    expect(res.data.length).toBeGreaterThan(0);
+  });
+});
