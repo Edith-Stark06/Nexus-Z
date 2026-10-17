@@ -23,4 +23,4 @@ The README exposes Jupyter on a public port and leaves the published default log
 
 - Rootless Podman stops the container when your SSH session ends. The script enables lingering for your user.
 - Mounted folders are not writable by the container user unless the user ids are mapped. The script uses `--userns=keep-id:uid=1000,gid=1000`.
-- The image has no pyarrow, FastAPI, pydantic or SHAP, and the VM has 7.5 GB of RAM. Training does not need the missing packages. The transaction loader was changed to use integer codes so it needs less memory without pyarrow.
+- The image has no pyarrow, FastAPI, pydantic or SHAP, and the VM has 7.5 GB of RAM. Training does not need the missing packages. `pip install pydantic fastapi uvicorn httpx pytest` works inside the container (it has a compiler), after which the whole test suite passes there (37 passed, 1 skipped, the SHAP comparison). The transaction loader was changed to use integer codes so it needs less memory without pyarrow.
