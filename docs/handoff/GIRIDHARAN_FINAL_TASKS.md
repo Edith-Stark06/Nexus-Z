@@ -1,6 +1,6 @@
 # Giridharan: final tasks (read this first)
 
-For Giridharan's Claude. Deadline: **Oct 18, 10:00 IST** for the Hack2Skill submission. Pull `main` before you start (`git pull origin main`), work on your branch `giridharan-re`, and open PRs to `main`. No attribution lines in commits or PR bodies. The repo is public: never commit keys, IP addresses, tokens or data files.
+For Giridharan's Claude. Deadline: **Oct 18, 10:00 PM IST** for the Hack2Skill submission (virtual track); aim to have your PRs in by Oct 18, 14:00 IST so there is time to review them. Pull `main` before you start (`git pull origin main`), work on your branch `giridharan-re`, and open PRs to `main`. No attribution lines in commits or PR bodies. The repo is public: never commit keys, IP addresses, tokens or data files.
 
 ## What changed since your last PR
 
