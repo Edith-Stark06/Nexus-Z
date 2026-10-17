@@ -253,6 +253,33 @@ The same payment-level model (57 features, 5% of non-laundering payments in trai
 - The payment model looks at payments in a window together with the history up to the cutoff, including the receiver's next payment. A payment is therefore flagged once the evidence appears (for example when the money is forwarded), which is why detection time is replayed separately.
 - Precision and recall are at one validation-chosen threshold; other thresholds trade them off.
 
+## 7. The typology demo bundle: trained with injected pig-butchering rings
+
+The committed IBM-only model (sections 1 to 6) learned IBM's own laundering patterns. Asked about the synthetic pig-butchering rings from `data/rings.py` (section 5), it finds none of them: on 90 rings and 90 look-alikes injected with seed 1 into the last 48 hours of HI-Small, it recovers **0 of 10** rings in the last-24-hour window and **0 of 20** in the 48-hour window, and none of its 10 riskiest rings contains an injected account (`python -m ml.pig_eval HI-Small ml/artifacts/HI-Small 1`). A pig-butchering demo therefore needs a model that has seen the typology.
+
+`ml/artifacts/HI-Small-pig` is the same payment-level pipeline trained on IBM's labels **plus** injected rings (`python -m ml.bundle HI-Small <folder> payment 0`, seed 0), trained on the LinuxONE VM in the platform container in 31 min 46 s including building the feature snapshots for the injected data (account model 691 trees, payment model 800 trees; 800 is the cap, so the payment model had not stopped improving). The demo serves `HI-Pig-Slice`, the last 48 hours of **seed 1**, a different random draw of rings, made with `python -m ml.make_demo_slice HI-Small 48 HI-Pig-Slice 1`. Scored the way the API scores it (`python -m ml.pig_eval HI-Small ml/artifacts/HI-Small-pig <seed>`, run on the VM):
+
+| Rings scored | Active window | Injected rings with 2 or more active fraud accounts | Recovered | Of the 10 riskiest rings, with injected accounts | Look-alike hubs inside a detected ring |
+|---|---|---|---|---|---|
+| IBM-only model, seed 1 | 24 h | 10 | 0 (0%) | 0 | 0 of 90 |
+| IBM-only model, seed 1 | 48 h | 20 | 0 (0%) | 0 | 0 of 90 |
+| **Demo bundle, seed 1 (not trained on)** | 24 h | 10 | **8 (80%)** | 5 | 0 of 90 |
+| **Demo bundle, seed 1 (not trained on)** | 48 h | 20 | **11 (55%)** | 8 | 0 of 90 |
+| Demo bundle, seed 0 (trained on, but these are later payments than it trained on) | 24 h | 9 | 7 (78%) | 4 | 0 of 90 |
+| Demo bundle, seed 0 | 48 h | 19 | 14 (74%) | 9 | 0 of 90 |
+
+Read these with care:
+
+- **The counts are small** (9 to 20 rings per row), so each percentage moves by 5 to 10 points per ring. Shapes are too few to compare: in the 48 h window, seed 1 missed its aged rings (0 of 2) and recovered 2 of 4 delayed ones, while seed 0 recovered all 3 aged rings and 0 of 4 delayed ones, so no shape is reliably easy or hard here.
+- **Same generator for training and testing.** The injected rings in training and in the demo come from the same code, written by the team that wrote the features. This shows the model can learn this typology, not that it detects real pig-butchering. The IBM-only rows are the honest measure of what a model that has not seen the typology does: nothing.
+- **What the model keys on.** After the explanation fix below, the top reasons for fully injected rings are mostly *absences*: no transfers to itself, no payments flowing back and forth, no long activity history, no repeated amounts. The one positive cue is money leaving within minutes. The model is largely recognising brand-new accounts with simple one-way flows. The generator's "aged" rings (accounts with earlier history) and "new-customer" look-alikes exist to break that shortcut, and aged rings were missed in one of the two draws.
+- **Look-alike hubs** (merchants, payroll, landlords, charities, new customers) never ended up inside a detected ring in these runs (0 of 90). That is a statement about this window only.
+- This bundle is for the demo and the typology evidence. **The headline benchmark numbers in sections 1 to 6 are for the IBM-only bundle**, which is unchanged.
+
+### Explanations now say when a signal is absent
+
+SHAP says which features pushed a score up, not whether the feature was high or low. The first labels ("Many transfers to itself") assumed high, so an injected ring, which has no self-transfers at all, was explained with "Receiver: many transfers to itself": the opposite of the data. Each reason now checks the feature's value against the typical value in the scored window, and when the label is not true it adds "(absent)" (`ml/explain.py: label_holds`; `ml/tests/test_explain.py`). A ring's reasons use the members' mean values, and a one-hot or a share counts as true only at 0.5 or more. The ring headline leads with the first signal that is really present. Reasons that have no direction (time of day, payment size) are never marked.
+
 ## Caveats that apply to everything above
 
 - Single time split per dataset. Seeds measure training noise, not split noise.
