@@ -202,5 +202,4 @@ class AsyncRefreshBackend:
             "refreshing": refreshing,
             "refreshes_completed": count,
             "last_error": err,
-            "scorer": self.bundle.scorer_name,
         }
