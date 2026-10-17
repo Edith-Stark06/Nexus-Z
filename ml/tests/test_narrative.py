@@ -1,7 +1,7 @@
 import pytest
 
 from ml import narrative
-from ml.narrative import Narrator, fact_sheet, prompt_for, template_summary, verify
+from ml.narrative import Narrator, fact_sheet, prompt_for, template_summary, verify_explanation
 
 RING = {"ring_id": "RNG-4A1B2C", "risk": 97, "accounts": 7,
         "members": [{"id": f"A{i}", "role": r, "score": 0.9} for i, r in
@@ -18,27 +18,33 @@ def test_facts_come_from_the_ring_and_skip_absent_signals():
     assert fact_sheet({**RING, "top_reasons": []})["signal"] == "an unusual payment pattern"
 
 
-def test_the_template_passes_its_own_check():
-    f = fact_sheet(RING, warnings=3)
-    assert verify(template_summary(f), f) == (True, "")
+def test_the_template_states_every_fact_exactly():
+    t = template_summary(fact_sheet(RING, warnings=3))
+    for part in ("RNG-4A1B2C", "7 accounts", "31 payments", "97 of 100", "2 likely victims", "2 collectors", "2 mules",
+                 "1 cash-outs", "3 recent payers", "money leaves within minutes"):
+        assert part in t
+    assert t.endswith("roles are estimates.")
 
 
 @pytest.mark.parametrize("text,why", [
-    ("RNG-4A1B2C links 9 accounts through 31 payments.", "numbers not in the facts"),
-    ("RNG-4A1B2C links 7 accounts. ACC-00FFEE received the money.", "ids not in the facts"),
-    ("RNG-4A1B2C links 7 accounts; its owner is a criminal.", "forbidden"),
-    ("RNG-4A1B2C links 7 accounts and nine mules.", "number word"),
-    ("", "empty"),
-    ("RNG-4A1B2C links 7 accounts", "no complete sentence"),
+    ("Funds moved on within minutes can mean the accounts only pass money along.", ""),
+    ("Two likely victims pay a collector.", "number"),
+    ("Funds moved on within 5 minutes can mean the accounts only pass money along.", "number"),
+    ("The money went to ACC-00FFEE, an account that only passes money along.", "id"),
+    ("The owner of this account is a criminal who only passes money along.", "forbidden"),
+    ("We think this means that the accounts only pass money along.", "person"),
+    ("Funds moved on quickly. They only pass money along as a rule.", "one complete sentence"),
+    ("Too short.", "short"),
+    ("Funds moved on quickly can mean the accounts only pass money along", "one complete sentence"),
 ])
-def test_text_that_says_more_than_the_facts_is_rejected(text, why):
-    ok, reason = verify(text, fact_sheet(RING, warnings=3))
-    assert not ok and why in reason
+def test_only_a_clean_sentence_without_numbers_or_ids_is_accepted(text, why):
+    ok, reason = verify_explanation(text)
+    assert ok == (why == "") and why in reason
 
 
-def test_prompt_shows_two_worked_examples_then_the_new_sheet():
-    p = prompt_for(fact_sheet(RING, warnings=3))
-    assert p.count("Fact sheet") == 3 and p.rstrip().endswith("Summary:") and "RNG-4A1B2C" in p.split("Summary:")[-2]
+def test_prompt_shows_three_worked_examples_then_the_new_signal():
+    p = prompt_for("it is active across many hours")
+    assert p.count("Signal:") == 4 and p.rstrip().endswith("Meaning:") and p.split("Signal:")[-1].startswith(" it is active")
 
 
 class FakeLlama:
@@ -52,25 +58,28 @@ class FakeLlama:
 
 def narrator_with(text, tmp_path):
     n = Narrator(str(tmp_path / "model.gguf"))
-    (tmp_path / "model.gguf").write_bytes(b"x")
     n._llm = FakeLlama(text)
     n.available = lambda: True
     return n
 
 
-def test_a_verified_model_text_is_used_and_cached(tmp_path):
+GOOD = " Funds that are moved on within minutes can mean the accounts are only passing money along.\nSignal: next"
+
+
+def test_a_clean_model_sentence_is_added_after_the_exact_facts_and_cached(tmp_path):
     f = fact_sheet(RING, warnings=3)
-    n = narrator_with(" RNG-4A1B2C links 7 accounts through 31 payments, mainly because money leaves within minutes. 3 payers may be at risk.\n\nFact sheet", tmp_path)
+    n = narrator_with(GOOD, tmp_path)
     out = n.summarize(f)
-    assert out["source"] == narrative.MODEL_LABEL and out["verified"] and out["summary"].startswith("RNG-4A1B2C links 7")
+    assert out["explanation"].startswith("Funds that are moved on") and "Granite" in out["source"]
+    assert out["summary"].startswith(narrative.facts_sentence(f)) and out["summary"].endswith("roles are estimates.")
     n.summarize(f)
     assert n._llm.calls == 1                      # the second request is served from the cache
 
 
-def test_an_invented_number_falls_back_to_the_template(tmp_path):
+def test_a_sentence_with_a_number_is_dropped_and_the_template_alone_is_shown(tmp_path):
     f = fact_sheet(RING, warnings=3)
-    out = narrator_with("RNG-4A1B2C links 70 accounts through 31 payments.", tmp_path).summarize(f)
-    assert out["source"] == "template" and out["summary"] == template_summary(f) and "failed the facts check" in out["note"]
+    out = narrator_with("Two likely victims pay a collector.", tmp_path).summarize(f)
+    assert out["source"] == "template" and out["summary"] == template_summary(f) and "failed the check" in out["note"]
 
 
 def test_a_missing_model_gives_the_template(tmp_path):
@@ -81,6 +90,10 @@ def test_a_missing_model_gives_the_template(tmp_path):
 
 def test_a_crashing_model_does_not_break_the_page(tmp_path):
     n = narrator_with("", tmp_path)
-    n._llm.create_completion = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom"))
+
+    def boom(*a, **k):
+        raise RuntimeError("boom")
+
+    n._llm.create_completion = boom
     out = n.summarize(fact_sheet(RING))
     assert out["source"] == "template" and "failed" in out["note"]
