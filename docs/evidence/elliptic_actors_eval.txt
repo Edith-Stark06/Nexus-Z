@@ -1,0 +1,41 @@
+822,942 addresses, 2,822,983 address-to-address edges, 55 features; labeled illicit 14,266, licit 251,088, unknown 557,588  [24s]
+windows: train 443,023, validation 77,346, test (new addresses) 292,102
+graph features built [42s]
+
+-- (1) do illicit wallets cluster? test graph, edges with both ends labeled --
+  370,561 labeled edges; illicit share of labeled wallets 0.054; given an illicit wallet, the chance its neighbor is illicit 0.902 (lift 16.8x; 5,140 illicit-illicit edges)
+seed 0 done [54s]
+seed 1 done [62s]
+seed 2 done [70s]
+seed 3 done [78s]
+seed 4 done [91s]
+
+-- (2) wallet level, test (new addresses), 92,451 labeled, chance PR-AUC 0.053; mean and (std) over 5 seeds --
+                      trees  PR-AUC  ROC-AUC  precision@100  precision@1000  trees sd  PR-AUC sd  ROC-AUC sd  precision@100 sd  precision@1000 sd
+features                                                                                                                                         
+dataset features     93.000   0.348    0.849          0.872           0.656    65.651      0.016       0.004             0.175              0.100
++ our graph features 40.200   0.431    0.880          0.920           0.844     1.643      0.025       0.007             0.022              0.039
+
+-- (3) rings of flagged wallets (strict share of test wallets flagged, linked by payments between them); mean over 5 seeds --
+                                     flagged labeled  wallet precision  rings  rings_with_2_labeled  mean_purity  share_real  illicit_in_rings  flagged_labeled_in_rings  precision_in_rings  flagged_labeled_alone  precision_alone
+features                flagged top                                                                                                                                                                                                 
+dataset features        0.005                521.400             0.776  0.000                 0.000          NaN         NaN             0.000                     0.000                 NaN                521.400            0.776
+                        0.010                858.200             0.690  0.200                 0.000          NaN         NaN             0.000                     0.000                 NaN                858.200            0.690
+                        0.020               1536.200             0.558  1.000                 0.000          NaN         NaN             0.000                     0.000                 NaN               1536.200            0.558
++ our graph features    0.005                699.200             0.899  1.000                 0.200        1.000       1.000             0.600                     0.600               1.000                698.600            0.898
+                        0.010                996.200             0.837  7.800                 5.800        0.848       0.848            33.400                    36.400               0.915                959.800            0.834
+                        0.020               1583.400             0.722 40.800                17.200        0.868       0.868            89.800                   100.200               0.904               1483.200            0.710
+random score (baseline) 0.010                923.400             0.053 20.000                13.200        0.003       0.000             0.200                    39.800               0.010                883.600            0.055
+
+std over seeds of the ring-level columns that carry the claim:
+                                     wallet precision  mean_purity  precision_in_rings  precision_alone
+features                flagged top                                                                    
+dataset features        0.005                   0.098          NaN                 NaN            0.098
+                        0.010                   0.075          NaN                 NaN            0.075
+                        0.020                   0.084          NaN                 NaN            0.084
++ our graph features    0.005                   0.036          NaN                 NaN            0.036
+                        0.010                   0.037        0.094               0.043            0.036
+                        0.020                   0.021        0.029               0.013            0.021
+random score (baseline) 0.010                   0.004        0.007               0.013            0.005
+
+done in 91s
