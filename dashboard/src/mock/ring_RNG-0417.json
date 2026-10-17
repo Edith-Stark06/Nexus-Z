@@ -1,0 +1,558 @@
+{
+  "ring_id": "RNG-0417",
+  "risk": 94,
+  "accounts": 29,
+  "victims": 21,
+  "headline": "21 people paid three accounts within 36 hours. Most of it left within 15 minutes.",
+  "first_seen": "2026-10-14T08:55:00Z",
+  "flagged_at": "2026-10-15T06:31:00Z",
+  "total_amount": 79400.0,
+  "members": [
+    {
+      "id": "ACC-7F3A",
+      "role": "collector",
+      "score": 0.95
+    },
+    {
+      "id": "ACC-C69C",
+      "role": "collector",
+      "score": 0.93
+    },
+    {
+      "id": "ACC-9269",
+      "role": "collector",
+      "score": 0.97
+    },
+    {
+      "id": "ACC-1775",
+      "role": "mule",
+      "score": 0.92
+    },
+    {
+      "id": "ACC-B300",
+      "role": "mule",
+      "score": 0.94
+    },
+    {
+      "id": "ACC-0343",
+      "role": "mule",
+      "score": 0.88
+    },
+    {
+      "id": "ACC-ECA5",
+      "role": "mule",
+      "score": 0.94
+    },
+    {
+      "id": "ACC-002A",
+      "role": "cashout",
+      "score": 0.92
+    },
+    {
+      "id": "ACC-C681",
+      "role": "victim",
+      "score": 0.08
+    },
+    {
+      "id": "ACC-283C",
+      "role": "victim",
+      "score": 0.13
+    },
+    {
+      "id": "ACC-0FDF",
+      "role": "victim",
+      "score": 0.05
+    },
+    {
+      "id": "ACC-A2D2",
+      "role": "victim",
+      "score": 0.06
+    },
+    {
+      "id": "ACC-C5D5",
+      "role": "victim",
+      "score": 0.09
+    },
+    {
+      "id": "ACC-02A9",
+      "role": "victim",
+      "score": 0.13
+    },
+    {
+      "id": "ACC-8688",
+      "role": "victim",
+      "score": 0.04
+    },
+    {
+      "id": "ACC-29E2",
+      "role": "victim",
+      "score": 0.03
+    },
+    {
+      "id": "ACC-B483",
+      "role": "victim",
+      "score": 0.03
+    },
+    {
+      "id": "ACC-824B",
+      "role": "victim",
+      "score": 0.05
+    },
+    {
+      "id": "ACC-058D",
+      "role": "victim",
+      "score": 0.07
+    },
+    {
+      "id": "ACC-AA2E",
+      "role": "victim",
+      "score": 0.03
+    },
+    {
+      "id": "ACC-D676",
+      "role": "victim",
+      "score": 0.14
+    },
+    {
+      "id": "ACC-36BA",
+      "role": "victim",
+      "score": 0.11
+    },
+    {
+      "id": "ACC-F0A4",
+      "role": "victim",
+      "score": 0.08
+    },
+    {
+      "id": "ACC-FDA6",
+      "role": "victim",
+      "score": 0.11
+    },
+    {
+      "id": "ACC-0D84",
+      "role": "victim",
+      "score": 0.14
+    },
+    {
+      "id": "ACC-D12B",
+      "role": "victim",
+      "score": 0.08
+    },
+    {
+      "id": "ACC-38DB",
+      "role": "victim",
+      "score": 0.13
+    },
+    {
+      "id": "ACC-DDD2",
+      "role": "victim",
+      "score": 0.03
+    },
+    {
+      "id": "ACC-8087",
+      "role": "victim",
+      "score": 0.04
+    }
+  ],
+  "edges": [
+    {
+      "src": "ACC-02A9",
+      "dst": "ACC-C69C",
+      "amount": 2850.0,
+      "ts": "2026-10-14T08:55:00Z"
+    },
+    {
+      "src": "ACC-D12B",
+      "dst": "ACC-7F3A",
+      "amount": 2850.0,
+      "ts": "2026-10-14T10:05:00Z"
+    },
+    {
+      "src": "ACC-DDD2",
+      "dst": "ACC-C69C",
+      "amount": 2050.0,
+      "ts": "2026-10-14T10:51:00Z"
+    },
+    {
+      "src": "ACC-058D",
+      "dst": "ACC-9269",
+      "amount": 2200.0,
+      "ts": "2026-10-14T12:02:00Z"
+    },
+    {
+      "src": "ACC-0D84",
+      "dst": "ACC-9269",
+      "amount": 750.0,
+      "ts": "2026-10-14T12:48:00Z"
+    },
+    {
+      "src": "ACC-29E2",
+      "dst": "ACC-7F3A",
+      "amount": 4800.0,
+      "ts": "2026-10-14T13:54:00Z"
+    },
+    {
+      "src": "ACC-0D84",
+      "dst": "ACC-C69C",
+      "amount": 1350.0,
+      "ts": "2026-10-14T14:04:00Z"
+    },
+    {
+      "src": "ACC-C69C",
+      "dst": "ACC-1775",
+      "amount": 5625.0,
+      "ts": "2026-10-14T14:15:00Z"
+    },
+    {
+      "src": "ACC-1775",
+      "dst": "ACC-0343",
+      "amount": 5312.5,
+      "ts": "2026-10-14T14:23:00Z"
+    },
+    {
+      "src": "ACC-0343",
+      "dst": "ACC-002A",
+      "amount": 5000.0,
+      "ts": "2026-10-14T14:29:00Z"
+    },
+    {
+      "src": "ACC-8087",
+      "dst": "ACC-7F3A",
+      "amount": 4650.0,
+      "ts": "2026-10-14T15:00:00Z"
+    },
+    {
+      "src": "ACC-824B",
+      "dst": "ACC-C69C",
+      "amount": 4550.0,
+      "ts": "2026-10-14T15:03:00Z"
+    },
+    {
+      "src": "ACC-7F3A",
+      "dst": "ACC-B300",
+      "amount": 11070.0,
+      "ts": "2026-10-14T15:08:00Z"
+    },
+    {
+      "src": "ACC-B300",
+      "dst": "ACC-0343",
+      "amount": 10455.0,
+      "ts": "2026-10-14T15:11:00Z"
+    },
+    {
+      "src": "ACC-0343",
+      "dst": "ACC-002A",
+      "amount": 9840.0,
+      "ts": "2026-10-14T15:17:00Z"
+    },
+    {
+      "src": "ACC-D676",
+      "dst": "ACC-9269",
+      "amount": 750.0,
+      "ts": "2026-10-14T19:23:00Z"
+    },
+    {
+      "src": "ACC-9269",
+      "dst": "ACC-B300",
+      "amount": 3330.0,
+      "ts": "2026-10-14T19:36:00Z"
+    },
+    {
+      "src": "ACC-B300",
+      "dst": "ACC-ECA5",
+      "amount": 3145.0,
+      "ts": "2026-10-14T19:49:00Z"
+    },
+    {
+      "src": "ACC-ECA5",
+      "dst": "ACC-002A",
+      "amount": 2960.0,
+      "ts": "2026-10-14T19:51:00Z"
+    },
+    {
+      "src": "ACC-A2D2",
+      "dst": "ACC-7F3A",
+      "amount": 4300.0,
+      "ts": "2026-10-14T20:06:00Z"
+    },
+    {
+      "src": "ACC-38DB",
+      "dst": "ACC-7F3A",
+      "amount": 3300.0,
+      "ts": "2026-10-14T21:14:00Z"
+    },
+    {
+      "src": "ACC-8688",
+      "dst": "ACC-9269",
+      "amount": 2600.0,
+      "ts": "2026-10-14T21:18:00Z"
+    },
+    {
+      "src": "ACC-F0A4",
+      "dst": "ACC-C69C",
+      "amount": 3350.0,
+      "ts": "2026-10-14T21:37:00Z"
+    },
+    {
+      "src": "ACC-D676",
+      "dst": "ACC-9269",
+      "amount": 1550.0,
+      "ts": "2026-10-14T22:36:00Z"
+    },
+    {
+      "src": "ACC-29E2",
+      "dst": "ACC-C69C",
+      "amount": 700.0,
+      "ts": "2026-10-14T22:55:00Z"
+    },
+    {
+      "src": "ACC-C69C",
+      "dst": "ACC-1775",
+      "amount": 7740.0,
+      "ts": "2026-10-14T23:08:00Z"
+    },
+    {
+      "src": "ACC-1775",
+      "dst": "ACC-0343",
+      "amount": 7310.0,
+      "ts": "2026-10-14T23:10:00Z"
+    },
+    {
+      "src": "ACC-0343",
+      "dst": "ACC-002A",
+      "amount": 6880.0,
+      "ts": "2026-10-14T23:22:00Z"
+    },
+    {
+      "src": "ACC-8087",
+      "dst": "ACC-7F3A",
+      "amount": 1100.0,
+      "ts": "2026-10-15T01:01:00Z"
+    },
+    {
+      "src": "ACC-7F3A",
+      "dst": "ACC-1775",
+      "amount": 7830.0,
+      "ts": "2026-10-15T01:05:00Z"
+    },
+    {
+      "src": "ACC-1775",
+      "dst": "ACC-0343",
+      "amount": 7395.0,
+      "ts": "2026-10-15T01:08:00Z"
+    },
+    {
+      "src": "ACC-0343",
+      "dst": "ACC-002A",
+      "amount": 6960.0,
+      "ts": "2026-10-15T01:22:00Z"
+    },
+    {
+      "src": "ACC-8688",
+      "dst": "ACC-9269",
+      "amount": 4900.0,
+      "ts": "2026-10-15T01:28:00Z"
+    },
+    {
+      "src": "ACC-9269",
+      "dst": "ACC-B300",
+      "amount": 8145.0,
+      "ts": "2026-10-15T01:35:00Z"
+    },
+    {
+      "src": "ACC-B300",
+      "dst": "ACC-ECA5",
+      "amount": 7692.5,
+      "ts": "2026-10-15T01:44:00Z"
+    },
+    {
+      "src": "ACC-ECA5",
+      "dst": "ACC-002A",
+      "amount": 7240.0,
+      "ts": "2026-10-15T01:48:00Z"
+    },
+    {
+      "src": "ACC-283C",
+      "dst": "ACC-9269",
+      "amount": 2750.0,
+      "ts": "2026-10-15T02:04:00Z"
+    },
+    {
+      "src": "ACC-B483",
+      "dst": "ACC-7F3A",
+      "amount": 2950.0,
+      "ts": "2026-10-15T03:26:00Z"
+    },
+    {
+      "src": "ACC-38DB",
+      "dst": "ACC-9269",
+      "amount": 2150.0,
+      "ts": "2026-10-15T03:54:00Z"
+    },
+    {
+      "src": "ACC-0FDF",
+      "dst": "ACC-C69C",
+      "amount": 1500.0,
+      "ts": "2026-10-15T05:17:00Z"
+    },
+    {
+      "src": "ACC-AA2E",
+      "dst": "ACC-C69C",
+      "amount": 3050.0,
+      "ts": "2026-10-15T06:01:00Z"
+    },
+    {
+      "src": "ACC-C681",
+      "dst": "ACC-7F3A",
+      "amount": 1300.0,
+      "ts": "2026-10-15T07:58:00Z"
+    },
+    {
+      "src": "ACC-F0A4",
+      "dst": "ACC-C69C",
+      "amount": 2300.0,
+      "ts": "2026-10-15T08:37:00Z"
+    },
+    {
+      "src": "ACC-C69C",
+      "dst": "ACC-B300",
+      "amount": 6165.0,
+      "ts": "2026-10-15T08:43:00Z"
+    },
+    {
+      "src": "ACC-B300",
+      "dst": "ACC-0343",
+      "amount": 5822.5,
+      "ts": "2026-10-15T08:54:00Z"
+    },
+    {
+      "src": "ACC-0343",
+      "dst": "ACC-002A",
+      "amount": 5480.0,
+      "ts": "2026-10-15T08:56:00Z"
+    },
+    {
+      "src": "ACC-02A9",
+      "dst": "ACC-C69C",
+      "amount": 3150.0,
+      "ts": "2026-10-15T10:15:00Z"
+    },
+    {
+      "src": "ACC-B483",
+      "dst": "ACC-7F3A",
+      "amount": 800.0,
+      "ts": "2026-10-15T10:49:00Z"
+    },
+    {
+      "src": "ACC-7F3A",
+      "dst": "ACC-B300",
+      "amount": 4545.0,
+      "ts": "2026-10-15T10:56:00Z"
+    },
+    {
+      "src": "ACC-B300",
+      "dst": "ACC-ECA5",
+      "amount": 4292.5,
+      "ts": "2026-10-15T11:10:00Z"
+    },
+    {
+      "src": "ACC-ECA5",
+      "dst": "ACC-002A",
+      "amount": 4040.0,
+      "ts": "2026-10-15T11:15:00Z"
+    },
+    {
+      "src": "ACC-36BA",
+      "dst": "ACC-7F3A",
+      "amount": 950.0,
+      "ts": "2026-10-15T11:18:00Z"
+    },
+    {
+      "src": "ACC-C681",
+      "dst": "ACC-9269",
+      "amount": 3850.0,
+      "ts": "2026-10-15T11:30:00Z"
+    },
+    {
+      "src": "ACC-D12B",
+      "dst": "ACC-9269",
+      "amount": 2550.0,
+      "ts": "2026-10-15T11:36:00Z"
+    },
+    {
+      "src": "ACC-9269",
+      "dst": "ACC-1775",
+      "amount": 7875.0,
+      "ts": "2026-10-15T11:41:00Z"
+    },
+    {
+      "src": "ACC-1775",
+      "dst": "ACC-ECA5",
+      "amount": 7437.5,
+      "ts": "2026-10-15T11:54:00Z"
+    },
+    {
+      "src": "ACC-ECA5",
+      "dst": "ACC-002A",
+      "amount": 7000.0,
+      "ts": "2026-10-15T11:56:00Z"
+    },
+    {
+      "src": "ACC-FDA6",
+      "dst": "ACC-9269",
+      "amount": 2250.0,
+      "ts": "2026-10-15T14:28:00Z"
+    },
+    {
+      "src": "ACC-C5D5",
+      "dst": "ACC-9269",
+      "amount": 1250.0,
+      "ts": "2026-10-15T18:19:00Z"
+    },
+    {
+      "src": "ACC-9269",
+      "dst": "ACC-B300",
+      "amount": 5445.0,
+      "ts": "2026-10-15T18:21:00Z"
+    },
+    {
+      "src": "ACC-B300",
+      "dst": "ACC-0343",
+      "amount": 5142.5,
+      "ts": "2026-10-15T18:34:00Z"
+    },
+    {
+      "src": "ACC-0343",
+      "dst": "ACC-002A",
+      "amount": 4840.0,
+      "ts": "2026-10-15T18:45:00Z"
+    }
+  ],
+  "top_reasons": [
+    {
+      "feature": "fan_in_ratio",
+      "label": "Many payers, few receivers",
+      "contribution": 0.34
+    },
+    {
+      "feature": "pass_through_minutes",
+      "label": "Money leaves within minutes",
+      "contribution": 0.28
+    },
+    {
+      "feature": "account_age_days",
+      "label": "Accounts opened recently",
+      "contribution": 0.17
+    },
+    {
+      "feature": "burst_timing",
+      "label": "Deposits arrive in bursts",
+      "contribution": 0.12
+    },
+    {
+      "feature": "account_history",
+      "label": "One mule has a long history",
+      "contribution": -0.05
+    }
+  ]
+}
