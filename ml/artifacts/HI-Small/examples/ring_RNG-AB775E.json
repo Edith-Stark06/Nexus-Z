@@ -1,0 +1,68 @@
+{
+  "ring_id": "RNG-AB775E",
+  "risk": 96,
+  "accounts": 3,
+  "victims": 1,
+  "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+  "first_seen": "2022-09-08T17:23:00Z",
+  "flagged_at": "2022-09-10T23:59:00Z",
+  "total_amount": 77102.91,
+  "members": [
+    {
+      "id": "ACC-0245B4",
+      "role": "mule",
+      "score": 0.2393
+    },
+    {
+      "id": "ACC-04767F",
+      "role": "victim",
+      "score": 0.7401
+    },
+    {
+      "id": "ACC-078D56",
+      "role": "cashout",
+      "score": 0.6513
+    }
+  ],
+  "edges": [
+    {
+      "src": "ACC-04767F",
+      "dst": "ACC-0245B4",
+      "amount": 67802.05,
+      "ts": "2022-09-08T17:23:00Z"
+    },
+    {
+      "src": "ACC-0245B4",
+      "dst": "ACC-078D56",
+      "amount": 9300.86,
+      "ts": "2022-09-08T19:15:00Z"
+    }
+  ],
+  "top_reasons": [
+    {
+      "feature": "cross_ccy_share",
+      "label": "Often changes currency",
+      "contribution": 1.288
+    },
+    {
+      "feature": "in_share_ACH",
+      "label": "Receives mostly by ACH",
+      "contribution": 0.9
+    },
+    {
+      "feature": "out_share_ACH",
+      "label": "Sends mostly by ACH",
+      "contribution": 0.843
+    },
+    {
+      "feature": "in_nb_out_cp_mean",
+      "label": "Paid by accounts that pay many others",
+      "contribution": 0.437
+    },
+    {
+      "feature": "max_tx_per_hour",
+      "label": "Bursts of payments within an hour",
+      "contribution": 0.318
+    }
+  ]
+}

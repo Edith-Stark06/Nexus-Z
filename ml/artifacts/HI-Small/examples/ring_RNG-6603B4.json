@@ -1,0 +1,68 @@
+{
+  "ring_id": "RNG-6603B4",
+  "risk": 99,
+  "accounts": 3,
+  "victims": 1,
+  "headline": "3 linked accounts, 2 payments between them, 50% reaching one account. Top signal: Often changes currency.",
+  "first_seen": "2022-09-07T02:25:00Z",
+  "flagged_at": "2022-09-10T23:59:00Z",
+  "total_amount": 26230.86,
+  "members": [
+    {
+      "id": "ACC-006FCF",
+      "role": "cashout",
+      "score": 0.4115
+    },
+    {
+      "id": "ACC-03FFC6",
+      "role": "cashout",
+      "score": 0.7412
+    },
+    {
+      "id": "ACC-056E23",
+      "role": "victim",
+      "score": 0.5916
+    }
+  ],
+  "edges": [
+    {
+      "src": "ACC-056E23",
+      "dst": "ACC-03FFC6",
+      "amount": 17620.22,
+      "ts": "2022-09-07T02:25:00Z"
+    },
+    {
+      "src": "ACC-056E23",
+      "dst": "ACC-006FCF",
+      "amount": 8610.64,
+      "ts": "2022-09-07T12:18:00Z"
+    }
+  ],
+  "top_reasons": [
+    {
+      "feature": "cross_ccy_share",
+      "label": "Often changes currency",
+      "contribution": 1.288
+    },
+    {
+      "feature": "out_share_ACH",
+      "label": "Sends mostly by ACH",
+      "contribution": 1.098
+    },
+    {
+      "feature": "in_share_ACH",
+      "label": "Receives mostly by ACH",
+      "contribution": 0.774
+    },
+    {
+      "feature": "in_nb_out_cp_mean",
+      "label": "Paid by accounts that pay many others",
+      "contribution": 0.435
+    },
+    {
+      "feature": "out_share_Cheque",
+      "label": "Sends mostly by Cheque",
+      "contribution": 0.32
+    }
+  ]
+}
