@@ -1,6 +1,7 @@
 """How many injected pig-butchering rings does a saved model find, and how many look-alikes does it wrongly flag?
 
-Usage (from the repo root):  python -m ml.pig_eval HI-Small <bundle folder> <inject seed> [hours]
+Usage (from the repo root):  python -m ml.pig_eval HI-Small <bundle folder> <inject seed> [hours] [option=value ...]
+Options are data/rings.py inject() settings (see ml/bundle.py), for example aged_share=0.25 to test with the default mix of aged rings.
 
 Rebuilds the data a demo slice is made from (the variant's primary period plus rings and look-alikes from
 data/rings.py with the given seed), keeps the last `hours` (default 48), and scores it the way the API does:
@@ -18,19 +19,20 @@ import pandas as pd
 from data.ibm_aml import PRIMARY_DAYS, load_transactions, primary_period
 from data.rings import inject
 
-from .bundle import load_bundle
+from .bundle import load_bundle, parse_inject_options
 from .service import Scorer
 
 
-def run(variant: str, bundle_dir: Path, seed: int, hours: int = 48) -> None:
+def run(variant: str, bundle_dir: Path, seed: int, hours: int = 48, options: dict | None = None) -> None:
     bundle = load_bundle(bundle_dir)
     tx = primary_period(load_transactions(variant), variant)
-    inj = inject(tx, seed=seed)
+    inj = inject(tx, seed=seed, **(options or {}))
     end = inj.tx["ts"].min().normalize() + pd.Timedelta(days=PRIMARY_DAYS[variant.split("-")[1]])
     data = inj.tx[(inj.tx["ts"] >= end - pd.Timedelta(hours=hours)) & (inj.tx["ts"] < end)].reset_index(drop=True)
     fraud = {a for r in inj.rings for a in r["accounts"]}
     print(f"{variant} + {len(inj.rings)} rings and {len(inj.hard)} look-alikes (seed {seed}); last {hours} h: {len(data):,} payments; "
-          f"bundle trained with injected seed {bundle.meta.get('injected_rings_seed')}", flush=True)
+          f"bundle trained with injected seed {bundle.meta.get('injected_rings_seed')} {bundle.meta.get('injected_rings_options', '')}; "
+          f"scored with settings {options or 'default'}", flush=True)
     now = data["ts"].max()
     for window in (24, hours):
         scorer = Scorer.from_transactions(bundle, data, active_since=now - pd.Timedelta(hours=window))
@@ -57,4 +59,6 @@ def run(variant: str, bundle_dir: Path, seed: int, hours: int = 48) -> None:
 
 
 if __name__ == "__main__":
-    run(sys.argv[1], Path(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]) if len(sys.argv) > 4 else 48)
+    rest = sys.argv[4:]
+    hours = int(rest.pop(0)) if rest and "=" not in rest[0] else 48
+    run(sys.argv[1], Path(sys.argv[2]), int(sys.argv[3]), hours, parse_inject_options(rest))

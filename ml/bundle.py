@@ -1,6 +1,7 @@
 """The trained model plus everything needed to score with it, saved as a folder.
 
-Usage (from the repo root):  python -m ml.bundle HI-Small [output folder] [payment|two_stage|account] [inject seed]
+Usage (from the repo root):  python -m ml.bundle HI-Small [output folder] [payment|two_stage|account] [inject seed [option=value ...]]
+An option is a setting of data/rings.py's inject(), for example aged_share=0.6 (share of rings whose accounts already have history).
 """
 import json
 import sys
@@ -93,7 +94,22 @@ def load_bundle(folder: Path) -> Bundle:
                   grow_fraction=m.get("grow_fraction"))
 
 
-def train_bundle(variant: str = "HI-Small", scorer: str = "payment", inject_seed: int | None = None) -> Bundle:
+def parse_inject_options(args: list[str]) -> dict:
+    """["aged_share=0.6", "n_rings=120"] -> {"aged_share": 0.6, "n_rings": 120}. Numbers only, so a typo cannot inject code."""
+    out = {}
+    for a in args:
+        key, _, value = a.partition("=")
+        out[key] = int(value) if value.lstrip("-").isdigit() else float(value)
+    return out
+
+
+def inject_tag(seed: int, options: dict | None) -> str:
+    """Snapshot-cache tag: different generator settings must never share a cache."""
+    return f"-pig{seed}" + "".join(f"-{k}{v}" for k, v in sorted((options or {}).items()))
+
+
+def train_bundle(variant: str = "HI-Small", scorer: str = "payment", inject_seed: int | None = None,
+                 inject_options: dict | None = None) -> Bundle:
     """Train the model folder.
 
     scorer "payment" (default): a payment-level model; an account's risk is its riskiest payment (ml/edge_model.py).
@@ -111,8 +127,8 @@ def train_bundle(variant: str = "HI-Small", scorer: str = "payment", inject_seed
     else:
         from data.rings import inject  # synthetic rings; a separate snapshot cache so the plain bundle's is untouched
 
-        tx = inject(tx, seed=inject_seed).tx
-        snaps = make_snapshots(variant, tx=tx, tag=f"-pig{inject_seed}")
+        tx = inject(tx, seed=inject_seed, **(inject_options or {})).tx
+        snaps = make_snapshots(variant, tx=tx, tag=inject_tag(inject_seed, inject_options))
     split = time_split(tx)
     ccy = currency_medians(tx[split == "train"])
     meta = {"variant": variant, "feature_version": FEATURE_VERSION, "scorer": scorer,
@@ -120,6 +136,8 @@ def train_bundle(variant: str = "HI-Small", scorer: str = "payment", inject_seed
             "trained_at": pd.Timestamp.now().isoformat(timespec="seconds")}
     if inject_seed is not None:
         meta["injected_rings_seed"] = inject_seed
+        if inject_options:
+            meta["injected_rings_options"] = inject_options
     fitted = fit_model(snaps["train"], snaps["val"], ALL_COLS)
     calibration = fit_calibration(fitted, snaps["val"], ALL_COLS)
     meta["trees"] = int(fitted.best_iteration + 1)
@@ -157,7 +175,7 @@ if __name__ == "__main__":
     variant = sys.argv[1] if len(sys.argv) > 1 else "HI-Small"
     out = Path(sys.argv[2]) if len(sys.argv) > 2 else DATA_DIR / "models" / variant
     chosen = sys.argv[3] if len(sys.argv) > 3 else "payment"
-    bundle = train_bundle(variant, chosen, int(sys.argv[4]) if len(sys.argv) > 4 else None)
+    bundle = train_bundle(variant, chosen, int(sys.argv[4]) if len(sys.argv) > 4 else None, parse_inject_options(sys.argv[5:]))
     save_bundle(bundle, out)
     extra = "".join(f", {k.replace('trees_', '')} {v} trees" for k, v in bundle.meta.items() if k.startswith("trees_"))
     print(f"saved {len(bundle.cols)}-feature {chosen} model (account model {bundle.meta['trees']} trees{extra}) to {out}")
