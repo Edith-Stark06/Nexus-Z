@@ -1,0 +1,24 @@
+# systemd USER service for the NEXUS Z API (no container). Install:
+#   mkdir -p ~/.config/systemd/user ~/.config/nexusz
+#   cp infra/nexusz-api.service ~/.config/systemd/user/
+#   cp infra/api.env.example ~/.config/nexusz/api.env      # then edit it
+#   systemctl --user daemon-reload && systemctl --user enable --now nexusz-api
+#   journalctl --user -u nexusz-api -f                      # logs
+# It keeps running after you log out only if lingering is enabled: loginctl enable-linger "$USER"
+[Unit]
+Description=NEXUS Z API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Nexus-Z
+# run_api.sh reads ~/.config/nexusz/api.env itself and binds to 127.0.0.1 unless NEXUSZ_HOST says otherwise
+ExecStart=/usr/bin/env bash %h/Nexus-Z/infra/run_api.sh
+Restart=on-failure
+RestartSec=5
+# The model backend builds its state at startup (about 15 seconds for the 48-hour slice on a laptop);
+# a configuration error makes the process exit with a message in the journal instead of serving.
+TimeoutStopSec=40
+
+[Install]
+WantedBy=default.target
