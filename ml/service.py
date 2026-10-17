@@ -72,6 +72,9 @@ class Scorer:
         self._by_id = {ring_id(r.members): r for r in self.rings}
         self._ring_of = {m: rid for rid, r in self._by_id.items() for m in r.members}
         self._ring_cache: dict[str, dict] = {}  # a ring is described once per Scorer, then reused
+        self._ring_tx: pd.DataFrame | None = None  # payments between any two ring members, built on first use
+        self._contrib: dict[str, np.ndarray] = {}  # per-account explanations filled by list_rings in one batch
+        self._contrib_cols: list[str] = []
 
     def _score_accounts(self, X, all_X, edges) -> None:
         bundle = self.bundle
@@ -119,12 +122,25 @@ class Scorer:
 
     # -- internals
     def _inside(self, members: list[str]) -> pd.DataFrame:
+        if self._ring_tx is None:  # one pass over all history; every ring's own payments are a subset of this
+            every = set(self._ring_of)
+            self._ring_tx = self.tx[self.tx["src"].isin(every) & self.tx["dst"].isin(every)]
         m = set(members)
-        return self.tx[self.tx["src"].isin(m) & self.tx["dst"].isin(m) & (self.tx["src"] != self.tx["dst"])]
+        t = self._ring_tx
+        return t[t["src"].isin(m) & t["dst"].isin(m) & (t["src"] != t["dst"])]
 
     def _reasons(self, ids: list[str], k: int = 5) -> list[dict]:
+        if all(a in self._contrib for a in ids):
+            return top_reasons(np.mean([self._contrib[a] for a in ids], axis=0), self._contrib_cols, k)
         contrib, cols = self._explanation_matrix(ids)
         return top_reasons(contrib.mean(axis=0), cols, k)
+
+    def _prefetch_contributions(self, ids: list[str]) -> None:
+        """Explain many accounts in one model call; describing each ring separately repeats the call's fixed cost."""
+        ids = [a for a in dict.fromkeys(ids) if a not in self._contrib]
+        if ids:
+            contrib, self._contrib_cols = self._explanation_matrix(ids)
+            self._contrib.update(zip(ids, contrib))
 
     def _headline(self, r: Ring, reasons: list[dict]) -> str:
         lead = next((x["label"] for x in reasons if x["contribution"] > 0), "Unusual payment pattern")
@@ -181,6 +197,8 @@ class Scorer:
     def list_rings(self) -> list[dict]:
         keys = ("ring_id", "risk", "accounts", "victims", "headline", "first_seen", "flagged_at")
         out = []
+        self._prefetch_contributions([m for rid, r in self._by_id.items() if rid not in self._ring_cache
+                                      for m in r.members])
         for rid in self._by_id:
             full = self.get_ring(rid)
             out.append({k: full[k] for k in keys})
