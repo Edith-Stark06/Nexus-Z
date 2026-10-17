@@ -70,7 +70,7 @@ python -m ml.export_scores HI-Small <folder> <out>           # real model output
 
 ## 6. Limits that matter
 
-- One dataset family (IBM AML) and one time split. The payment-level numbers are three seeds for the first feature set and one seed for the committed 57-feature model.
+- One dataset family (IBM AML) and one time split. The payment model also ranks accounts about three times better than the account model on LI-Small (PR-AUC 0.093 against 0.031, one seed), but there it recovers fewer laundering groups as rings (6.8% against 10.2%, without ring growth); see ML_RESULTS.md. The payment-level numbers are three seeds for the first feature set and one seed for the committed 57-feature model.
 - Most laundering groups are still missed: a third recovered as rings, 45% never detected in the replay.
 - The injected pig-butchering rings used to test the typology are a stand-in written by the modelling side, so those results are optimistic.
 - Roles (victim, collector, mule, cash-out) are guessed from position in a ring; the data has no role labels.
