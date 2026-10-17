@@ -11,7 +11,9 @@ Sections 1 to 4 use general laundering data (IBM AML, Elliptic). Pig-butchering 
 | Label and time rule (no look-ahead) | `ml/PROTOCOL.md` |
 | 48 account features (transaction, behavioral, graph, structure) | `ml/features.py` |
 | XGBoost, calibration, ablation | `ml/model.py`, `ml/ablation.py` |
-| Rings: top accounts, linked by payments, Louvain split to at most 40 | `ml/rings.py` |
+| Rings: top accounts, linked by payments, optionally grown through weaker accounts, Louvain split to at most 40 | `ml/rings.py` |
+| Payment-level model: each payment scored, an account takes its riskiest payment | `ml/edge_model.py` |
+| Two-stage account model (neighbors' scores) | `ml/stack.py`, `ml/neighbors.py` |
 | Learned ring score | `ml/ring_score.py` |
 | Explanations (exact TreeSHAP from XGBoost) | `ml/explain.py` |
 | Model folder (model, thresholds, calibration, ring scorer) | `ml/bundle.py` |
@@ -84,18 +86,44 @@ The first score (mean of the top three account scores) ranked real rings barely 
 
 ## 3. How soon do we catch a ring? Time-to-detection
 
-The test window is replayed in 6-hour steps. At each step features, scores and rings are rebuilt from only the transactions up to that moment. 65 laundering groups start in the test window.
+The test window is replayed in 6-hour steps through the same `Scorer` the API serves. At each step it is given only the transactions up to that moment and scores the accounts active in the last 24 hours. 65 laundering groups start in the test window. A group counts as detected at the first step where one detected ring holds at least half of its accounts seen so far.
+
+**The committed model** (payment level, run on the LinuxONE VM, compared with the account model inside the same folder):
 
 | Model | Groups detected | Median time to detection | 90th percentile |
 |---|---|---|---|
-| Transaction-only | 7 of 65 (11%) | 14.6 hours | 32.5 hours |
-| Graph features | 13 of 65 (20%) | **4.9 hours** | 16.8 hours |
+| Account model | 13 of 65 (20%) | 10.4 hours | 21.8 hours |
+| **Payment model with ring growth (committed)** | **36 of 65 (55%)** | 9.7 hours | 21.9 hours |
 
-Every detected group was caught before its last payment. **80% of groups were not detected at all** within the window.
+The payment model finds almost three times as many groups, at about the same delay. 52% of groups were caught before their last payment. **45% were not detected at all** within the window. Median time to detection is measured only on the groups that were detected.
+
+Earlier replay with the first account model (laptop, before the payment model existed): graph features detected 13 of 65 (20%) at a median of 4.9 hours, transaction-only 7 of 65 (11%) at 14.6 hours. The two median figures are not comparable, since the 4.9 hours is for 13 groups and the 9.7 hours is for 36.
 
 ## 4. Speed on LinuxONE (s390x)
 
-Measured on the datathon VM: RHEL 9.8, s390x (big-endian), 3 vCPUs, 7.5 GB RAM. Full rescore of the last 48 hours of HI-Small (862,792 transactions, 354,447 accounts), three runs:
+Measured on the datathon VM: RHEL 9.8, s390x (big-endian), 3 vCPUs, 7.5 GB RAM.
+
+### Scaling of the committed model (payment level)
+
+Full rescore (features for every account from the last N hours of history, plus scoring the payments of the last 24 hours and forming rings), measured by `ml/scaling_check.py` with nothing else running:
+
+| History used | Transactions | Total time | Throughput | Rings |
+|---|---|---|---|---|
+| 6 hours | 48,163 | 0.28 s | 170,000 tx/s | 3 |
+| 12 hours | 95,775 | 0.55 s | 174,000 tx/s | 21 |
+| 24 hours | 208,325 | 1.17 s | 179,000 tx/s | 55 |
+| 48 hours | 862,792 | 3.22 s | 268,000 tx/s | 53 |
+| 96 hours | 1,828,316 | 5.65 s | 324,000 tx/s | 57 |
+| 192 hours | 3,207,867 | 9.34 s | 344,000 tx/s | 61 |
+| all (10 days) | 5,077,237 | 15.65 s | 324,000 tx/s | 60 |
+
+Time grows roughly in step with the history used, and the peak memory stayed at 1.8 GB up to 96 hours, 2.3 GB at 192 hours and 2.7 GB for the whole file, inside the VM's 7.5 GB. The rings counted depend on the window, since only accounts active in the last 24 hours are flagged.
+
+Cores: XGBoost with 200 trees on the same data took 18.6 s on one thread, 12.7 s on two and 9.5 s on three (a 2.0 times speed-up on this run; an earlier run with 48 features measured 2.8 times). Scoring 356,260 accounts took 1.75 s on one thread and 0.60 s on three (2.9 times, about 590,000 accounts per second). Training speed-up varied between runs, so quote it as 2.0 to 2.8 times.
+
+### Earlier measurement with the first (account-level) model
+
+Full rescore of the last 48 hours of HI-Small (862,792 transactions, 354,447 accounts), three runs:
 
 | Step | Time |
 |---|---|
@@ -114,6 +142,8 @@ Measured on the datathon VM: RHEL 9.8, s390x (big-endian), 3 vCPUs, 7.5 GB RAM. 
 ### Trained and evaluated on LinuxONE
 
 The model was trained inside the platform's Jupyter Lab container on the same VM (s390x, 3 vCPUs, 7.5 GB RAM, CPU only; see `ml/LINUXONE.md`). This is the model committed in `ml/artifacts/HI-Small`.
+
+**The committed payment-level model** (57 features; an account model of 374 trees and a payment model of 358 trees): training the whole folder took 882 s (14.7 minutes), the 6-hour-step replay 357 s, exporting the real examples 191 s, and the scaling benchmark 107 s. Everything in this subsection below describes the first, account-level model.
 
 | Job on the VM (HI-Small) | Time |
 |---|---|
@@ -179,9 +209,11 @@ Laundering groups recovered, rings that are real, and mean purity, test window, 
 
 Growth is a dial between catching more of each group and keeping rings clean. The committed setting recovers a third of the laundering groups with seven in ten rings real. Without growth the rings are almost all real but a fifth of the groups are found. The validation-chosen setting also holds on test.
 
-### What did not help
+### Choices that were tested
 
-- **Burst and motif features** (distinct payers within an hour, six hours or a day; directed triangles; feed-forward loops; repeated amounts): PR-AUC 0.149 against 0.160 without them. Not adopted.
+- **Burst and motif features** (distinct payers within an hour, six hours or a day; directed triangles; feed-forward loops; repeated amounts) did not help the account model (PR-AUC 0.149 against 0.160). They **did help the payment model** when added to the endpoint features: payment-level PR-AUC 0.468 against 0.434 and account PR-AUC 0.453 against 0.428 (seed 0, same split). The committed model uses them, which makes it 57 features. The 3-seed table above was measured before this change, so the committed model has one seed behind the 0.468 and 0.453 figures, not three.
+- **More negative payments in training** (keeping 20% instead of 5%) was slightly worse (payment PR-AUC 0.414 against 0.434), so 5% is used.
+- **Ring risk score.** A learned ring score, fitted on validation rings, saturated: validation rings were about 98% real, so there was nothing to learn and most rings showed risk 100. The bundle now skips the learned score whenever fewer than 15% of the training rings are real or not real. Ring risk is then the mean of the ring's three most suspicious accounts' calibrated laundering probabilities, which is well spread (88 to 92 for the top rings) and keeps its meaning. It ranks real rings above others only modestly, so treat it as a priority, not as a probability that the ring is real.
 
 ### Caveats specific to this section
 

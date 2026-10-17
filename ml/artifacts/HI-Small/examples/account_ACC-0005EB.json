@@ -1,0 +1,28 @@
+{
+  "account_id": "ACC-0005EB",
+  "risk": 0.0691,
+  "role": "victim",
+  "ring_id": "RNG-7BE48C",
+  "reasons": [
+    {
+      "feature": "ch_ACH",
+      "label": "Paid by ACH",
+      "contribution": 2.701
+    },
+    {
+      "feature": "s_cross_ccy_share",
+      "label": "Sender: often changes currency",
+      "contribution": 2.277
+    },
+    {
+      "feature": "d_pagerank",
+      "label": "Receiver: central in the payment network",
+      "contribution": -0.528
+    }
+  ],
+  "neighborhood": {
+    "in_degree": 3,
+    "out_degree": 6,
+    "ring_size": 19
+  }
+}
