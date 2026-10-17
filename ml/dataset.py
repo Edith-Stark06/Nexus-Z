@@ -6,7 +6,7 @@ import pandas as pd
 from data.ibm_aml import load_transactions, primary_period, time_split
 from data.paths import DATA_DIR
 
-from .features import FEATURE_VERSION, build_features
+from .features import FEATURE_VERSION, build_features_with_edges
 
 CACHE_DIR = DATA_DIR / "cache"
 SPLITS = ("train", "val", "test")
@@ -18,6 +18,8 @@ class Snapshot:
     y: pd.Series
     seen_positive: pd.Series  # positive in an earlier window (repeat accounts)
     cutoff: pd.Timestamp
+    all_X: pd.DataFrame | None = None   # features of every account seen up to the cutoff, not only the active ones
+    edges: tuple | None = None          # distinct payer-to-payee pairs as row positions in all_X
 
 
 def currency_medians(train_tx: pd.DataFrame) -> dict:
@@ -43,7 +45,7 @@ def make_snapshots(variant: str = "HI-Small", use_cache: bool = True, tx: pd.Dat
     for name in SPLITS:
         window = tx[split == name]
         cutoff = window["ts"].max()
-        features = build_features(tx[tx["ts"] <= cutoff], ccy_median)
+        features, edges = build_features_with_edges(tx[tx["ts"] <= cutoff], ccy_median)
 
         active = pd.unique(pd.concat([window["src"], window["dst"]], ignore_index=True))
         bad = window[window["is_laundering"] == 1]
@@ -54,7 +56,7 @@ def make_snapshots(variant: str = "HI-Small", use_cache: bool = True, tx: pd.Dat
             X=X,
             y=pd.Series(X.index.isin(list(positive)).astype("int8"), index=X.index, name="y"),
             seen_positive=pd.Series(X.index.isin(list(earlier_positive)), index=X.index),
-            cutoff=cutoff,
+            cutoff=cutoff, all_X=features, edges=edges,
         )
         earlier_positive |= positive
 

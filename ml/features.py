@@ -27,7 +27,7 @@ STRUCTURE_COLS = ["kcore", "clustering", "comp_size", "comp_avg_deg"]
 MOTIF_COLS = ["fanin_1h", "fanin_6h", "fanin_24h", "fanout_1h", "fanout_6h", "fanout_24h", "cyc3", "ffl",
               "dup_amount_share"]
 
-FEATURE_VERSION = 3  # bump when columns change so cached snapshots are rebuilt
+FEATURE_VERSION = 4  # bump when columns or what a snapshot stores change, so cached snapshots are rebuilt
 HUB_DEGREE_CAP = 100  # accounts with more distinct neighbors are left out of triangle and component counts
 FAST_MINUTES = 15  # an outflow within this many minutes of an inflow counts as fast pass-through
 _HOUR_KEY = 100_000
@@ -126,6 +126,11 @@ def _motifs(A, deg_total, cap: int = HUB_DEGREE_CAP, chunk: int = 50_000):
 
 def build_features(tx: pd.DataFrame, ccy_median: dict) -> pd.DataFrame:
     """One row per account seen in tx, indexed by account id."""
+    return build_features_with_edges(tx, ccy_median)[0]
+
+
+def build_features_with_edges(tx: pd.DataFrame, ccy_median: dict):
+    """Like build_features, plus the distinct payer-to-payee pairs as two arrays of row positions."""
     n = len(tx)
     codes, accs = pd.factorize(pd.concat([tx["src"], tx["dst"]], ignore_index=True))
     N = len(accs)
@@ -220,4 +225,5 @@ def build_features(tx: pd.DataFrame, ccy_median: dict) -> pd.DataFrame:
     f["dup_amount_share"] = np.bincount(s[dup], minlength=N) / np.maximum(out_cnt, 1)
 
     cols = TX_COLS + BEHAVIOR_COLS + GRAPH_COLS + STRUCTURE_COLS + MOTIF_COLS
-    return pd.DataFrame({c: f[c] for c in cols}, index=pd.Index(accs, name="account"))
+    frame = pd.DataFrame({c: f[c] for c in cols}, index=pd.Index(accs, name="account"))
+    return frame, (us.astype(np.int64), ud.astype(np.int64))
