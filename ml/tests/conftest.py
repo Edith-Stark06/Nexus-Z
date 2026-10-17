@@ -36,3 +36,37 @@ def tx_and_bundle():
     model = xgb.train({"objective": "binary:logistic", "max_depth": 3, "tree_method": "hist", "seed": 0},
                       xgb.DMatrix(X[ALL_COLS], label=y), num_boost_round=30)
     return tx, Bundle(model, ALL_COLS, 0.5, 0.2, med, {}, calibration=(1.0, -2.0))
+
+
+@pytest.fixture(scope="module")
+def tx_and_two_stage_bundle():
+    """The same small network, with a tiny two-stage model: stage 2 also sees summaries of neighbors' stage-1 scores."""
+    from ml.features import build_features_with_edges
+    from ml.neighbors import NEIGHBOR_COLS, stage2_inputs
+
+    tx = make_tx()
+    med = {"US Dollar": 100.0}
+    X, edges = build_features_with_edges(tx, med)
+    y = X.index.str.match(r"^(V|C|M|O)").astype(int)
+    params = {"objective": "binary:logistic", "max_depth": 3, "tree_method": "hist", "seed": 0}
+    stage1 = xgb.train(params, xgb.DMatrix(X[ALL_COLS], label=y), num_boost_round=30)
+    X2 = stage2_inputs(X, ALL_COLS, X.index, stage1.predict(xgb.DMatrix(X[ALL_COLS])), edges, 0.9)
+    stage2 = xgb.train(params, xgb.DMatrix(X2[ALL_COLS + NEIGHBOR_COLS], label=y), num_boost_round=30)
+    return tx, Bundle(stage1, ALL_COLS, 0.5, 0.2, med, {}, calibration=(1.0, -2.0), stage2=stage2, high_quantile=0.9)
+
+
+@pytest.fixture(scope="module")
+def tx_and_payment_bundle():
+    """The same small network, with a tiny payment-level model: hops out of collectors and mules are the positives."""
+    from ml.edge_model import payment_features
+    from ml.features import build_features
+
+    tx = make_tx()
+    med = {"US Dollar": 100.0}
+    X = build_features(tx, med)
+    params = {"objective": "binary:logistic", "max_depth": 3, "tree_method": "hist", "seed": 0}
+    account = xgb.train(params, xgb.DMatrix(X[ALL_COLS], label=X.index.str.match(r"^(V|C|M|O)").astype(int)), 30)
+    rows = payment_features(tx, tx, X, ALL_COLS, med)
+    payment = xgb.train(params, xgb.DMatrix(rows, label=tx["src"].str.match(r"^(C|M)").astype(int).to_numpy()), 30)
+    return tx, Bundle(account, ALL_COLS, 0.5, 0.2, med, {}, calibration=(1.0, -2.0), payment=payment,
+                      payment_calibration=(1.0, -2.0))
