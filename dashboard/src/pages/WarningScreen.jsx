@@ -9,7 +9,7 @@ import "./WarningScreen.css";
 const UNKNOWN_MESSAGE =
   "We could not find this account in our system. It is not currently linked " +
   "to a flagged ring, but we cannot confirm it is safe either. If you were " +
-  "about to send money, please double-check the recipient details before " +
+  "about to send money, please double-check the recipient before " +
   "proceeding.";
 
 export default function WarningScreen() {
