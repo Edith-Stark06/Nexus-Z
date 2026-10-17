@@ -42,7 +42,7 @@ Screenshots worth taking: the VM and its specs, `podman ps` with the container, 
 
 ## Rules to keep in mind
 
-- All code is to be created during the event window. Planning, research and the abstract before Oct 17 are fine. **Confirm with the organizers how pre-kickoff work counts** (owner: Ramana; Discord #helpdesk, or stemprograms@sstarsfoundation.org).
+- The guidebook says code is to be created during the event window; planning, research and the abstract before Oct 17 are fine. **The organizers confirmed to Ramana (Oct 17) that pre-kickoff code is acceptable.** Keep their reply (screenshot or email) as evidence.
 - Open-source libraries and public datasets are allowed with links and licenses. Elliptic is CC BY-NC-ND 4.0.
 - No reuse of another team's code or ideas. No political or hateful content. Friendly competition only.
 
