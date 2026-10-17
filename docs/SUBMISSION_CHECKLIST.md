@@ -8,7 +8,7 @@ Source: the Participant Guidebook. Times are India hub (IST) and region-specific
 |---|---|
 | Oct 17, 9:00 to 10:00 | Kick-off |
 | Oct 17, 17:00 to Oct 18, 10:00 | Virtual continuation |
-| **Oct 18, 10:00** | **End of the datathon: final submission** (confirm in the portal) |
+| **Oct 18, 22:00 (10:00 PM)** | **Final submission deadline, as Ramana read it in the portal for the virtual track.** The guidebook's India-hub schedule says 10:00 (morning), so trust the portal |
 | Oct 18, 10:30 | Closing ceremony |
 | Oct 23 | Feedback survey |
 | Oct 28 | Winners announced |
@@ -48,6 +48,6 @@ Screenshots worth taking: the VM and its specs, `podman ps` with the container, 
 
 ## Open questions
 
-- Abstract (due Oct 15): **submitted**. Has the team been created on the Hack2Skill platform?
-- Which track: an in-person hub (India) or virtual?
+- Abstract (due Oct 15): **submitted**. The team exists on Hack2Skill.
+- Track: **virtual** (confirmed by Ramana). Team name: **Big Iron**.
 - Confirm the exact title format on the Hack2Skill form (the guidebook shows `[Team Name_IBM Z Datathon 2026 Project]`).
