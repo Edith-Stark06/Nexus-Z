@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-SERVING_MODULES = ["ml.service", "ml.api_backend", "ml.bundle", "ml.stack", "ml.neighbors", "ml.explain", "ml.narrative", "ml.ring_ids", "api.main"]
+SERVING_MODULES = ["ml.service", "ml.api_backend", "ml.bundle", "ml.stack", "ml.neighbors", "ml.explain", "ml.narrative", "ml.ring_ids", "ml.elliptic_actors_eval", "api.main"]
 
 
 def test_everything_the_server_imports_works_without_scikit_learn():
