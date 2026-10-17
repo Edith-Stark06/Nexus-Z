@@ -2,11 +2,13 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from functools import lru_cache
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from .backend import Backend, BackendConfigError, get_backend
+from .chat import ChatRequest, ChatResponse, ChatService, ChatStatus
 from .schemas import AccountScore, Alert, IngestResult, Ring, RingSummary, Transaction
 
 log = logging.getLogger("nexusz.api")
@@ -99,3 +101,22 @@ def get_ring(ring_id: str, backend: Backend = Depends(get_backend)) -> Ring:
 @app.get("/alerts", response_model=list[Alert])
 def list_alerts(limit: int = Query(50, ge=1, le=500), backend: Backend = Depends(get_backend)) -> list[Alert]:
     return backend.list_alerts(limit)
+
+
+@lru_cache
+def get_chat() -> ChatService:
+    return ChatService()
+
+
+@app.get("/chat/status", response_model=ChatStatus)
+def chat_status(chat: ChatService = Depends(get_chat)) -> ChatStatus:
+    """What a question would use right now: a Granite model, or the rules. Never returns the token."""
+    return chat.status()
+
+
+@app.post("/chat", response_model=ChatResponse)
+def chat(request: ChatRequest, backend: Backend = Depends(get_backend), chat: ChatService = Depends(get_chat)) -> ChatResponse:
+    """An analyst's question, answered from our own data. The model may call read-only tools; the answer is checked before it is returned."""
+    if not chat.allow():
+        raise HTTPException(status_code=429, detail="Too many questions in the last minute; wait a moment.")
+    return chat.ask(request, backend)

@@ -4,6 +4,7 @@ import "./Layout.css";
 const NAV = [
   { to: "/", label: "Rings" },
   { to: "/alerts", label: "Alerts" },
+  { to: "/assistant", label: "Assistant" },
 ];
 
 export default function Layout({ children, usingMock }) {
@@ -44,7 +45,7 @@ export default function Layout({ children, usingMock }) {
       <main className="main">
         <header className="topbar">
           <h1 className="topbar-title">
-            {loc.pathname === "/" ? "Flagged rings" : loc.pathname === "/alerts" ? "Alerts" : ""}
+            {loc.pathname === "/" ? "Flagged rings" : loc.pathname === "/alerts" ? "Alerts" : loc.pathname === "/assistant" ? "Assistant" : ""}
           </h1>
         </header>
         {children}
