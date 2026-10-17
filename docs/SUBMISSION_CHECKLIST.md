@@ -48,6 +48,6 @@ Screenshots worth taking: the VM and its specs, `podman ps` with the container, 
 
 ## Open questions
 
-- Was the abstract (due Oct 15) submitted, and has the team been created on the Hack2Skill platform?
+- Abstract (due Oct 15): **submitted**. Has the team been created on the Hack2Skill platform?
 - Which track: an in-person hub (India) or virtual?
 - Team name.
