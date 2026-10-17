@@ -55,6 +55,7 @@ class Ring(RingSummary):
     members: list[Member]
     edges: list[Edge]
     top_reasons: list[Reason]
+    summary: str | None = None  # a short case write-up from the same facts; see ml/narrative.py
 
 
 class Neighborhood(BaseModel):
@@ -78,5 +79,6 @@ class Alert(BaseModel):
     severity: Literal["high", "medium", "low"]
     ring_id: str
     account_id: str | None
+    recipient_id: str | None = None  # victim_warning only: the ring account that was paid; GET /accounts/<it> is the pre-check
     message: str
     ts: datetime

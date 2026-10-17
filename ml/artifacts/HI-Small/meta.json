@@ -47,10 +47,19 @@
     "kcore",
     "clustering",
     "comp_size",
-    "comp_avg_deg"
+    "comp_avg_deg",
+    "fanin_1h",
+    "fanin_6h",
+    "fanin_24h",
+    "fanout_1h",
+    "fanout_6h",
+    "fanout_24h",
+    "cyc3",
+    "ffl",
+    "dup_amount_share"
   ],
-  "threshold": 0.14093314111232758,
-  "top_fraction": 0.01,
+  "threshold": 0.3319910168647766,
+  "top_fraction": 0.0025,
   "ccy_median": {
     "Australian Dollar": 1451.455,
     "Bitcoin": 0.0768625,
@@ -70,58 +79,27 @@
   },
   "meta": {
     "variant": "HI-Small",
-    "feature_version": 2,
-    "trees": 376,
+    "feature_version": 4,
+    "scorer": "payment",
     "train_cutoff": "2022-09-06 13:34:00",
     "val_cutoff": "2022-09-08 16:09:00",
-    "trained_at": "2026-10-17T07:26:40",
-    "val_rings": 69
+    "trained_at": "2026-10-17T14:16:03",
+    "trees": 374,
+    "trees_payment": 358,
+    "val_rings": 104,
+    "ring_scorer": "not fitted: the validation rings were about 98 percent real, so there was nothing to learn (see ml/ring_score.py MIN_SHARE)"
   },
   "calibration": [
-    0.8761424422264099,
-    -4.230288028717041
+    0.8740215301513672,
+    -4.352636814117432
   ],
-  "ring_scorer": {
-    "features": [
-      "log_size",
-      "density",
-      "concentration",
-      "log_tx_per_member",
-      "mean_score",
-      "min_score",
-      "max_score",
-      "top3_score"
-    ],
-    "mean": [
-      1.859453967967467,
-      0.42467995330727115,
-      0.5247618365666717,
-      0.9653320605630497,
-      0.30616992020952527,
-      0.11121353291083073,
-      0.6011922612138416,
-      0.45709031798701355
-    ],
-    "scale": [
-      0.7991643235810536,
-      0.24861869320951488,
-      0.2998900446264603,
-      0.583485959699954,
-      0.11875936777318098,
-      0.05158195271082864,
-      0.22672236927793352,
-      0.21992259652943427
-    ],
-    "coef": [
-      -1.1123834952097387,
-      -0.06149743286906086,
-      -0.5991436747190078,
-      -0.09606619581272202,
-      1.2638497648778235,
-      -0.4860610020898393,
-      0.2060780714120639,
-      -0.38758871745356843
-    ],
-    "intercept": -0.0835761932346831
-  }
+  "ring_scorer": null,
+  "two_stage": false,
+  "high_quantile": 0.99,
+  "payment": true,
+  "payment_calibration": [
+    0.777888834476471,
+    -4.2879204750061035
+  ],
+  "grow_fraction": 0.02
 }

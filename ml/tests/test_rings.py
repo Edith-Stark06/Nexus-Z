@@ -50,3 +50,21 @@ def test_oversized_group_is_split_into_rings_within_the_size_limit():
     rings = detect_rings(scores, tx, top_fraction=1.0, min_size=3, max_size=6)
     assert sorted(r.size for r in rings) == [5, 5]
     assert {frozenset(r.members) for r in rings} == {frozenset(left), frozenset(right)}
+
+
+def test_growing_rings_gathers_weaker_members_but_needs_a_strong_seed():
+    # strong a, b; middling c, d linked to them; weak e hanging off d; x and y are a middling pair with no strong seed
+    scores = pd.Series({"a": 0.95, "b": 0.94, "c": 0.5, "d": 0.45, "e": 0.05, "x": 0.4, "y": 0.35, "f": 0.01, "g": 0.01, "h": 0.01})
+    tx = pd.DataFrame({"src": ["a", "b", "c", "d", "x", "f"], "dst": ["b", "c", "d", "e", "y", "g"]})
+    strict_only = detect_rings(scores, tx, top_fraction=0.2, min_size=3)               # just a and b: too small for a ring
+    grown = detect_rings(scores, tx, top_fraction=0.2, min_size=3, grow_fraction=0.5)   # the top 5 of 10 accounts
+    assert strict_only == []
+    assert len(grown) == 1 and grown[0].members == ["a", "b", "c", "d"]
+    assert "x" not in grown[0].members                                                 # x and y have no strong seed
+    wider = detect_rings(scores, tx, top_fraction=0.2, min_size=3, grow_fraction=0.7)  # now weak e is inside the net
+    assert [r.members for r in wider] == [["a", "b", "c", "d", "e"]]
+
+
+def test_not_growing_is_unchanged():
+    scores, tx = sample()
+    assert [r.members for r in detect_rings(scores, tx, top_fraction=0.84, min_size=3, grow_fraction=None)] == [["a", "b", "c"]]

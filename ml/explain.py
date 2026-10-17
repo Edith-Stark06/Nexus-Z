@@ -24,10 +24,37 @@ LABELS = {
     "reciprocity": "Payments flow back and forth", "kcore": "Sits in a tightly connected core",
     "clustering": "Its neighbors also pay each other", "comp_size": "Part of a large connected group",
     "comp_avg_deg": "Densely connected group",
+    "s1": "Its own first-pass risk score",
+    "nb_in_mean": "Accounts that pay it look risky", "nb_in_max": "A very risky account pays it",
+    "nb_out_mean": "Accounts it pays look risky", "nb_out_max": "It pays a very risky account",
+    "nb_in_high": "Many high-risk accounts pay it", "nb_out_high": "It pays many high-risk accounts",
+    "nb_in_high_share": "Most of its payers are high-risk", "nb_out_high_share": "Most of its payees are high-risk",
+    "nb_in_mean2": "Its payers are paid by risky accounts", "nb_out_mean2": "Its payees pay risky accounts",
+    "fanin_1h": "Many different payers within an hour", "fanin_6h": "Many different payers within six hours",
+    "fanin_24h": "Many different payers within a day", "fanout_1h": "Pays many different accounts within an hour",
+    "fanout_6h": "Pays many different accounts within six hours", "fanout_24h": "Pays many different accounts within a day",
+    "cyc3": "Money goes round in a triangle", "ffl": "Pays two accounts that also pay each other",
+    "dup_amount_share": "Repeats the same amounts",
+}
+
+
+PAYMENT_LABELS = {
+    "amount_norm": "Unusually large payment", "log_amount": "Payment size", "cross_ccy": "Payment changes currency",
+    "hour": "Time of day of the payment", "self_transfer": "Transfer to the same account",
+    "prev_in_gap": "Sender received money shortly before sending", "prev_in_ratio": "Payment is close to what the sender just received",
+    "next_out_gap": "Receiver passes the money on quickly", "next_out_ratio": "Receiver forwards about the same amount",
 }
 
 
 def label(feature: str) -> str:
+    if feature in PAYMENT_LABELS:
+        return PAYMENT_LABELS[feature]
+    if feature.startswith("ch_"):
+        return "Paid by " + feature[3:]
+    if feature.startswith("s_") and feature[2:] in LABELS:
+        return "Sender: " + LABELS[feature[2:]][0].lower() + LABELS[feature[2:]][1:]
+    if feature.startswith("d_") and feature[2:] in LABELS:
+        return "Receiver: " + LABELS[feature[2:]][0].lower() + LABELS[feature[2:]][1:]
     if feature in LABELS:
         return LABELS[feature]
     for prefix, text in (("out_share_", "Sends mostly by "), ("in_share_", "Receives mostly by ")):
@@ -46,7 +73,39 @@ def shap_values(model, X: pd.DataFrame) -> np.ndarray:
     return contrib[:, :-1]  # the last column is the base value
 
 
-def top_reasons(contrib: np.ndarray, cols: list[str], k: int = 5) -> list[dict]:
+# Most labels describe a HIGH value ("Many payments sent"); these describe a LOW one ("Money leaves within minutes"), and
+# these have no direction ("Time of day of the payment").
+LABEL_IS_LOW = {"pt_min", "pt_median", "prev_in_gap", "next_out_gap"}
+LABEL_HAS_NO_DIRECTION = {"log_amount", "hour", "prev_in_ratio", "next_out_ratio"}
+
+
+def label_holds(feature: str, value: float, typical: float) -> bool | None:
+    """Whether the feature's value really is what its label says, or None when the label has no direction.
+
+    A feature can raise the risk by being LOW (an account with no self-transfers looks different from the many IBM
+    accounts that have them), and the label would then claim the opposite of what the data shows.
+    """
+    base = feature[2:] if feature[:2] in ("s_", "d_") else feature
+    if base in LABEL_HAS_NO_DIRECTION or value is None or not np.isfinite(value):
+        return None
+    if feature.startswith(("ch_", "out_share_", "in_share_")):  # a one-hot or a share: true when it is the main case
+        return bool(value >= 0.5)
+    return bool(value < typical) if base in LABEL_IS_LOW else bool(value > typical)
+
+
+def top_reasons(contrib: np.ndarray, cols: list[str], k: int = 5, values: np.ndarray | None = None,
+                typical: dict | None = None) -> list[dict]:
+    """The k biggest contributions with readable labels. With `values` (the feature values behind the contributions)
+    and `typical` (a typical value per feature), a reason whose label is not actually true gets " (absent)" and
+    "holds": false, so the text never says "many transfers to itself" about an account that has none."""
     order = np.argsort(-np.abs(contrib))[:k]
-    return [{"feature": cols[i], "label": label(cols[i]), "contribution": round(float(contrib[i]), 3)}
-            for i in order]
+    out = []
+    for i in order:
+        item = {"feature": cols[i], "label": label(cols[i]), "contribution": round(float(contrib[i]), 3)}
+        if values is not None and typical is not None:
+            holds = label_holds(cols[i], float(values[i]), float(typical.get(cols[i], np.nan)))
+            if holds is False:
+                item["label"] += " (absent)"
+            item["holds"] = holds
+        out.append(item)
+    return out

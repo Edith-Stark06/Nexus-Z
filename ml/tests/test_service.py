@@ -59,3 +59,93 @@ def test_ring_is_described_once_and_reused(scorer):
     assert scorer.get_ring(rid) is scorer.get_ring(rid)       # same object: no recomputation
     scorer.list_rings(), scorer.list_alerts()                  # these reuse the cache as well
     assert rid in scorer._ring_cache
+
+
+def test_listing_all_rings_at_once_gives_the_same_descriptions_as_one_by_one(tx_and_bundle):
+    tx, bundle = tx_and_bundle
+    feats = build_features(tx, bundle.ccy_median)
+    batched, single = Scorer(bundle, feats, tx, tx["ts"].max()), Scorer(bundle, feats, tx, tx["ts"].max())
+    batched.list_rings()
+    assert batched._contrib, "list_rings should have explained the members in one batch"
+    for rid in single._by_id:
+        want, got = single.get_ring(rid), batched.get_ring(rid)
+        assert want["edges"] == got["edges"] and want["headline"] == got["headline"]
+        assert [r["feature"] for r in want["top_reasons"]] == [r["feature"] for r in got["top_reasons"]]
+        assert [r["contribution"] for r in want["top_reasons"]] == pytest.approx([r["contribution"] for r in got["top_reasons"]])
+
+
+def test_two_stage_bundle_scores_explains_and_matches_the_api_schema(tx_and_two_stage_bundle):
+    from ml.neighbors import NEIGHBOR_COLS
+
+    tx, bundle = tx_and_two_stage_bundle
+    scorer = Scorer.from_transactions(bundle, tx)
+    assert scorer._booster is bundle.stage2 and set(NEIGHBOR_COLS) <= set(scorer._frame.columns)
+    rings = scorer.list_rings()
+    assert rings
+    for s in rings:
+        RingSummary(**s)
+    ring = scorer.get_ring(rings[0]["ring_id"])
+    Ring(**ring)
+    member = ring["members"][0]["id"]
+    AccountScore(**scorer.score_account(member))
+    reasons = {r["feature"] for r in scorer.explain(member, k=len(bundle.cols2))}
+    assert reasons <= set(bundle.cols2) and all(isinstance(r, str) for r in reasons)
+
+
+def test_two_stage_bundle_survives_save_and_load(tx_and_two_stage_bundle, tmp_path):
+    import numpy as np
+    from ml.bundle import load_bundle, save_bundle
+
+    tx, bundle = tx_and_two_stage_bundle
+    save_bundle(bundle, tmp_path)
+    loaded = load_bundle(tmp_path)
+    assert loaded.stage2 is not None and loaded.high_quantile == 0.9 and loaded.cols2 == bundle.cols2
+    a, b = Scorer.from_transactions(bundle, tx), Scorer.from_transactions(loaded, tx)
+    assert np.allclose(a.scores.to_numpy(), b.scores.to_numpy())
+
+
+def test_payment_level_scoring_rings_and_explanations(tx_and_payment_bundle):
+    tx, bundle = tx_and_payment_bundle
+    scorer = Scorer.from_transactions(bundle, tx)
+    assert scorer._payment_mode
+    rings = scorer.list_rings()
+    assert rings
+    for s in rings:
+        RingSummary(**s)
+    ring = scorer.get_ring(rings[0]["ring_id"])
+    Ring(**ring)
+    assert {m["id"] for m in ring["members"]} & {"C0", "C1", "M0", "M1", "OUT"}
+    assert len(ring["top_reasons"]) == 5
+    member = ring["members"][0]["id"]
+    acc = scorer.score_account(member)
+    AccountScore(**acc)
+    explanation = scorer.explain(member, k=5)
+    assert all(r["label"] for r in explanation)
+    assert any(r["label"].startswith(("Sender:", "Receiver:")) or r["feature"] in
+               ("prev_in_gap", "prev_in_ratio", "next_out_gap", "next_out_ratio", "amount_norm") or r["feature"].startswith("ch_")
+               for r in explanation)
+
+
+def test_payment_features_are_recomputed_for_accounts_without_kept_rows(tx_and_payment_bundle):
+    tx, bundle = tx_and_payment_bundle
+    scorer = Scorer.from_transactions(bundle, tx)
+    kept = scorer.explain("C0", k=5)
+    scorer._payment_rows = scorer._payment_rows.iloc[0:0]       # forget every kept row
+    assert scorer.explain("C0", k=5) == kept                     # the same payment, recomputed on demand
+    assert len(scorer._payment_rows) == 1
+
+
+def test_payment_bundle_survives_save_and_load(tx_and_payment_bundle, tmp_path):
+    import numpy as np
+    from ml.bundle import load_bundle, save_bundle
+
+    import dataclasses
+
+    tx, bundle = tx_and_payment_bundle
+    bundle = dataclasses.replace(bundle, grow_fraction=0.5)
+    save_bundle(bundle, tmp_path)
+    loaded = load_bundle(tmp_path)
+    assert loaded.payment is not None and loaded.payment_calibration == bundle.payment_calibration
+    assert loaded.grow_fraction == 0.5
+    a, b = Scorer.from_transactions(bundle, tx), Scorer.from_transactions(loaded, tx)
+    assert np.allclose(a.scores.to_numpy(), b.scores.to_numpy())

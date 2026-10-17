@@ -1,0 +1,366 @@
+{
+  "ring_id": "RNG-F91BDE",
+  "risk": 91,
+  "accounts": 11,
+  "victims": 3,
+  "headline": "11 linked accounts, 45 payments between them, 47% reaching one account. Top signal: Paid by ACH.",
+  "first_seen": "2022-09-01T20:54:00Z",
+  "flagged_at": "2022-09-10T23:59:00Z",
+  "total_amount": 9904834.79,
+  "members": [
+    {
+      "id": "ACC-00014D",
+      "role": "cashout",
+      "score": 0.6677
+    },
+    {
+      "id": "ACC-0001D1",
+      "role": "victim",
+      "score": 0.2358
+    },
+    {
+      "id": "ACC-00323E",
+      "role": "victim",
+      "score": 0.9319
+    },
+    {
+      "id": "ACC-00348E",
+      "role": "victim",
+      "score": 0.3067
+    },
+    {
+      "id": "ACC-00CA3A",
+      "role": "cashout",
+      "score": 0.3067
+    },
+    {
+      "id": "ACC-01832B",
+      "role": "cashout",
+      "score": 0.8617
+    },
+    {
+      "id": "ACC-03E866",
+      "role": "mule",
+      "score": 0.123
+    },
+    {
+      "id": "ACC-051CAF",
+      "role": "collector",
+      "score": 0.8371
+    },
+    {
+      "id": "ACC-0636AD",
+      "role": "mule",
+      "score": 0.2358
+    },
+    {
+      "id": "ACC-064E43",
+      "role": "mule",
+      "score": 0.9319
+    },
+    {
+      "id": "ACC-077FAF",
+      "role": "cashout",
+      "score": 0.367
+    }
+  ],
+  "edges": [
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 1779.38,
+      "ts": "2022-09-01T20:54:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 962.81,
+      "ts": "2022-09-01T20:58:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 3434.18,
+      "ts": "2022-09-01T21:39:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 109.18,
+      "ts": "2022-09-01T21:47:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 19190.8,
+      "ts": "2022-09-01T21:58:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 109.18,
+      "ts": "2022-09-02T01:08:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 3434.18,
+      "ts": "2022-09-02T01:10:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 19190.8,
+      "ts": "2022-09-02T01:28:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 1779.38,
+      "ts": "2022-09-02T14:40:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 962.81,
+      "ts": "2022-09-02T14:44:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 1779.38,
+      "ts": "2022-09-05T07:31:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 962.81,
+      "ts": "2022-09-05T07:36:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 19190.8,
+      "ts": "2022-09-05T17:00:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 3434.18,
+      "ts": "2022-09-05T17:12:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 109.18,
+      "ts": "2022-09-05T17:13:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-064E43",
+      "amount": 6836.09,
+      "ts": "2022-09-05T18:12:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 962.81,
+      "ts": "2022-09-06T06:50:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 1779.38,
+      "ts": "2022-09-06T06:56:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 3434.18,
+      "ts": "2022-09-06T09:02:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 109.18,
+      "ts": "2022-09-06T09:19:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 19190.8,
+      "ts": "2022-09-06T09:28:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 962.81,
+      "ts": "2022-09-07T13:02:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 1779.38,
+      "ts": "2022-09-07T13:14:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 109.18,
+      "ts": "2022-09-07T15:37:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 19190.8,
+      "ts": "2022-09-07T15:46:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 3434.18,
+      "ts": "2022-09-07T15:55:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 19190.8,
+      "ts": "2022-09-08T12:37:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 109.18,
+      "ts": "2022-09-08T12:41:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 3434.18,
+      "ts": "2022-09-08T12:49:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 1779.38,
+      "ts": "2022-09-08T17:36:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 962.81,
+      "ts": "2022-09-08T17:58:00Z"
+    },
+    {
+      "src": "ACC-0001D1",
+      "dst": "ACC-03E866",
+      "amount": 912.56,
+      "ts": "2022-09-08T23:38:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-03E866",
+      "amount": 202.79,
+      "ts": "2022-09-08T23:49:00Z"
+    },
+    {
+      "src": "ACC-00323E",
+      "dst": "ACC-064E43",
+      "amount": 15146.2,
+      "ts": "2022-09-09T02:04:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 1779.38,
+      "ts": "2022-09-09T09:50:00Z"
+    },
+    {
+      "src": "ACC-00348E",
+      "dst": "ACC-00CA3A",
+      "amount": 962.81,
+      "ts": "2022-09-09T09:55:00Z"
+    },
+    {
+      "src": "ACC-051CAF",
+      "dst": "ACC-064E43",
+      "amount": 13930.6,
+      "ts": "2022-09-09T10:44:00Z"
+    },
+    {
+      "src": "ACC-064E43",
+      "dst": "ACC-01832B",
+      "amount": 5134.86,
+      "ts": "2022-09-09T13:25:00Z"
+    },
+    {
+      "src": "ACC-0001D1",
+      "dst": "ACC-0636AD",
+      "amount": 270.03,
+      "ts": "2022-09-09T15:07:00Z"
+    },
+    {
+      "src": "ACC-03E866",
+      "dst": "ACC-0636AD",
+      "amount": 4579.44,
+      "ts": "2022-09-09T15:19:00Z"
+    },
+    {
+      "src": "ACC-064E43",
+      "dst": "ACC-077FAF",
+      "amount": 9667383.73,
+      "ts": "2022-09-09T19:20:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 3434.18,
+      "ts": "2022-09-09T20:41:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 109.18,
+      "ts": "2022-09-09T20:45:00Z"
+    },
+    {
+      "src": "ACC-0636AD",
+      "dst": "ACC-051CAF",
+      "amount": 19190.8,
+      "ts": "2022-09-09T20:46:00Z"
+    },
+    {
+      "src": "ACC-064E43",
+      "dst": "ACC-00014D",
+      "amount": 12104.04,
+      "ts": "2022-09-10T11:57:00Z"
+    }
+  ],
+  "top_reasons": [
+    {
+      "feature": "ch_ACH",
+      "label": "Paid by ACH",
+      "contribution": 2.49
+    },
+    {
+      "feature": "s_cross_ccy_share",
+      "label": "Sender: often changes currency",
+      "contribution": 1.872
+    },
+    {
+      "feature": "s_out_share_ACH",
+      "label": "S out share ach",
+      "contribution": 0.512
+    },
+    {
+      "feature": "d_hours_active",
+      "label": "Receiver: active across many hours",
+      "contribution": 0.3
+    },
+    {
+      "feature": "s_repeat_out",
+      "label": "Sender: repeat payments to the same accounts",
+      "contribution": 0.224
+    }
+  ]
+}

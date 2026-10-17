@@ -70,13 +70,15 @@ def test_recent_payer_into_a_ring_gets_a_cautious_warning(client):
     text = mine[0]["message"].lower()
     assert "flagged ring" in text and not any(w in text for w in ("fraud", "scam", "stolen", "criminal", "guilty"))
     assert mine[0]["severity"] == "medium" and mine[0]["ring_id"] in {r["ring_id"] for r in c.get("/rings").json()}
+    assert mine[0]["recipient_id"] == "C0"  # the ring account that was paid, so the warning screen can look it up
+    assert c.get("/accounts/C0").json()["ring_id"] == mine[0]["ring_id"]
 
 
 def test_without_recent_outside_payers_there_are_no_victim_warnings(client):
     c, _ = client
     alerts = c.get("/alerts?limit=500").json()
     assert alerts and all(a["type"] == "ring" for a in alerts)  # the planted victims are inside the ring
-    assert all(set(a) == {"alert_id", "type", "severity", "ring_id", "account_id", "message", "ts"} for a in alerts)
+    assert all(set(a) == {"alert_id", "type", "severity", "ring_id", "account_id", "recipient_id", "message", "ts"} for a in alerts)
 
 
 def test_stub_precheck_for_the_demo_collector():
@@ -85,3 +87,15 @@ def test_stub_precheck_for_the_demo_collector():
     c = TestClient(app)
     acc = c.get("/accounts/ACC-7F3A").json()
     assert acc["ring_id"] == "RNG-0417" and c.get("/accounts/ACC-NOPE").status_code == 404
+
+
+def test_a_ring_keeps_its_id_through_a_refresh(client):
+    """The dashboard holds a ring id while data streams in; the next rebuild must not rename the ring."""
+    c, backend = client
+    before = {r["ring_id"]: set(m["id"] for m in c.get(f"/rings/{r['ring_id']}").json()["members"]) for r in c.get("/rings").json()}
+    backend.ingest([api_tx("W2", "B17", "C0", T0 + pd.Timedelta(hours=12, minutes=40))])
+    assert backend.refresh_now(wait=True)
+    after = {r["ring_id"]: set(m["id"] for m in c.get(f"/rings/{r['ring_id']}").json()["members"]) for r in c.get("/rings").json()}
+    carrier = next(r for r, m in before.items() if "C0" in m)
+    assert carrier in after and "C0" in after[carrier]          # the ring with C0 is still reachable under its old id
+    assert c.get(f"/rings/{carrier}").status_code == 200
