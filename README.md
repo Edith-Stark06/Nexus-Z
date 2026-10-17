@@ -45,6 +45,10 @@ IBM synthetic AML data, test window (details, seeds and caveats in [docs/ML_RESU
 
 **What these do not show:** most laundering groups are still missed (a third recovered as rings, 45% never detected in the replay); the payment-level figures are on one dataset (HI-Small) and one time split, and the lower-fraud LI-Small was run once (precision about 9% at 33% recall); graph features added nothing on the Elliptic Bitcoin data; the injected pig-butchering rings are easy and were designed by the same side that designed the features, so results on them are optimistic.
 
+## AI-assisted chat
+
+The dashboard has an **Assistant** page where an analyst asks questions in plain language. The language model is **IBM Granite 4.2** (30B, falling back to 8B and 3B, then to built-in rules), served by Hugging Face Inference Providers: **it does not run on the LinuxONE VM** (58.6 GB of weights). It answers only from our own API through read-only tools, every answer is checked for invented ids, and the page says which model wrote it. Only the question and compact synthetic facts leave the VM. The model's only provider has announced its retirement for 2026-10-18, hence the fallbacks. Details, data flow, token handling and what was and was not tested: [docs/CHATBOT.md](docs/CHATBOT.md).
+
 ## How it uses IBM LinuxONE
 
 - **Platform:** the datathon's LinuxONE Community Cloud VM (RHEL 9.8, s390x, 3 vCPUs, 7.5 GB RAM).

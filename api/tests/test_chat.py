@@ -200,7 +200,7 @@ def test_a_result_that_is_too_large_is_not_sent():
 # -- the rules answers
 @pytest.mark.parametrize("question,expected", [
     (f"Explain {RING}", RING), ("Which rings are riskiest?", "Highest-risk rings"), ("Show me the newest alerts", "alerts"),
-    ("Who may pay in next?", "alerts"), ("How current is the data?", "Backend: stub"), ("Tell me about ACC-7F3A", "ACC-7F3A"),
+    ("Who may pay in next?", "likely victims flagged"), ("How current is the data?", "Backend: stub"), ("Tell me about ACC-7F3A", "ACC-7F3A"),
     ("What is the meaning of life", "I can answer about"), ("Explain RNG-FFFF", "no ring"),
 ])
 def test_rules_answer_the_questions_they_know_and_say_what_they_cannot(question, expected):
@@ -252,3 +252,21 @@ def test_too_many_questions_in_a_minute_get_a_429(tmp_path):
 def test_a_request_model_rejects_a_bad_role():
     with pytest.raises(ValidationError):
         ChatRequest(message="hi", history=[{"role": "tool", "content": "x"}])
+
+
+def test_the_alert_tool_can_ask_for_one_kind_and_ignores_a_bad_kind():
+    t = Tools(StubBackend())
+    victims = t.run("list_alerts", {"kind": "victim_warning", "limit": 3})["alerts"]
+    assert victims and all(a["type"] == "victim_warning" for a in victims) and len(victims) <= 3
+    assert all(a["type"] == "ring" for a in t.run("list_alerts", {"kind": "ring"})["alerts"])
+    assert t.run("list_alerts", {"kind": "'; drop table"})["alerts"]            # a bad kind means both kinds, not an error or a crash
+
+
+def test_the_victim_question_is_answered_with_the_payer_the_account_paid_and_the_ring():
+    out = rules_answer("Who may pay in next?", Tools(StubBackend()), [])
+    assert "paid" in out and "RNG-" in out and "ACC-" in out
+
+
+def test_a_missing_account_paid_is_never_printed_as_none():
+    out = rules_answer("Who may pay in next?", Tools(StubBackend()), [])           # the stub's alerts have no recipient_id
+    assert "None" not in out and "paid into RNG-" in out

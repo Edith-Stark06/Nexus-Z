@@ -35,6 +35,7 @@ MAX_TOOL_ROUNDS = 4
 MAX_TOOL_RESULT_CHARS = 6000
 MAX_ANSWER_CHARS = 1800
 FORBIDDEN = ("criminal", "guilty", "fraudster", "scammer", "convicted", "arrest", "stolen", "illegal")
+ARG_NAMES = ("limit", "ring_id", "account_id", "kind")
 ID_PATTERN = re.compile(r"\b(?:RNG|ACC)-[0-9A-Za-z]{4,}\b")
 RING_ID = re.compile(r"^RNG-[0-9A-Fa-f]{4,12}$")
 ACCOUNT_ID = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
@@ -65,7 +66,9 @@ TOOL_SPECS = [
         "parameters": {"type": "object", "properties": {"account_id": {"type": "string", "description": "An account id such as ACC-0016AB"}}, "required": ["account_id"]}}},
     {"type": "function", "function": {
         "name": "list_alerts", "description": "Newest alerts: ring alerts and likely-victim flags (a payer who recently paid into a flagged ring, and the account paid).",
-        "parameters": {"type": "object", "properties": {"limit": {"type": "integer", "description": "How many alerts, 1 to 10"}}, "required": []}}},
+        "parameters": {"type": "object", "properties": {
+            "limit": {"type": "integer", "description": "How many alerts, 1 to 10"},
+            "kind": {"type": "string", "enum": ["ring", "victim_warning"], "description": "Only ring alerts, or only likely-victim flags; leave out for both"}}, "required": []}}},
     {"type": "function", "function": {
         "name": "system_status", "description": "Which backend is running, how current the data is, and how long the last rebuild took.",
         "parameters": {"type": "object", "properties": {}, "required": []}}},
@@ -150,7 +153,7 @@ class Tools:
         if fn is None:
             return {"error": f"unknown tool {name!r}"}
         try:
-            return fn(**{k: v for k, v in (args or {}).items() if k in ("limit", "ring_id", "account_id")})
+            return fn(**{k: v for k, v in (args or {}).items() if k in ARG_NAMES})
         except TypeError:
             return {"error": "bad arguments"}
 
@@ -186,8 +189,10 @@ class Tools:
                 "reasons": [{"label": r.label, "contribution": r.contribution} for r in acc.reasons],
                 "in_degree": acc.neighborhood.in_degree, "out_degree": acc.neighborhood.out_degree, "ring_size": acc.neighborhood.ring_size}
 
-    def list_alerts(self, limit=5) -> dict:
-        alerts = self.backend.list_alerts(_clamp(limit, 1, 10, 5))
+    def list_alerts(self, limit=5, kind=None) -> dict:
+        kind = kind if kind in ("ring", "victim_warning") else None
+        # newest first, and the ring alerts are all as new as the ring itself, so look further back before keeping only one kind
+        alerts = [a for a in self.backend.list_alerts(500 if kind else _clamp(limit, 1, 10, 5)) if kind is None or a.type == kind][:_clamp(limit, 1, 10, 5)]
         return {"alerts": [{"type": a.type, "severity": a.severity, "ring_id": a.ring_id, "payer": a.account_id,
                             "account_paid": getattr(a, "recipient_id", None), "ts": a.ts.isoformat(), "message": a.message} for a in alerts]}
 
@@ -228,12 +233,17 @@ def rules_answer(question: str, tools: Tools, used: list[ToolUse]) -> str:
         why = "; ".join(f"{x['label']} ({x['contribution']:+.2f})" for x in a["reasons"][:3])
         where = f"in ring {a['ring_id']} as an estimated {a['estimated_role']}" if a["ring_id"] else "not in a flagged ring"
         return f"Account {a['account_id']} has risk {a['risk']:.2f} and is {where}." + (f" Main reasons: {why}." if why else "")
-    if any(w in q for w in ("alert", "victim", "warn", "next", "pay in", "paid")):
+    if any(w in q for w in ("victim", "pay in", "paid", "next person", "may pay")):
+        al = use("list_alerts", limit=5, kind="victim_warning")["alerts"]
+        if not al:
+            return "No likely victims are flagged right now."
+        return ("Likely victims flagged (payers who recently paid into a flagged ring): "
+                + "; ".join(f"{a['payer']} paid {a['account_paid']} in {a['ring_id']}" if a.get("account_paid") else f"{a['payer']} paid into {a['ring_id']}" for a in al) + ".")
+    if "alert" in q or "warn" in q:
         al = use("list_alerts", limit=5)["alerts"]
         if not al:
             return "There are no alerts yet."
-        lines = [f"{a['type'].replace('_', ' ')} on {a['ring_id']}" + (f": {a['payer']} paid {a['account_paid']}" if a.get("account_paid") else "") for a in al]
-        return "Newest alerts: " + "; ".join(lines) + "."
+        return "Newest alerts: " + "; ".join(f"{a['type'].replace('_', ' ')} on {a['ring_id']}" for a in al) + "."
     if any(w in q for w in ("status", "fresh", "current", "health", "data as of", "up to date", "how old")):
         s = use("system_status")
         return (f"Backend: {s['backend']}. Data as of {s.get('data_as_of', 'unknown')}; the last rebuild took "
@@ -369,7 +379,7 @@ class ChatService:
                     result = tools.run(str(fn.get("name")), args)
                     text = tool_result_text(result)
                     results_text += " " + text
-                    used.append(ToolUse(tool=str(fn.get("name")), args={k: v for k, v in args.items() if k in ("limit", "ring_id", "account_id")}))
+                    used.append(ToolUse(tool=str(fn.get("name")), args={k: v for k, v in args.items() if k in ARG_NAMES}))
                     messages.append({"role": "tool", "tool_call_id": call.get("id", ""), "content": text})
         raise _Failure("the model kept calling tools without answering")
 
