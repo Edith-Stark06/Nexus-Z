@@ -14,6 +14,7 @@ unchanged and coordinates it from outside:
 This is still micro-batch rescoring: every refresh recomputes features for all history. It is not
 per-transaction incremental scoring.
 """
+import inspect
 import logging
 import threading
 import time
@@ -35,9 +36,11 @@ MAX_BACKOFF_SECONDS = 60.0
 MAX_ALERTS = 500  # the API caps /alerts?limit at 500
 
 
-def build_snapshot(bundle: Bundle, tx: pd.DataFrame, active_hours: int) -> ModelBackend:
-    """Full rebuild, then describe all rings once so served reads hit a warm cache."""
-    state = ModelBackend(bundle, tx, active_hours=active_hours, min_refresh_seconds=0)
+def build_snapshot(bundle: Bundle, tx: pd.DataFrame, active_hours: int, previous_rings: dict | None = None) -> ModelBackend:
+    """Full rebuild, then describe all rings once so served reads hit a warm cache.
+
+    `previous_rings` (ring id -> members, from the snapshot being replaced) lets a ring that grew keep its id."""
+    state = ModelBackend(bundle, tx, active_hours=active_hours, min_refresh_seconds=0, previous_rings=previous_rings)
     state.list_rings()
     return state
 
@@ -70,6 +73,8 @@ class AsyncRefreshBackend:
                  min_refresh_seconds: float = 5.0, build: Builder = build_snapshot, autostart: bool = True):
         self.bundle, self.active_hours, self.min_refresh_seconds = bundle, active_hours, min_refresh_seconds
         self._build = build
+        self._build_remembers_rings = "previous_rings" in inspect.signature(build).parameters  # test builders take three arguments
+        self._ring_memory: dict | None = None   # ring ids and members of the snapshot being served
         self._lock = threading.Lock()          # guards _pending, _snapshot, status fields
         self._refresh_lock = threading.Lock()  # only one refresh at a time
         self._pending: list[dict] = []
@@ -80,12 +85,21 @@ class AsyncRefreshBackend:
         self._last_started = float("-inf")
         self._stop, self._wake = threading.Event(), threading.Event()
         started = time.monotonic()
-        self._snapshot = self._make_snapshot(self._build(bundle, tx, active_hours), started)
+        self._snapshot = self._make_snapshot(self._build_state(tx), started)
         self._worker = threading.Thread(target=self._run, name="nexusz-refresh", daemon=True)
         if autostart:
             self._worker.start()
 
     # -- snapshot handling
+    def _build_state(self, tx: pd.DataFrame) -> ModelBackend:
+        """A new state from `tx`; its rings keep the ids of the ring snapshot being served, so open pages stay valid."""
+        if self._build_remembers_rings:
+            state = self._build(self.bundle, tx, self.active_hours, previous_rings=self._ring_memory)
+        else:
+            state = self._build(self.bundle, tx, self.active_hours)
+        self._ring_memory = state.ring_members() if hasattr(state, "ring_members") else None
+        return state
+
     @staticmethod
     def _make_snapshot(state: ModelBackend, started: float) -> _Snapshot:
         newest = state.tx["ts"].max()
@@ -115,7 +129,7 @@ class AsyncRefreshBackend:
             try:
                 merged = pd.concat([base.backend.tx, pd.DataFrame(batch)], ignore_index=True)
                 merged = merged.sort_values("ts", kind="stable", ignore_index=True)
-                fresh = self._make_snapshot(self._build(self.bundle, merged, self.active_hours), started)
+                fresh = self._make_snapshot(self._build_state(merged), started)
             except Exception as exc:
                 log.exception("refresh failed; still serving the previous state")
                 with self._lock:
