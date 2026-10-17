@@ -30,7 +30,7 @@ Where the artifact is out of date:
 1. The ML core is built. The "model functions" contract is real: `ml/service.py` returns dicts shaped like `api/schemas.py`.
 2. **"Refresh features, dirty nodes only" is not implemented.** `ModelBackend` does a **full rebuild** of features, scores and rings from the transactions it holds, at most once every `min_refresh_seconds`. Do not describe this as incremental or per-transaction real time. Say what it is: micro-batch rescoring.
 3. Serving does not use scikit-learn or the SHAP package; they do not build on the s390x VM. Explanations use XGBoost's built-in TreeSHAP.
-4. The artifact says Docker. **The VM has neither Docker nor Podman installed.** See Task 2.
+4. The artifact says Docker. The VM uses **Podman** (installed by Ramana on 2026-10-17; Docker is not installed). A Jupyter Lab ML container (`notebook`) is already running there for training; see `ml/LINUXONE.md`. See Task 2.
 5. The owner names on the artifact are current.
 
 ## 3. The project in five lines
@@ -74,8 +74,8 @@ Acceptance: on the VM, `python -m pytest ml/tests api/tests -q` passes (4 skips 
 
 ### Task 2: how to run the API on the VM (containers or not, honestly)
 
-The plan says Docker containers on LinuxONE. Neither Docker nor Podman is installed. Podman is available with `sudo dnf install podman`. Choose one and say which:
-- **Containers:** a Containerfile for the API on a UBI 9 base image (UBI is published for s390x). You would have to build pandas and xgboost inside the image, which is slow, or mount the host virtualenv. Test that the container starts the API and answers `/health`.
+The plan says Docker containers on LinuxONE. Podman 5.8.2 is installed on the VM and works (rootless, as `linux1`); Docker is not. Note that rootless containers stop when your SSH session ends unless lingering is enabled (already on for `linux1`). Choose one and say which:
+- **Containers:** a Containerfile for the API on a UBI 9 base image (UBI is published for s390x). You would have to build pandas and xgboost inside the image, which is slow, or mount the host virtualenv. Alternatively reuse the image `registry.linuxone.cloud.marist.edu/l1cc/jupyterlab-image-s390x:latest`, already pulled: it has numpy, pandas, scikit-learn and XGBoost built for s390x, and a compiler. It does not ship FastAPI or pydantic, but `pip install pydantic fastapi uvicorn httpx pytest` works inside it (tested by Ramana), and then `python -m pytest ml/tests api/tests -q` passes there (37 passed, 1 skipped). So the API can run in that image. Its Jupyter is bound to the VM's loopback on port 38888, so give the API a different port and do not open either to the internet without a reason. Test that the container starts the API and answers `/health`.
 - **No containers:** run `uvicorn` as a `systemd` service. Fine if time is short, but then **do not claim Docker or containers anywhere** (README, deck, API docs).
 
 Acceptance: one documented command starts the API on the VM and `/health` answers.

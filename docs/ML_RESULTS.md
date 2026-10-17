@@ -108,8 +108,24 @@ Measured on the datathon VM: RHEL 9.8, s390x (big-endian), 3 vCPUs, 7.5 GB RAM. 
 
 - **Predictions on s390x match the laptop** to within 9×10⁻¹⁶ over 300 rows, so the big-endian machine gives the same answers.
 - This is a full recompute, not an incremental update. New transactions appear after the next rescore (a few seconds), not instantly. The cost grows with the history used: on the laptop, rebuilding features from all 5M transactions takes about 25 s.
-- Models were trained elsewhere (laptop and Kaggle CPU). Only scoring runs on LinuxONE. No accelerator-specific gains are claimed or used.
-- scikit-learn, SHAP and numba could not be built on the VM, so serving uses XGBoost's own explanations and no scikit-learn.
+- The committed model was trained on this VM (next section). Earlier experiments ran on a laptop and on Kaggle CPU notebooks. No accelerator-specific gains are claimed or used.
+- scikit-learn, SHAP and numba could not be built on the VM's own Python environment, so serving uses XGBoost's own explanations and no scikit-learn. Training uses the platform container, which does include scikit-learn.
+
+### Trained and evaluated on LinuxONE
+
+The model was trained inside the platform's Jupyter Lab container on the same VM (s390x, 3 vCPUs, 7.5 GB RAM, CPU only; see `ml/LINUXONE.md`). This is the model committed in `ml/artifacts/HI-Small`.
+
+| Job on the VM (HI-Small) | Time |
+|---|---|
+| Train the model folder (features for three windows, XGBoost, calibration, ring scorer) | 149 s |
+| Account-level ablation (four feature sets) | 160 s |
+| Ring-level evaluation | 142 s |
+| Full rescore of the last 48 hours (862,792 transactions) | 2.3 s, 5.4 ms per account with explanation, peak 786 MB |
+
+- **The account-level ablation on the VM matches the Kaggle run exactly**, row for row (PR-AUC 0.110, 0.116, 0.135, 0.160; same tree counts, same precision and recall). Two different machines running the same library versions gave the same answer. The laptop differs slightly (0.113, 0.116, 0.142, 0.150) because its library versions are newer, so small differences between a laptop run and a Kaggle or VM run are expected.
+- Memory stayed above 4 GB free during training.
+- Ring level on the VM (flagged fraction chosen on validation): the graph model recovered 30.3% of groups at 29.2% purity (2% flagged), within the 20 to 30% range seen on the laptop and Kaggle.
+- CPU only. No on-chip AI accelerator is used, so no accelerator gains are claimed.
 
 ### Bounded-history alternative
 
