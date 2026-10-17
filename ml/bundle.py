@@ -1,6 +1,6 @@
 """The trained model plus everything needed to score with it, saved as a folder.
 
-Usage (from the repo root):  python -m ml.bundle HI-Small [output folder]
+Usage (from the repo root):  python -m ml.bundle HI-Small [output folder] [payment|two_stage|account] [inject seed]
 """
 import json
 import sys
@@ -93,22 +93,33 @@ def load_bundle(folder: Path) -> Bundle:
                   grow_fraction=m.get("grow_fraction"))
 
 
-def train_bundle(variant: str = "HI-Small", scorer: str = "payment") -> Bundle:
+def train_bundle(variant: str = "HI-Small", scorer: str = "payment", inject_seed: int | None = None) -> Bundle:
     """Train the model folder.
 
     scorer "payment" (default): a payment-level model; an account's risk is its riskiest payment (ml/edge_model.py).
     scorer "two_stage": the account model plus a second stage that sees neighbors' scores (ml/stack.py).
     scorer "account": the plain account model. The plain account model is always trained and saved as well.
+
+    inject_seed: also train on synthetic pig-butchering rings and look-alikes from data/rings.py injected into the
+    transactions with that seed (labels are IBM's own plus the injected rings'). Used for the typology demo bundle.
     """
     from .ablation import best_f1_threshold  # scikit-learn is only needed for training, not serving
     assert scorer in TOP_FRACTIONS, scorer
-    snaps = make_snapshots(variant)
     tx = primary_period(load_transactions(variant), variant)
+    if inject_seed is None:
+        snaps = make_snapshots(variant)
+    else:
+        from data.rings import inject  # synthetic rings; a separate snapshot cache so the plain bundle's is untouched
+
+        tx = inject(tx, seed=inject_seed).tx
+        snaps = make_snapshots(variant, tx=tx, tag=f"-pig{inject_seed}")
     split = time_split(tx)
     ccy = currency_medians(tx[split == "train"])
     meta = {"variant": variant, "feature_version": FEATURE_VERSION, "scorer": scorer,
             "train_cutoff": str(snaps["train"].cutoff), "val_cutoff": str(snaps["val"].cutoff),
             "trained_at": pd.Timestamp.now().isoformat(timespec="seconds")}
+    if inject_seed is not None:
+        meta["injected_rings_seed"] = inject_seed
     fitted = fit_model(snaps["train"], snaps["val"], ALL_COLS)
     calibration = fit_calibration(fitted, snaps["val"], ALL_COLS)
     meta["trees"] = int(fitted.best_iteration + 1)
@@ -146,7 +157,7 @@ if __name__ == "__main__":
     variant = sys.argv[1] if len(sys.argv) > 1 else "HI-Small"
     out = Path(sys.argv[2]) if len(sys.argv) > 2 else DATA_DIR / "models" / variant
     chosen = sys.argv[3] if len(sys.argv) > 3 else "payment"
-    bundle = train_bundle(variant, chosen)
+    bundle = train_bundle(variant, chosen, int(sys.argv[4]) if len(sys.argv) > 4 else None)
     save_bundle(bundle, out)
     extra = "".join(f", {k.replace('trees_', '')} {v} trees" for k, v in bundle.meta.items() if k.startswith("trees_"))
     print(f"saved {len(bundle.cols)}-feature {chosen} model (account model {bundle.meta['trees']} trees{extra}) to {out}")

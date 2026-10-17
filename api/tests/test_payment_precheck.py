@@ -70,13 +70,15 @@ def test_recent_payer_into_a_ring_gets_a_cautious_warning(client):
     text = mine[0]["message"].lower()
     assert "flagged ring" in text and not any(w in text for w in ("fraud", "scam", "stolen", "criminal", "guilty"))
     assert mine[0]["severity"] == "medium" and mine[0]["ring_id"] in {r["ring_id"] for r in c.get("/rings").json()}
+    assert mine[0]["recipient_id"] == "C0"  # the ring account that was paid, so the warning screen can look it up
+    assert c.get("/accounts/C0").json()["ring_id"] == mine[0]["ring_id"]
 
 
 def test_without_recent_outside_payers_there_are_no_victim_warnings(client):
     c, _ = client
     alerts = c.get("/alerts?limit=500").json()
     assert alerts and all(a["type"] == "ring" for a in alerts)  # the planted victims are inside the ring
-    assert all(set(a) == {"alert_id", "type", "severity", "ring_id", "account_id", "message", "ts"} for a in alerts)
+    assert all(set(a) == {"alert_id", "type", "severity", "ring_id", "account_id", "recipient_id", "message", "ts"} for a in alerts)
 
 
 def test_stub_precheck_for_the_demo_collector():
