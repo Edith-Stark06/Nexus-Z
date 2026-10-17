@@ -36,7 +36,8 @@ def main(variant: str, bundle_dir: Path, out_dir: Path) -> None:
 
     summaries = scorer.list_rings()
     write("rings.json", summaries, RingSummary, many=True)
-    for s in summaries[:3]:
+    largest = max(summaries, key=lambda s: s["accounts"])  # a big ring is the better example for a graph view
+    for s in summaries[:3] + [largest]:
         write(f"ring_{s['ring_id']}.json", scorer.get_ring(s["ring_id"]), Ring)
     top = scorer.get_ring(summaries[0]["ring_id"])["members"][0]["id"]
     write(f"account_{top}.json", scorer.score_account(top), AccountScore)

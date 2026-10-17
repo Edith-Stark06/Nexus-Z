@@ -1,0 +1,28 @@
+{
+  "account_id": "ACC-006FCF",
+  "risk": 0.4115,
+  "role": "cashout",
+  "ring_id": "RNG-6603B4",
+  "reasons": [
+    {
+      "feature": "cross_ccy_share",
+      "label": "Often changes currency",
+      "contribution": 1.033
+    },
+    {
+      "feature": "in_share_ACH",
+      "label": "Receives mostly by ACH",
+      "contribution": 0.897
+    },
+    {
+      "feature": "out_share_ACH",
+      "label": "Sends mostly by ACH",
+      "contribution": 0.739
+    }
+  ],
+  "neighborhood": {
+    "in_degree": 3,
+    "out_degree": 3,
+    "ring_size": 3
+  }
+}
