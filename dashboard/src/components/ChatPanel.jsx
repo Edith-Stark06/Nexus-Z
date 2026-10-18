@@ -28,12 +28,18 @@ export function providerName(url) {
 function Badge({ status }) {
   if (!status) return <span className="chat-badge chat-badge-off">API unreachable</span>;
   if (status.mode === "llm") return <span className="chat-badge chat-badge-llm">IBM Granite · {providerName(status.provider)}</span>;
+  if (status.mode === "local") return <span className="chat-badge chat-badge-llm">IBM Granite Embedding · on this machine</span>;
   return <span className="chat-badge chat-badge-rules">Built-in rules, no language model</span>;
 }
 
 function Meta({ m }) {
   if (!m) return null;
-  const who = m.mode === "llm" ? `Answered by ${m.model} through ${providerName(m.provider)}` : "Answered by the built-in rules";
+  const who =
+    m.mode === "llm"
+      ? `Answered by ${m.model} through ${providerName(m.provider)}`
+      : m.mode === "local"
+        ? `Question understood by ${m.model} on this machine; the answer is a fixed sentence filled from our data`
+        : "Answered by the built-in rules";
   return (
     <div className="chat-meta">
       <span>
@@ -109,6 +115,8 @@ export default function ChatPanel() {
         Synthetic data. Answers come only from NEXUS Z's own data; roles are estimates and "flagged" does not mean guilty.
         {status?.mode === "llm" &&
           ` The language model runs at ${providerName(status.provider)}, not on the LinuxONE VM: your question and the ring facts it needs are sent there.`}
+        {status?.mode === "local" &&
+          " IBM Granite Embedding runs on the same machine as the API and only chooses which question this is; it writes no text. Nothing leaves the machine."}
       </p>
 
       <div className="chat-log" role="log" aria-live="polite">
