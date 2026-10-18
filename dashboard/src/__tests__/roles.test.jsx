@@ -6,6 +6,7 @@ import { RoleChooser, RoleLogin } from "../pages/Login";
 import RequireRole from "../auth/RequireRole";
 import { ROLES, ROLE_LIST, allowed, getSession, homeFor, signIn, signOut } from "../auth/session";
 import { _setIterations, signUp } from "../auth/accounts";
+import { _pending } from "../auth/demo";
 
 vi.mock("../services/api", () => ({
   API_BASE: "http://localhost:8000",
@@ -24,7 +25,7 @@ function Where() {
   return <div data-testid="where">{useLocation().pathname}</div>;
 }
 
-beforeEach(() => { window.sessionStorage.clear(); window.localStorage.clear(); _setIterations(1000); });
+beforeEach(async () => { await _pending(); window.localStorage.clear(); window.sessionStorage.clear(); _setIterations(1000); });
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 describe("demo session", () => {

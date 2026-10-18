@@ -12,6 +12,7 @@ import { ROLES } from "./session";
 const KEY = "nexusz.demo-accounts";
 const LOCK_KEY = "nexusz.demo-lock";
 export const MAX_ACCOUNTS = 50;
+export const RESERVED_PREFIX = "demo.";
 export const MAX_FAILS = 5;
 export const LOCK_MS = 30_000;
 let iterations = 210_000; // OWASP's 2023 guidance for PBKDF2-HMAC-SHA256
@@ -85,10 +86,11 @@ export function listAccounts() {
   return Object.values(read(KEY, {})).map(({ username, name, role }) => ({ username, name, role }));
 }
 
-export async function signUp({ username, name = "", password, role }) {
+export async function signUp({ username, name = "", password, role, allowReserved = false }) {
   if (!ROLES[role]) return { ok: false, error: "Choose a role." };
   const uErr = validateUsername(username);
   if (uErr) return { ok: false, error: uErr };
+  if (!allowReserved && normalizeUsername(username).startsWith(RESERVED_PREFIX)) return { ok: false, error: "Usernames starting with demo. are kept for the demo accounts." };
   const pErr = validatePassword(password, username);
   if (pErr) return { ok: false, error: pErr };
   const accounts = read(KEY, {});
@@ -103,8 +105,13 @@ export async function signUp({ username, name = "", password, role }) {
   } catch (e) {
     return { ok: false, error: e.message };
   }
-  accounts[key] = { username: key, name: String(name).trim().slice(0, 60), role, salt: toB64(salt), hash: toB64(hash), iterations, createdAt: Date.now() };
-  if (!write(KEY, accounts)) return { ok: false, error: "This browser would not save the account (private window or storage blocked)." };
+  // hashing took a moment: read the list again before writing, so a sign-up that finished meanwhile is not erased
+  const latest = read(KEY, {});
+  if (latest[key]) return { ok: false, error: "That username is taken. Sign in or choose another." };
+  if (Object.keys(latest).length >= MAX_ACCOUNTS) return { ok: false, error: "This browser already holds the most demo accounts it allows." };
+  latest[key] = { username: key, name: String(name).trim().slice(0, 60), role, salt: toB64(salt), hash: toB64(hash), iterations, createdAt: Date.now() };
+  accounts[key] = latest[key];
+  if (!write(KEY, latest)) return { ok: false, error: "This browser would not save the account (private window or storage blocked)." };
   return { ok: true, account: { username: key, name: accounts[key].name, role } };
 }
 

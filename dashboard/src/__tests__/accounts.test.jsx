@@ -6,10 +6,11 @@ import {
 } from "../auth/accounts";
 import { RoleSignup } from "../pages/Login";
 import { getSession } from "../auth/session";
+import { _pending } from "../auth/demo";
 
 const GOOD = "correct horse 9";
 
-beforeEach(() => { window.localStorage.clear(); window.sessionStorage.clear(); _setIterations(1000); });
+beforeEach(async () => { await _pending(); window.localStorage.clear(); window.sessionStorage.clear(); _setIterations(1000); });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 describe("username and password rules", () => {
@@ -56,6 +57,18 @@ describe("signing up", () => {
     expect(stored.salt).toMatch(/^[A-Za-z0-9+/]+=*$/);
     expect(stored.iterations).toBe(1000);
     expect(listAccounts()).toEqual([{ username: "asha", name: "Asha R", role: "bank" }]);
+  });
+
+  it("keeps every account when sign-ups overlap, instead of the last one erasing the others", async () => {
+    const results = await Promise.all(["one1", "two2", "three3", "four4"].map((u) => signUp({ username: u, password: GOOD, role: "bank" })));
+    expect(results.every((r) => r.ok)).toBe(true);
+    expect(listAccounts().map((a) => a.username).sort()).toEqual(["four4", "one1", "three3", "two2"]);
+  });
+
+  it("does not let two overlapping sign-ups both take the same username", async () => {
+    const [a, b] = await Promise.all([signUp({ username: "same1", password: GOOD, role: "bank" }), signUp({ username: "same1", password: GOOD, role: "admin" })]);
+    expect([a.ok, b.ok].filter(Boolean)).toHaveLength(1);
+    expect(listAccounts()).toHaveLength(1);
   });
 
   it("gives two accounts with the same password different salts and hashes", async () => {
