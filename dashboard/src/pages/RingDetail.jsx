@@ -99,7 +99,7 @@ export default function RingDetail() {
         </div>
 
         <div className="detail-foot">
-          <span className="badge">{victims.length} victim warnings sent</span>
+          <span className="badge">{victims.length} likely victims flagged</span>
           <span className="footer-note">
             Roles are estimated by the model. A victim is a recent payer into the ring.
           </span>

@@ -51,8 +51,9 @@ export default function Dashboard() {
             />
           </div>
           <div className="sample-note">
-            Results are from stand-in rings used for testing. Real accuracy is
-            modest; many laundering groups are still missed.
+            Synthetic data: IBM's AML transactions with simulated pig-butchering
+            rings. Accuracy is modest; many laundering groups are still missed.
+            See docs/ML_RESULTS.md.
           </div>
           {filtered.length === 0 ? (
             <div className="empty">No rings match that search.</div>
@@ -95,7 +96,7 @@ export default function Dashboard() {
                   <div className="ring-foot">
                     <span className="badge">
                       {victimAlerts.filter((a) => a.ring_id === r.ring_id).length}{" "}
-                      victim warnings sent
+                      likely victims flagged
                     </span>
                     <Link
                       to={`/ring/${r.ring_id}`}
@@ -152,7 +153,7 @@ export default function Dashboard() {
               <div className="detail-foot">
                 <span className="badge">
                   {victimAlerts.filter((a) => a.ring_id === selected.ring_id).length}{" "}
-                  victim warnings sent
+                  likely victims flagged
                 </span>
                 <span className="footer-note">
                   Roles are estimated by the model. SHAP contributions are
