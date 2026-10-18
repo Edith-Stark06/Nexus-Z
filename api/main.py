@@ -105,7 +105,9 @@ def list_alerts(limit: int = Query(50, ge=1, le=500), backend: Backend = Depends
 
 @lru_cache
 def get_chat() -> ChatService:
-    return ChatService()
+    service = ChatService()
+    service.warm_up()       # loads Granite Embedding in the background when it is configured
+    return service
 
 
 @app.get("/chat/status", response_model=ChatStatus)

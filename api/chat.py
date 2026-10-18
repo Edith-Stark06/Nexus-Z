@@ -25,6 +25,8 @@ from typing import Literal
 import httpx
 from pydantic import BaseModel, Field
 
+from .intent import IntentRouter
+
 log = logging.getLogger("nexusz.chat")
 
 DEFAULT_BASE_URL = "https://router.huggingface.co/v1"
@@ -93,8 +95,8 @@ class ToolUse(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
-    mode: Literal["llm", "rules"]
-    model: str | None = None            # the model that wrote the answer, when mode is "llm"
+    mode: Literal["llm", "local", "rules"]    # llm: a hosted Granite wrote it; local: Granite Embedding on our machine chose the topic; rules: keywords
+    model: str | None = None            # the Granite model that wrote the answer (llm) or understood the question (local)
     provider: str | None = None
     tools_used: list[ToolUse] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)   # figures the checker could not find in the data
@@ -103,19 +105,22 @@ class ChatResponse(BaseModel):
 
 
 class ChatStatus(BaseModel):
-    mode: Literal["llm", "rules"]       # what a question would use right now
+    mode: Literal["llm", "local", "rules"]       # what a question would use right now
     models: list[str]
     provider: str
     token_configured: bool
+    intent_model: str | None = None     # Granite Embedding on this machine, when it is set up and loads
 
 
 # -- configuration
 class ChatConfig:
     def __init__(self, base_url: str = DEFAULT_BASE_URL, models: list[str] | None = None, token_file: str = DEFAULT_TOKEN_FILE,
-                 max_tokens: int = 1200, timeout: float = 60.0, per_minute: int = 12, reasoning_effort: str = "low", enabled: bool = True):
+                 max_tokens: int = 1200, timeout: float = 60.0, per_minute: int = 12, reasoning_effort: str = "low", enabled: bool = True,
+                 intent_model: str | None = None):
         self.base_url, self.models, self.token_file = base_url.rstrip("/"), models or list(DEFAULT_MODELS), token_file
         self.max_tokens, self.timeout, self.per_minute = max_tokens, timeout, per_minute
         self.reasoning_effort, self.enabled = reasoning_effort, enabled
+        self.intent_model = intent_model        # a folder or Hugging Face name of Granite Embedding; None switches the local understanding off
 
     @classmethod
     def from_env(cls) -> "ChatConfig":
@@ -124,7 +129,8 @@ class ChatConfig:
         return cls(base_url=env("NEXUSZ_CHAT_BASE_URL", DEFAULT_BASE_URL), models=models, token_file=env("NEXUSZ_CHAT_TOKEN_FILE", DEFAULT_TOKEN_FILE),
                    max_tokens=int(env("NEXUSZ_CHAT_MAX_TOKENS", "1200")), timeout=float(env("NEXUSZ_CHAT_TIMEOUT", "60")),
                    per_minute=int(env("NEXUSZ_CHAT_RATE_PER_MIN", "12")), reasoning_effort=env("NEXUSZ_CHAT_REASONING_EFFORT", "low"),
-                   enabled=env("NEXUSZ_CHAT", "auto").lower() != "off")
+                   enabled=env("NEXUSZ_CHAT", "auto").lower() != "off",
+                   intent_model=(env("NEXUSZ_CHAT_INTENT_MODEL", "").strip() or None))
 
     def read_token(self) -> str | None:
         path = Path(self.token_file)
@@ -209,8 +215,29 @@ def tool_result_text(result: dict) -> str:
 
 
 # -- the rules answer: same tools, fixed sentences. It also covers every case where a model cannot be used.
-def rules_answer(question: str, tools: Tools, used: list[ToolUse]) -> str:
+HELP = ("I can answer about the flagged rings, one ring or account by id (for example RNG-1A2B3C), the newest alerts, and how current the data is. "
+        "Try: 'Which rings are riskiest?' or 'Explain RNG-1A2B3C'.")
+
+
+def keyword_topic(question: str) -> str | None:
+    """The topic of a question by plain keywords: the fallback when Granite Embedding is not available."""
     q = question.lower()
+    if any(w in q for w in ("why", "explain", "flagged")) and any(w in q for w in ("top", "riskiest", "highest", "first", "worst")):
+        return "explain_top"
+    if any(w in q for w in ("victim", "pay in", "paid", "next person", "may pay")):
+        return "victims"
+    if "alert" in q or "warn" in q:
+        return "alerts"
+    if any(w in q for w in ("status", "fresh", "current", "health", "data as of", "up to date", "how old")):
+        return "status"
+    if any(w in q for w in ("top", "risk", "highest", "worst", "ring", "list", "show", "which")):
+        return "top_rings"
+    return None
+
+
+def rules_answer(question: str, tools: Tools, used: list[ToolUse], topic: str | None = None, routed: bool = False) -> str:
+    """Fixed sentences filled from the tools. `topic` is the question's topic if Granite Embedding already decided it; with `routed` set,
+    a missing topic means "off topic" and is not second-guessed by keywords."""
     ring_ids = [i.upper() for i in re.findall(r"\bRNG-[0-9A-Fa-f]{4,12}\b", question, re.I)]
     account_ids = re.findall(r"\bACC-[0-9A-Za-z]{4,}\b", question, re.I)
 
@@ -233,32 +260,33 @@ def rules_answer(question: str, tools: Tools, used: list[ToolUse]) -> str:
         why = "; ".join(f"{x['label']} ({x['contribution']:+.2f})" for x in a["reasons"][:3])
         where = f"in ring {a['ring_id']} as an estimated {a['estimated_role']}" if a["ring_id"] else "not in a flagged ring"
         return f"Account {a['account_id']} has risk {a['risk']:.2f} and is {where}." + (f" Main reasons: {why}." if why else "")
-    if any(w in q for w in ("why", "explain", "flagged")) and any(w in q for w in ("top", "riskiest", "highest", "first", "worst")):
+    topic = topic if routed or topic else keyword_topic(question)
+    if topic == "explain_top":
         top = use("list_rings", limit=1)["rings"]       # "the top ring": find it, then explain it
         if top:
             return rules_answer(f"Explain {top[0]['ring_id']}", tools, used)
-    if any(w in q for w in ("victim", "pay in", "paid", "next person", "may pay")):
+        return "No rings are flagged right now."
+    if topic == "victims":
         al = use("list_alerts", limit=5, kind="victim_warning")["alerts"]
         if not al:
             return "No likely victims are flagged right now."
         return ("Likely victims flagged (payers who recently paid into a flagged ring): "
                 + "; ".join(f"{a['payer']} paid {a['account_paid']} in {a['ring_id']}" if a.get("account_paid") else f"{a['payer']} paid into {a['ring_id']}" for a in al) + ".")
-    if "alert" in q or "warn" in q:
+    if topic == "alerts":
         al = use("list_alerts", limit=5)["alerts"]
         if not al:
             return "There are no alerts yet."
         return "Newest alerts: " + "; ".join(f"{a['type'].replace('_', ' ')} on {a['ring_id']}" for a in al) + "."
-    if any(w in q for w in ("status", "fresh", "current", "health", "data as of", "up to date", "how old")):
+    if topic == "status":
         s = use("system_status")
         return (f"Backend: {s['backend']}. Data as of {s.get('data_as_of', 'unknown')}; the last rebuild took "
                 f"{s.get('last_rebuild_seconds', 'an unknown number of')} seconds.")
-    if any(w in q for w in ("top", "risk", "highest", "worst", "ring", "list", "show", "which")):
+    if topic == "top_rings":
         rings = use("list_rings", limit=5)["rings"]
         if not rings:
             return "No rings are flagged right now."
         return "Highest-risk rings: " + "; ".join(f"{r['ring_id']} (risk {r['risk']}, {r['accounts']} accounts)" for r in rings) + "."
-    return ("I can answer about the flagged rings, one ring or account by id (for example RNG-1A2B3C), the newest alerts, and how current the data is. "
-            "Try: 'Which rings are riskiest?' or 'Explain RNG-1A2B3C'.")
+    return HELP
 
 
 class _Failure(Exception):
@@ -281,16 +309,26 @@ def _numbers(text: str) -> set[str]:
 
 
 class ChatService:
-    def __init__(self, config: ChatConfig | None = None, transport: httpx.BaseTransport | None = None):
+    def __init__(self, config: ChatConfig | None = None, transport: httpx.BaseTransport | None = None, router: IntentRouter | None = None):
         self.config, self.transport = config or ChatConfig.from_env(), transport
+        self.router = router if router is not None else (IntentRouter(self.config.intent_model) if self.config.enabled and self.config.intent_model else None)
         self._calls: deque[float] = deque()
         self._lock = threading.Lock()
 
     # -- public
+    def warm_up(self) -> None:
+        """Load Granite Embedding in the background so the first question does not wait for it."""
+        if self.router is not None:
+            threading.Thread(target=self.router.available, name="intent-warm-up", daemon=True).start()
+
+    def _local_ready(self) -> bool:
+        return self.router is not None and self.router.failure is None
+
     def status(self) -> ChatStatus:
         have = self.config.enabled and self.config.read_token() is not None
-        return ChatStatus(mode="llm" if have else "rules", models=self.config.models if have else [], provider=self.config.base_url,
-                          token_configured=self.config.read_token() is not None)
+        local = not have and self._local_ready()
+        return ChatStatus(mode="llm" if have else "local" if local else "rules", models=self.config.models if have else [], provider=self.config.base_url,
+                          token_configured=self.config.read_token() is not None, intent_model=self.router.name if self._local_ready() else None)
 
     def allow(self) -> bool:
         now = time.monotonic()
@@ -308,9 +346,9 @@ class ChatService:
         note = ""
         token = self.config.read_token() if self.config.enabled else None
         if not self.config.enabled:
-            note = "The language model is switched off (NEXUSZ_CHAT=off); answered by rules."
+            note = "The language model is switched off (NEXUSZ_CHAT=off)."
         elif token is None:
-            note = "No Hugging Face token is configured; answered by rules."
+            note = "No Hugging Face token is configured."
         else:
             for model in self.config.models:
                 try:
@@ -323,9 +361,23 @@ class ChatService:
                     used = []
                     if failure.stop:
                         break
-            note = f"{note} Answered by rules."
-        answer = rules_answer(request.message, tools, used)
-        return ChatResponse(answer=answer, mode="rules", tools_used=used, note=note.strip(), seconds=round(time.perf_counter() - started, 2))
+        topic, routed, how = None, False, ""
+        if self.router is not None and self.router.available():
+            routed = True
+            if not ID_PATTERN.search(request.message):
+                topic, score = self.router.route(request.message)
+                how = (f"IBM Granite Embedding (on this machine) matched the question to '{topic}' (similarity {score})." if topic
+                       else f"IBM Granite Embedding (on this machine) found no topic close enough (best similarity {score}).")
+            else:
+                how = "The question names an id, so no topic was needed."
+        elif self.router is not None:
+            note = f"{note} Granite Embedding could not be loaded ({self.router.failure})."
+        answer = rules_answer(request.message, tools, used, topic, routed)
+        elapsed = round(time.perf_counter() - started, 2)
+        if routed:
+            return ChatResponse(answer=answer, mode="local", model=self.router.name, provider="this machine", tools_used=used,
+                                note=f"{note} {how} The sentences are fixed; the facts come from our API.".strip(), seconds=elapsed)
+        return ChatResponse(answer=answer, mode="rules", tools_used=used, note=f"{note} Answered by rules.".strip(), seconds=elapsed)
 
     # -- one model, with the tool loop and the checks
     def _post(self, client: httpx.Client, token: str, payload: dict) -> dict:
