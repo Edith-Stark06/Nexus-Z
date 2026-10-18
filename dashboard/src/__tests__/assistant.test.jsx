@@ -96,6 +96,22 @@ describe("the assistant page", () => {
     expect(screen.getByRole("link", { name: "ACC-7F3A" }).getAttribute("href")).toBe("/account/ACC-7F3A");
   });
 
+  it("local mode says Granite Embedding only chose the question, on this machine, and that nothing leaves it", async () => {
+    const GE = "ibm-granite/granite-embedding-30m-english";
+    fakeApi({
+      status: { mode: "local", models: [], provider: HF, token_configured: false, intent_model: GE },
+      chat: reply({ mode: "local", model: GE, provider: "this machine", answer: "Highest-risk rings: RNG-0417 (risk 94, 12 accounts).", note: "IBM Granite Embedding (on this machine) matched the question to 'top_rings' (similarity 0.83)." }),
+    });
+    open();
+    expect(await screen.findByText(/IBM Granite Embedding · on this machine/)).toBeInTheDocument();
+    expect(screen.getByText(/writes no text. Nothing leaves the machine/)).toBeInTheDocument();
+    expect(screen.queryByText(/Hugging Face, not on/)).toBeNull();
+    ask("which clusters carry the most risk");
+    expect(await screen.findByText(new RegExp(`Question understood by ${GE} on this machine; the answer is a fixed sentence`))).toBeInTheDocument();
+    expect(screen.getByText(/similarity 0.83/)).toBeInTheDocument();
+    expect(screen.queryByText(/through/)).toBeNull();
+  });
+
   it("sends the earlier turns as history, but never an error message", async () => {
     let n = 0;
     const sent = fakeApi({ chat: () => (++n === 2 ? 429 : reply({ answer: `Answer ${n}.` })) });
