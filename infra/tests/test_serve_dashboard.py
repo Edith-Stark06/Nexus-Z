@@ -68,3 +68,8 @@ def test_security_headers_are_sent_and_the_policy_names_only_the_api_on_loopback
     assert headers["X-Content-Type-Options"] == "nosniff" and headers["Referrer-Policy"] == "no-referrer"
     csp = headers["Content-Security-Policy"]
     assert "default-src 'self'" in csp and "http://127.0.0.1:8000" in csp and "*" not in csp
+
+
+def test_bundled_fonts_are_allowed_but_only_from_self_or_data(server):
+    _, headers, _ = fetch(server, "/")
+    assert "font-src 'self' data:" in headers["Content-Security-Policy"]
