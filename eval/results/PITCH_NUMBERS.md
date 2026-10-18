@@ -51,4 +51,4 @@ Say these too, or the numbers mislead:
 - "Warns the next victim before they pay" or "victim warnings sent": the system lists accounts that recently paid into a flagged ring, nothing is sent, and the rule has not been evaluated.
 - "Graph features improve detection" without the timing caveat. On the Elliptic Bitcoin transaction data they added nothing; on the Elliptic++ wallet data they helped (`docs/ML_RESULTS.md` sections 1 and 9).
 - Any accelerator use for detection. The scoring runs on CPU. The accelerator counts (0 for trees, thousands for a network and a 350M Granite model) have no saved output yet, so quote them only after `bash infra/accel_counters.sh` has been run and its output kept.
-- That the Assistant's language model has answered a question: the hosted account has no credits, so it answers by rules.
+- That the Assistant is IBM's language model writing the answers. Today the hosted answer writer on the VM is NVIDIA's Nemotron through NVIDIA's free API; IBM Granite Embedding on the VM picks the topic when that is off; hosted IBM Granite (Hugging Face, watsonx.ai) has never answered (`docs/CHATBOT.md`).
