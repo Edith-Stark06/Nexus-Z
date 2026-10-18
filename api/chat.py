@@ -512,6 +512,8 @@ class ChatService:
     def _checked(self, text: str, results_text: str, seen_text: str, used: list[ToolUse]):
         if not text:
             raise _Failure("the model returned an empty answer")
+        # Some models write ids with a typographic hyphen (RNG‑0417) or invisible characters; unchanged, they would slip past the id check.
+        text = re.sub(r"[‐-―−]", "-", re.sub(r"[​-‍⁠﻿]", "", text))
         text = text[:MAX_ANSWER_CHARS]
         low = text.lower()
         bad = [w for w in FORBIDDEN if w in low]
