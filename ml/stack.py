@@ -12,7 +12,6 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
 from xgboost import XGBClassifier
 
 from .dataset import Snapshot
@@ -50,6 +49,8 @@ class Stacked:
 
 def fit_stacked(train: Snapshot, val: Snapshot, cols: list[str], folds: int = 5, seed: int = 0,
                 high_quantile: float = 0.99) -> Stacked:
+    from sklearn.model_selection import StratifiedKFold  # training only: serving never needs scikit-learn
+
     stage1 = fit_model(train, val, cols, seed)
 
     # out-of-fold stage-1 scores for the training accounts; accounts that are not training rows are

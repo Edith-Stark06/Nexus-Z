@@ -329,6 +329,36 @@ First attempt: Granite wrote a whole summary from a fact sheet. It attached numb
 
 What this section does and does not support: the accelerator works on this platform and we can prove it with hardware counters; a model that uses it is not better than ours for this task, so ours does not.
 
+## 9. A real-data check of the ring idea: Elliptic++ Bitcoin wallets
+
+Everything so far on pig-butchering is synthetic, so we ran the ring idea once on real labeled data: **Elliptic++** (Elmougy and Liu, KDD 2023, [doi 10.1145/3580305.3599803](https://doi.org/10.1145/3580305.3599803)), 822,942 Bitcoin wallet addresses with 55 features per address and time step, a label per address (14,266 illicit, 251,088 licit, 557,588 unknown) and a directed address-to-address payment graph of 2,822,983 edges. **This is not pig-butchering**: "illicit" is Elliptic's generic label. The dataset states no licence and asks for citation; we used it for evaluation only, did not copy it into the repository, and cite it. Command: `python -m ml.elliptic_actors_eval` (about 90 seconds; data from `NEXUSZ_DATA_DIR/elliptic++`; raw output in `docs/evidence/elliptic_actors_eval.txt`).
+
+**Design, so that nothing from the future reaches the past.** The edge list has no timestamps, so each address is one row (its last row) and the split is by when addresses appear: train = addresses whose last time step is at most 28 (443,023), validation = 29 to 34 (77,346), test = addresses that first appear at step 35 or later (292,102 new addresses; their whole life is in the test period). Graph features and rings use only edges between addresses of the same window. Only labeled addresses are scored (92,451 in the test window, 5.3% illicit); unlabeled addresses stay in the graph, as they would in use. Five training seeds with the split fixed; means and standard deviations below.
+
+**1. Illicit wallets cluster in the payment graph.** Given an illicit wallet, 90.2% of its labeled neighbours in the test graph are illicit, against 5.4% of labeled wallets overall: a lift of 16.8 (5,140 illicit-to-illicit edges among 370,561 labeled edges). Elliptic's labels may be assigned per entity, in which case wallets of one entity are linked by construction and this overstates how much unrelated illicit actors cluster; we did not check how the labels were made.
+
+**2. Our graph features help on this graph** (degree, PageRank, k-core, clustering, component size, computed with the same code as the main model):
+
+| Wallet-level, test window, new addresses | PR-AUC (chance 0.053) | ROC-AUC | Precision in the top 1,000 |
+|---|---|---|---|
+| Dataset's own 55 features | 0.348 ± 0.016 | 0.849 ± 0.004 | 0.656 ± 0.100 |
+| + our graph features | **0.431 ± 0.025** | 0.880 ± 0.007 | 0.844 ± 0.039 |
+
+The gain (+0.083 PR-AUC) is larger than the spread between seeds. It is the opposite of what we found on Elliptic's transaction graph (`docs/ML_RESULTS.md` section 1, where graph features added nothing); the two graphs, splits and labels differ, so the two results do not contradict each other, but neither generalizes to the other.
+
+**3. Rings of flagged wallets are pure, but they cover very little.** Flagged = the top share of test wallets by score; rings = the payments between flagged wallets, split into connected groups and Louvain communities (`ml.rings.detect_rings`, unchanged). Means over five seeds:
+
+| Scores from | Flagged | Rings (with 2+ labeled) | Mean ring purity | Illicit wallets inside rings | Precision of flagged wallets in rings / not in rings |
+|---|---|---|---|---|---|
+| Dataset features | 1% | 0.2 (0) | no rings | 0 | none in rings / 0.690 |
+| + our graph features | 1% | 7.8 (5.8) | **0.848** ± 0.094 | 33 | **0.915** / 0.834 |
+| + our graph features | 2% | 40.8 (17.2) | **0.868** ± 0.029 | 90 | **0.904** / 0.710 |
+| Random score, same code (baseline) | 1% | 20.0 (13.2) | 0.003 | 0 | 0.010 / 0.055 |
+
+Purity is the share of illicit wallets among a ring's labeled members. Wallets that sit in a ring with other flagged wallets are more often illicit than flagged wallets that do not (0.915 against 0.834 at 1%; 0.904 against 0.710 at 2%), and rings built from a random score are worthless (purity 0.003), so the measurement works. **But coverage is tiny:** the rings hold about 33 to 90 of roughly 4,900 illicit test wallets (under 2%), and 96% of the wallets flagged at 1% (94% at 2%) belong to no ring at all, because flagged Bitcoin addresses rarely pay each other directly. The scores from the dataset's own features form almost no rings. And the graph-feature model flags well-connected wallets to begin with, so part of the difference between "in a ring" and "alone" is the model's own preference for connected wallets, not extra evidence from grouping.
+
+**What this supports and what it does not.** It supports a narrow claim: on real illicit Bitcoin actors, illicit wallets do cluster, our graph features improve the ranking, and the few rings we can form are mostly illicit. It does not support any claim about pig-butchering, about detection rates (rings reach under 2% of illicit wallets), or about transaction data from banks. One dataset, one split, no edge timestamps.
+
 ## Caveats that apply to everything above
 
 - Single time split per dataset. Seeds measure training noise, not split noise.
