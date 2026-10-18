@@ -4,6 +4,7 @@ import Alerts from './pages/Alerts'
 import RingDetail from './pages/RingDetail'
 import AccountDetail from './pages/AccountDetail'
 import WarningScreen from './pages/WarningScreen'
+import Assistant from './pages/Assistant'
 import './App.css'
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
       <Route path="/ring/:ringId" element={<RingDetail />} />
       <Route path="/account/:accountId" element={<AccountDetail />} />
       <Route path="/warning/:accountId" element={<WarningScreen />} />
+      <Route path="/assistant" element={<Assistant />} />
     </Routes>
   )
 }
