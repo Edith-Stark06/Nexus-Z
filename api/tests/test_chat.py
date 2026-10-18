@@ -66,6 +66,15 @@ def test_a_model_answer_built_from_a_tool_result_is_returned_with_its_sources(tm
     assert second[-1]["role"] == "tool" and RING in second[-1]["content"]          # the tool result went back to the model
 
 
+def test_ids_written_with_a_typographic_hyphen_are_still_checked_and_are_normalised(tmp_path):
+    p = FakeProvider(call("get_ring", ring_id=RING), say(f"The ring RNG‑0417 has risk 94."), say("RNG‑FFFFFF is the riskiest."))
+    ok = ask(service(p, tmp_path), f"Tell me about {RING}")
+    assert ok.mode == "llm" and "RNG-0417" in ok.answer and "‑" not in ok.answer and ok.warnings == []
+    p2 = FakeProvider(say("RNG‑FFFFFF is the riskiest."), say("RNG‑FFFFFF is the riskiest."), say("RNG‑FFFFFF is the riskiest."))
+    bad = ask(service(p2, tmp_path), "Which rings are riskiest?")
+    assert bad.mode == "rules" and "no tool returned" in bad.note
+
+
 def test_thinking_text_is_removed(tmp_path):
     p = FakeProvider(say(f"<think>The user wants {RING}, maybe RNG-FFFFFF.</think>Ring {RING} has risk 94."))
     out = ask(service(p, tmp_path), f"{RING}?")
@@ -150,7 +159,7 @@ def test_without_a_token_no_request_is_made_and_the_rules_answer(tmp_path, monke
     p = FakeProvider(say("should not be asked"))
     svc = ChatService(ChatConfig(token_file=str(tmp_path / "missing")), transport=p.transport)
     out = ask(svc, "Which rings are riskiest?")
-    assert out.mode == "rules" and "No Hugging Face token" in out.note and p.requests == []
+    assert out.mode == "rules" and "No hosted-model credential" in out.note and p.requests == []
     assert svc.status().mode == "rules" and svc.status().token_configured is False
 
 

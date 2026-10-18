@@ -1,4 +1,5 @@
 import { featureLabel } from '../lib/constants'
+import './SHAPPanel.css'
 
 // Render SHAP-style feature contributions as a horizontal bar chart.
 // Accepts either a ring object (top_reasons) or an account object (reasons).
