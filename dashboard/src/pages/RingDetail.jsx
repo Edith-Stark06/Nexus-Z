@@ -7,12 +7,14 @@ import PaymentTable from "../components/PaymentTable";
 import ReplaySlider from "../components/ReplaySlider";
 import { CaseSummary, RoleLegend } from "../components/CaseSummary";
 import { ROLE_COLORS, formatUtc } from "../lib/constants";
+import { useHome } from "../auth/session";
 import Layout from "./Layout";
 import "./RingDetail.css";
 import InfoTip from "../components/InfoTip";
 
 export default function RingDetail() {
   const { ringId } = useParams();
+  const home = useHome();
   const [ring, setRing] = useState(null);
   const [gone, setGone] = useState(false); // the API said 404: the ring was rebuilt under a new id, or never existed
   const [usingMock, setUsingMock] = useState(true);
@@ -27,8 +29,8 @@ export default function RingDetail() {
         setRing(res.data);
         setGone(Boolean(res.notFound));
         setUsingMock(res.usingMock);
-        // Start the replay at the ring's first seen moment.
-        setCutoff(res.data ? res.data.first_seen : null);
+        // Open on the whole ring. The slider replays it from the first payment when asked.
+        setCutoff(null);
       }
     }
     load();
@@ -40,7 +42,7 @@ export default function RingDetail() {
     return (
       <Layout usingMock={usingMock}>
         <div className="empty">
-          This ring changed after the last refresh, or no longer exists. <Link to="/">Back to the list of rings</Link> to
+          This ring changed after the last refresh, or no longer exists. <Link to={home}>Back to the list of rings</Link> to
           find it again.
         </div>
       </Layout>

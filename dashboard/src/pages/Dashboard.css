@@ -201,3 +201,8 @@
 
 /* the graph gets the full width of the detail panel (RingDetail.css also defines .detail-grid) */
 .detail .detail-grid { grid-template-columns: 1fr; }
+
+.dash-kpis { padding: 10px 28px 0; }
+.dash-kpis .kpi { padding: 12px 22px; }
+.dash-kpis .kpi-n { font-size: 38px; }
+.dash-kpis .kpi-l { margin-top: 4px; }

@@ -19,7 +19,8 @@ describe("ring layout that follows the money", () => {
     expect(x("C1")).toBeLessThan(x("M1"));
     expect(x("M1")).toBeLessThan(x("M3"));
     expect(x("M3")).toBeLessThan(x("X1"));
-    expect(columns[0].label).toBe("Payers");
+    expect(columns[0].label).toBe("Likely victims");
+    expect(columns[2].label).toBe("Mules");
     expect(columns[columns.length - 1].label).toBe("Cash-out");
     expect(columns).toHaveLength(5);
   });

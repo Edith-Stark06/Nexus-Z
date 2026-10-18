@@ -41,7 +41,7 @@ export function D3Graph({ ringId, ring, cutoff }) {
   return (
     <div className="graph-wrap" ref={wrapRef}>
       <svg ref={svgRef} className="d3-graph" preserveAspectRatio="xMidYMid meet" role="img"
-        aria-label={`Money flow of ring ${ring.ring_id || ""}: payers on the left, then the collectors and pass-through accounts, and the cash-out on the right.`} />
+        aria-label={`Money flow of ring ${ring.ring_id || ""}: likely victims on the left, then the collectors and mules, and the cash-out on the right.`} />
       <div ref={tipRef} className="graph-tooltip" hidden />
     </div>
   );
@@ -163,7 +163,7 @@ function draw(svgEl, wrapEl, tipEl, ring, cutoff, dragged) {
       g.selectAll("*").remove();
       drawMarks(g.append("g").attr("transform", "translate(7,-4)"), { role }, { collector: 7, mule: 5.5, cashout: 6, victim: 5 }[role] || 5, false);
       g.append("text").attr("x", 17).attr("y", 0).attr("font-size", 11).attr("fill", "#4F566B")
-        .text(role === "victim" ? "Payer" : role === "cashout" ? "Cash-out" : role === "mule" ? "Pass-through" : "Collector");
+        .text(ROLE_LABEL[role]);
     });
     layer("note").selectAll("text").data(graph.nodes.length ? [] : [0]).join("text").attr("x", W / 2).attr("y", H / 2)
       .attr("text-anchor", "middle").attr("font-size", 13).attr("fill", "#666D82").text("No payment has reached this ring at this moment.");

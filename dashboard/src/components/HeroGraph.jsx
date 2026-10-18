@@ -171,9 +171,9 @@ export default function HeroGraph() {
           </g>
         ))}
         <g fontFamily="Hanken Grotesk, sans-serif" fontSize="10.5" fontWeight="700" letterSpacing="0.09em" fill="#7A8095" pointerEvents="none">
-          <text x="14" y="18">PAYERS</text>
+          <text x="14" y="18">LIKELY VICTIMS</text>
           <text x="148" y="58">COLLECTORS</text>
-          <text x="258" y="30">MULE CHAIN</text>
+          <text x="258" y="30">MULES</text>
           <text x="346" y="196">CASH-OUT</text>
         </g>
       </svg>

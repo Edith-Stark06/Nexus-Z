@@ -1,6 +1,6 @@
 .graph-wrap { position: relative; width: 100%; }
 .graph-wrap .d3-graph {
-  width: 100%; height: auto; display: block; border-radius: 14px;
+  width: 100%; height: auto; max-height: 560px; display: block; border-radius: 14px;
   background: #fbfbfd; border: 1px solid var(--border-soft);
 }
 .graph-wrap .node { cursor: grab; outline: none; transition: opacity 0.15s ease; }
