@@ -1,0 +1,12 @@
+.reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.reasons li { display: grid; grid-template-columns: 18px 1fr auto; column-gap: 8px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
+.reasons li:last-child { border-bottom: 0; }
+.reasons-rank { color: var(--text-3); font-size: var(--fs-xs); }
+.reasons-label { color: var(--text); font-size: var(--fs-sm); line-height: 1.35; }
+.reasons-val { font-family: var(--font-mono); font-size: var(--fs-sm); text-align: right; }
+.reasons-val.up { color: var(--accent-hi); }
+.reasons-val.down { color: var(--text-3); }
+.reasons-bar { grid-column: 2 / 4; height: 2px; background: var(--line-soft); margin-top: 5px; border-radius: 1px; overflow: hidden; }
+.reasons-bar i { display: block; height: 100%; }
+.reasons-bar i.up { background: var(--accent); }
+.reasons-bar i.down { background: #4d5f72; }

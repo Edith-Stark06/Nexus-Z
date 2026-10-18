@@ -14,21 +14,51 @@ export const FEATURE_LABELS = {
   account_history: "One mule has a long history",
 };
 
-// Colour for a ring or account role. Roles are *estimated* — the model guesses
-// the function each account plays inside the ring.
+// Colour for a ring or account role. Roles are *estimated*: they are guessed from an account's position in the
+// ring's payments (the data has no role labels), so every place that shows one says so. Values match tokens.css.
 export const ROLE_COLORS = {
-  victim: "#5b8ff9", // blue
-  collector: "#e0502e", // red
-  mule: "#e8a600", // amber
-  cashout: "#7b2fe8", // purple
-  unknown: "#8a8f99",
+  victim: "#7fa6d1",
+  collector: "#d9a66f",
+  mule: "#a3b0c0",
+  cashout: "#cf8fa6",
+  unknown: "#6b7b8c",
 };
 
-export const SEVERITY_COLORS = {
-  high: "#e0502e",
-  medium: "#e8a600",
-  low: "#5b8ff9",
+export const ROLE_LABELS = {
+  victim: "Likely victim",
+  collector: "Collector",
+  mule: "Mule",
+  cashout: "Cash-out",
+  unknown: "Unknown",
 };
+
+// Left-to-right order of the "flow" layout: money enters from victims and leaves at a cash-out.
+export const ROLE_ORDER = ["victim", "collector", "mule", "cashout"];
+
+export const SEVERITY_COLORS = {
+  high: "#e87970",
+  medium: "#e5af62",
+  low: "#64b5c8",
+};
+
+// Ring risk is 0 to 100. The cut-offs are the ones ml/service.py uses for alert severity (HIGH_RISK 50, MEDIUM_RISK 25).
+export const HIGH_RISK = 50;
+export const MEDIUM_RISK = 25;
+export function riskTone(riskPct) {
+  if (riskPct == null || Number.isNaN(Number(riskPct))) return "none";
+  if (riskPct >= HIGH_RISK) return "high";
+  if (riskPct >= MEDIUM_RISK) return "medium";
+  return "low";
+}
+
+// Absolute time in UTC, for example "2022-09-10 12:55 UTC". The data is from 2022 and the browser clock is not, so a
+// relative label ("3 years ago") would be meaningless here.
+export function formatUtc(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso);
+  return `${d.toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
 
 // Convert an ISO timestamp to a short, relative label like "2 hours ago".
 export function relativeTime(iso) {
