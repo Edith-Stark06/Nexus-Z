@@ -149,7 +149,7 @@
 
 .detail-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 14px;
 }
 
@@ -198,3 +198,6 @@
 .dash-kpis { padding: 16px 28px 0; }
 
 .ring-foot { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+
+/* the graph gets the full width of the detail panel (RingDetail.css also defines .detail-grid) */
+.detail .detail-grid { grid-template-columns: 1fr; }
