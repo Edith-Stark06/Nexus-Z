@@ -5,6 +5,7 @@ import { DataProvider } from "../state/DataContext";
 import Alerts from "../pages/Alerts";
 import Accounts from "../pages/Accounts";
 import Overview from "../pages/Overview";
+import WarningScreen from "../pages/WarningScreen";
 
 const T = (m) => `2022-09-09T${m}:00Z`;
 const HEALTH = { status: "ok", backend: "model", data_as_of: T("23:59"), history_transactions: 1000, state_age_seconds: 30, refreshes_completed: 0, last_rebuild_seconds: 2.5, pending_transactions: 0, refreshing: false, last_error: null };
@@ -32,6 +33,8 @@ function fakeApi({ health = HEALTH, rings = RINGS, alerts = ALERTS, down = false
       if (path === "/health") return ok(health);
       if (path === "/rings") return ok(rings);
       if (path.startsWith("/alerts")) return alertsFail ? { ok: false, status: 500, json: async () => ({ detail: "boom" }) } : ok(alerts);
+      const acc = path.match(/^\/accounts\/(.+)$/);
+      if (acc) return ok({ account_id: decodeURIComponent(acc[1]), risk: 0.71, role: "victim", ring_id: "RNG-AAA111", reasons: [{ feature: "f", label: "Paid by ACH", contribution: 1 }], neighborhood: { in_degree: 1, out_degree: 1, ring_size: 3 } });
       const r = path.match(/^\/rings\/(.+)$/);
       if (r) return DETAIL[decodeURIComponent(r[1])] ? ok(DETAIL[decodeURIComponent(r[1])]) : { ok: false, status: 404, json: async () => ({}) };
       return { ok: false, status: 404, json: async () => ({}) };
@@ -52,6 +55,7 @@ const open = (path) =>
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/accounts" element={<Accounts />} />
           <Route path="/overview" element={<Overview />} />
+          <Route path="/warning/:accountId" element={<WarningScreen />} />
           <Route path="*" element={<div>elsewhere</div>} />
         </Routes>
         <Where />
@@ -302,5 +306,20 @@ describe("overview", () => {
     const side = screen.getByRole("heading", { name: "System and data" }).closest("section");
     for (const k of ["api", "backend", "source", "refresh"]) expect(side.querySelector(`[data-row="${k}"]`)).not.toBeNull();
     expect(within(side).getByText("Source data through 2022-09-09 23:59 UTC")).toBeInTheDocument();
+  });
+});
+
+describe("payment pre-check", () => {
+  it("shows the account score on its own 0 to 1 scale and never as a percentage or a ring-style severity", async () => {
+    fakeApi();
+    open("/warning/ACC-C1");
+    await screen.findByText("Check before you send");
+    const card = document.querySelector(".ws-card");
+    expect(within(card).getByText("Account score")).toBeInTheDocument();
+    expect(card.textContent).toMatch(/0\.71/);
+    expect(card.textContent).toMatch(/account score 0\.71 on a 0 to 1 scale/);
+    expect(card.textContent).not.toMatch(/71\s*%/); // 0.71 printed as 71% would read as a probability
+    expect(card.textContent).not.toMatch(/risk signal/i);
+    expect(screen.getByText(/is not a probability of fraud/)).toBeInTheDocument();
   });
 });
