@@ -81,7 +81,7 @@ case "${1:-}" in
       -e NEXUSZ_CHAT_BASE_URL="${NEXUSZ_CHAT_BASE_URL:-https://router.huggingface.co/v1}" -e NEXUSZ_CHAT_REASONING_EFFORT="${NEXUSZ_CHAT_REASONING_EFFORT-low}" \
       -e NEXUSZ_WATSONX_URL="${NEXUSZ_WATSONX_URL:-}" -e NEXUSZ_WATSONX_PROJECT_ID="${NEXUSZ_WATSONX_PROJECT_ID:-}" -e NEXUSZ_WATSONX_MODELS="${NEXUSZ_WATSONX_MODELS:-}" \
       -w /srv/nexusz/repo "$IMAGE" \
-      "$PY" -m uvicorn api.main:app --host 0.0.0.0 --port 8000 >/dev/null     # 0.0.0.0 is inside the container only
+      "$PY" -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --timeout-keep-alive 75 >/dev/null     # 0.0.0.0 is inside the container only
     echo "started $NAME; wait about 30 s (model mode builds its first state), then: curl -fsS http://127.0.0.1:$PORT/health"
     ;;
   dash-start)
