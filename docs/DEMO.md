@@ -51,6 +51,7 @@ Start the stream when you are ready to show it (a second terminal on the VM):
 4. Start the replay. Within about 12 seconds the ring list changes; refreshes go on while payments arrive.
 5. The alerts page: ring alerts and likely-victim alerts. Open "Preview" on a victim alert: the screen shows the ring account that was paid.
 6. Back to the VM terminal: `curl -s http://127.0.0.1:8000/health` shows the model backend, rebuild time and data time.
+6b. Optional, 1 minute: the **Assistant** page. Click a suggestion, or type a paraphrase such as "which clusters carry the most risk" or "who is likely to be cheated next". The badge reads "IBM Granite Embedding · on this machine": Granite works out which question it is, and the answer is a fixed sentence with facts from our API. Say exactly that; it writes no text. Off-topic questions get the help text. `docs/CHATBOT.md` has the measured accuracy (87% on 31 fresh questions of ours).
 7. Optional, 2 minutes, **VM idle (stop the replay first)**: `bash infra/accel_counters.sh` prints the processor's NNPA counters for XGBoost (0), a neural network and Granite (thousands). Say exactly this: "the accelerator is real and we can count it; networks and Granite use it, trees do not; we tested a network on our data and it lost to the trees, so detection stays on trees." Do not say NEXUS Z runs on the accelerator.
 
 ## Say, and do not say
