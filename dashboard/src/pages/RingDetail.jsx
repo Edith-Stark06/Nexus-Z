@@ -49,7 +49,7 @@ export default function RingDetail() {
     <Layout usingMock={usingMock}>
       <div className="ring-detail">
         <div className="crumb">
-          <Link to="/">Rings</Link> / <span>{ring.ring_id}</span>
+          <Link to="/monitor">Rings</Link> / <span>{ring.ring_id}</span>
         </div>
 
         <div className="detail-head">
@@ -99,7 +99,7 @@ export default function RingDetail() {
         </div>
 
         <div className="detail-foot">
-          <span className="badge">{victims.length} victim warnings sent</span>
+          <span className="badge">{victims.length} likely-victim flags</span>
           <span className="footer-note">
             Roles are estimated by the model. A victim is a recent payer into the ring.
           </span>

@@ -39,10 +39,17 @@ export default function Dashboard() {
 
   return (
     <Layout usingMock={usingMock}>
+      <div className="dash-kpis">
+        <div className="kpi-row" aria-label="Summary">
+          <div className="kpi"><div className="kpi-n">{rings.length}</div><div className="kpi-l">Rings flagged</div></div>
+          <div className="kpi"><div className="kpi-n rose">{rings.length ? `${Math.min(...rings.map((r) => r.risk))}-${Math.max(...rings.map((r) => r.risk))}` : "n/a"}</div><div className="kpi-l">Ring risk range (lowest to highest)</div></div>
+          <div className="kpi"><div className="kpi-n">{victimAlerts.length}</div><div className="kpi-l">Recent payers flagged for review</div></div>
+        </div>
+      </div>
       <div className="dash">
         <section className="panel">
           <div className="panel-head">
-            <h2>Flagged rings</h2>
+            <h2>Rings</h2>
             <input
               className="search"
               placeholder="Search ring id…"
@@ -51,8 +58,8 @@ export default function Dashboard() {
             />
           </div>
           <div className="sample-note">
-            Results are from stand-in rings used for testing. Real accuracy is
-            modest; many laundering groups are still missed.
+            Synthetic data and simulated rings. Accuracy is modest; many
+            laundering groups in IBM's data are still missed.
           </div>
           {filtered.length === 0 ? (
             <div className="empty">No rings match that search.</div>
@@ -95,7 +102,7 @@ export default function Dashboard() {
                   <div className="ring-foot">
                     <span className="badge">
                       {victimAlerts.filter((a) => a.ring_id === r.ring_id).length}{" "}
-                      victim warnings sent
+                      likely-victim flags
                     </span>
                     <Link
                       to={`/ring/${r.ring_id}`}
@@ -152,7 +159,7 @@ export default function Dashboard() {
               <div className="detail-foot">
                 <span className="badge">
                   {victimAlerts.filter((a) => a.ring_id === selected.ring_id).length}{" "}
-                  victim warnings sent
+                  likely-victim flags
                 </span>
                 <span className="footer-note">
                   Roles are estimated by the model. SHAP contributions are

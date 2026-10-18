@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getAccount } from "../services/api";
 import { ROLE_COLORS } from "../lib/constants";
+import { ROLES, useHome, useSession } from "../auth/session";
 import Layout from "./Layout";
 import "./WarningScreen.css";
 
@@ -14,6 +15,9 @@ const UNKNOWN_MESSAGE =
 
 export default function WarningScreen() {
   const { accountId } = useParams();
+  const home = useHome();
+  const session = useSession();
+  const isCustomer = session && ROLES[session.role].id === "customer";
   const [account, setAccount] = useState(null);
   const [usingMock, setUsingMock] = useState(true);
 
@@ -45,17 +49,17 @@ export default function WarningScreen() {
             We could not look up <b>{accountId}</b>.
           </p>
           <div className="warning-message">
-            <span className="wm-label">Message shown to the customer</span>
+            <span className="wm-label">{isCustomer ? "What this means" : "Message shown to the customer"}</span>
             <p>{UNKNOWN_MESSAGE}</p>
           </div>
           <div className="warning-actions">
-            <Link to="/" className="ghost">
+            <Link to={home} className="ghost">
               Cancel payment
             </Link>
             <a href="tel:0" className="ghost">
               Talk to my bank
             </a>
-            <Link to="/" className="primary">
+            <Link to={home} className="primary">
               I understand the risk, continue
             </Link>
           </div>
@@ -79,14 +83,14 @@ export default function WarningScreen() {
 
   const message =
     `Payment to this account is high risk (${riskPct}%). ` +
-    `It is linked to ${ringId || "a flagged ring"}, ${roleCopy}. ` +
+    `It is linked to ${isCustomer || !ringId ? "a flagged ring" : ringId}, ${roleCopy}. ` +
     `If you have not already done so, verify the recipient before sending.`;
 
   return (
     <Layout usingMock={usingMock}>
       <div className="warning">
-        <div className="crumb">
-          <Link to="/">Rings</Link>
+        <div className="crumb" hidden={isCustomer}>
+          <Link to={home}>Rings</Link>
           {ringId ? (
             <> / <Link to={`/ring/${ringId}`}>{ringId}</Link></>
           ) : null}
@@ -117,7 +121,7 @@ export default function WarningScreen() {
               <span>Estimated role</span>
               <b style={{ color: ROLE_COLORS[role] }}>{role}</b>
             </div>
-            {ringId && (
+            {ringId && !isCustomer && (
               <div className="wm-row">
                 <span>Ring</span>
                 <b>{ringId}</b>
@@ -130,12 +134,12 @@ export default function WarningScreen() {
           </div>
 
           <div className="warning-message">
-            <span className="wm-label">Message shown to the customer</span>
+            <span className="wm-label">{isCustomer ? "What this means" : "Message shown to the customer"}</span>
             <p>{message}</p>
           </div>
 
           <div className="warning-actions">
-            <Link to="/" className="ghost">
+            <Link to={home} className="ghost">
               Cancel payment
             </Link>
             <a href="tel:0" className="ghost">

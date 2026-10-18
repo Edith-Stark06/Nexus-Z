@@ -36,7 +36,7 @@ useEffect(() => {
     <Layout usingMock={usingMock}>
       <div className="account-detail">
         <div className="crumb">
-          <Link to="/">Rings</Link>
+          <Link to="/monitor">Rings</Link>
           {ringId ? <> / <Link to={`/ring/${ringId}`}>{ringId}</Link></> : null}
           {' / '} <span>{account.account_id}</span>
         </div>

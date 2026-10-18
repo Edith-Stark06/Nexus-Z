@@ -1,3 +1,4 @@
+import './SHAPPanel.css'
 import { featureLabel } from '../lib/constants'
 
 // Render SHAP-style feature contributions as a horizontal bar chart.
