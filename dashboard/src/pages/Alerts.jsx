@@ -68,11 +68,11 @@ export default function Alerts() {
 
         <section className="panel">
           <div className="panel-head">
-            <h2>Victim warnings</h2>
-            <span className="badge">{victims.length} sent</span>
+            <h2>Likely-victim flags</h2>
+            <span className="badge">{victims.length} flagged</span>
           </div>
           {victims.length === 0 ? (
-            <div className="empty">No victim warnings sent yet.</div>
+            <div className="empty">No likely-victim flags yet.</div>
           ) : (
             <table className="alert-table">
               <thead>

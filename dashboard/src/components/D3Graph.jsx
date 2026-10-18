@@ -56,7 +56,7 @@ function draw(svgEl, ring, cutoff) {
 
   const link = g
     .append("g")
-    .attr("stroke", "#30363d")
+    .attr("stroke", "#c3c8dc")
     .attr("stroke-opacity", 0.7)
     .selectAll("line")
     .data(links)
@@ -70,7 +70,7 @@ function draw(svgEl, ring, cutoff) {
     .join("circle")
     .attr("r", (d) => 5 + (d.score ?? 0.5) * 9)
     .attr("fill", (d) => ROLE_COLORS[d.role] || ROLE_COLORS.unknown)
-    .attr("stroke", "#0d1117")
+    .attr("stroke", "#ffffff")
     .attr("stroke-width", 1.5)
     .call(
       d3
@@ -84,7 +84,7 @@ function draw(svgEl, ring, cutoff) {
     .append("text")
     .attr("class", "tt")
     .attr("font-size", 11)
-    .attr("fill", "#e6edf3")
+    .attr("fill", "#0c0f1d")
     .attr("opacity", 0);
 
   node
