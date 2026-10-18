@@ -69,7 +69,10 @@ export default function ReplaySlider({ edges, t, onT, playing, onPlay }) {
         </span>
         <button
           className="replay-play"
-          onClick={() => onPlay(!playing)}
+          onClick={() => {
+            if (!playing && safeIdx >= times.length - 1 && times.length > 1) onT(msToIso(times[0])); // at the end, Play starts over
+            onPlay(!playing);
+          }}
           aria-label={playing ? "Pause replay" : "Play replay"}
         >
           {playing ? "Pause" : "Play"}

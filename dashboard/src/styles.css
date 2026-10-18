@@ -1,118 +1,139 @@
-/* NEXUS Z dashboard — dark theme, projector-readable. */
+/* NEXUS Z design tokens and base styles.
+   Palette and type follow the design sheet: Porcelain, Ink, Ultramarine, Signal rose;
+   Instrument Serif for numbers and titles, Hanken Grotesk for everything you read and tap.
+   Fonts are bundled (no external requests), so the page works under the VM's content security policy. */
+@import "@fontsource/hanken-grotesk/400.css";
+@import "@fontsource/hanken-grotesk/500.css";
+@import "@fontsource/hanken-grotesk/600.css";
+@import "@fontsource/hanken-grotesk/700.css";
+@import "@fontsource/instrument-serif/400.css";
+
 :root {
-  --bg: #0d1117;
-  --bg-elev: #161b22;
-  --bg-elev-2: #1c2230;
-  --border: #30363d;
-  --border-soft: #21262d;
-  --text: #e6edf3;
-  --text-dim: #8b949e;
-  --text-faint: #6e7681;
-  --accent: #5b8ff9;
-  --danger: #e0502e;
-  --warn: #e8a600;
-  --ok: #3fb950;
-  --victim: #5b8ff9;
-  --collector: #e0502e;
-  --mule: #e8a600;
-  --cashout: #7b2fe8;
+  --porcelain: #f3f4f7;
+  --ink: #0c0f1d;
+  --ultramarine: #2430d9;
+  --rose: #e11d5a;
+
+  --bg: var(--porcelain);
+  --bg-elev: #ffffff;
+  --bg-elev-2: #f7f8fb;
+  --border: #dde0ea;
+  --border-soft: #e8eaf1;
+  --text: var(--ink);
+  --text-dim: #4f566b;
+  --text-faint: #666d82;
+  --accent: var(--ultramarine);
+  --accent-soft: rgba(36, 48, 217, 0.08);
+  --danger: var(--rose);
+  --danger-soft: rgba(225, 29, 90, 0.08);
+  --warn: #a35f00;
+  --warn-soft: rgba(163, 95, 0, 0.1);
+  --ok: #12805c;
+  --ok-soft: rgba(18, 128, 92, 0.1);
+
+  --panel: var(--bg-elev);
+  --panel-2: var(--bg-elev-2);
+  --victim: #2430d9;
+  --collector: #e11d5a;
+  --mule: #f08aac;
+  --cashout: #0c0f1d;
+
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 1px 2px rgba(12, 15, 29, 0.04), 0 8px 24px rgba(12, 15, 29, 0.05);
+  --font-body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 
 html, body, #root {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 14px;
-  line-height: 1.4;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.01em; color: var(--text); }
+
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgba(36, 48, 217, 0.45);
+  outline-offset: 2px;
+}
 
 button {
   font-family: inherit;
   font-size: inherit;
+  font-weight: 600;
   color: var(--text);
   background: var(--bg-elev);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: 999px;
+  padding: 8px 16px;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 button:hover { background: var(--bg-elev-2); border-color: var(--accent); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--warn);
-  background: rgba(232, 166, 0, 0.12);
-  border: 1px solid rgba(232, 166, 0, 0.3);
-  border-radius: 999px;
-  padding: 3px 10px;
+.btn-primary, a.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--accent); color: #fff; border: 1px solid var(--accent);
+  border-radius: 999px; padding: 12px 22px; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.btn-primary:hover, a.btn-primary:hover { background: #1b25b8; border-color: #1b25b8; text-decoration: none; }
+.btn-ghost, a.btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--bg-elev); color: var(--text); border: 1px solid var(--border);
+  border-radius: 999px; padding: 12px 22px; font-weight: 600; text-decoration: none; cursor: pointer;
+}
+.btn-ghost:hover, a.btn-ghost:hover { border-color: var(--accent); text-decoration: none; }
+
+input, select, textarea {
+  font-family: inherit; font-size: 15px; color: var(--text);
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px;
 }
 
-.severity-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px;
-  vertical-align: middle;
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
+  color: var(--warn); background: var(--warn-soft);
+  border: 1px solid rgba(163, 95, 0, 0.25); border-radius: 999px; padding: 3px 12px;
 }
+.badge-live { background: var(--ok-soft); color: var(--ok); border-color: rgba(18, 128, 92, 0.3); }
+
+.severity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
 .severity-dot.high { background: var(--danger); }
 .severity-dot.medium { background: var(--warn); }
 .severity-dot.low { background: var(--accent); }
 
-.risk-bar {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--border);
-  overflow: hidden;
-}
-.risk-bar > span {
-  display: block;
-  height: 100%;
-  background: var(--danger);
-  transition: width 0.3s ease;
-}
+.risk-bar { height: 6px; border-radius: 3px; background: var(--border-soft); overflow: hidden; }
+.risk-bar > span { display: block; height: 100%; background: var(--danger); transition: width 0.3s ease; }
 
 .graph-tooltip {
-  position: absolute;
-  pointer-events: none;
-  background: var(--bg-elev-2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 12px;
-  color: var(--text);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-  max-width: 240px;
-  z-index: 10;
+  position: absolute; pointer-events: none; background: var(--ink); color: #fff;
+  border-radius: 10px; padding: 8px 12px; font-size: 12px; box-shadow: 0 10px 30px rgba(12, 15, 29, 0.25);
+  max-width: 240px; z-index: 10;
 }
-.graph-tooltip .tt-role { color: var(--accent); font-weight: 600; }
-.graph-tooltip .tt-id { color: var(--text-dim); font-family: ui-monospace, monospace; }
+.graph-tooltip .tt-role { color: #ff9dbb; font-weight: 600; }
+.graph-tooltip .tt-id { color: #c4c8d8; font-family: ui-monospace, monospace; }
 
-.footer-note {
-  font-size: 11px;
-  color: var(--text-faint);
-  border-top: 1px solid var(--border-soft);
-  padding-top: 8px;
-  margin-top: 12px;
-}
+.footer-note { font-size: 12px; color: var(--text-faint); }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Small uppercase labels in the older pages use the body font, not the display serif. */
+.panel-head h2, .detail-col h3, .detail-section h3, .acct-reasons h3 { font-family: var(--font-body); font-weight: 700; }

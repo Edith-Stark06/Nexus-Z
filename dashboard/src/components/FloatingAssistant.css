@@ -1,0 +1,49 @@
+.fa { position: fixed; right: 24px; bottom: 24px; z-index: 80; display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+
+/* the orb: three soft blobs of the brand colours that drift inside a glass sphere */
+.fa-orb {
+  position: relative; width: 60px; height: 60px; padding: 0; border: 0; border-radius: 50%; overflow: hidden; cursor: pointer;
+  background: radial-gradient(circle at 35% 30%, #5b63e8, #2430d9 55%, #12185f);
+  box-shadow: 0 10px 30px rgba(36, 48, 217, 0.45), inset 0 0 0 1.5px rgba(255, 255, 255, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fa-orb:hover { transform: scale(1.07); box-shadow: 0 14px 38px rgba(36, 48, 217, 0.55), inset 0 0 0 1.5px rgba(255, 255, 255, 0.5); }
+.fa-orb:focus-visible { outline: 3px solid rgba(36, 48, 217, 0.5); outline-offset: 3px; }
+.fa-blob { position: absolute; border-radius: 50%; filter: blur(9px); opacity: 0.9; mix-blend-mode: screen; }
+.fa-blob.b1 { width: 38px; height: 38px; background: #e11d5a; left: -8px; top: 22px; animation: fa-drift1 7s ease-in-out infinite; }
+.fa-blob.b2 { width: 34px; height: 34px; background: #8e99ff; right: -6px; top: -8px; animation: fa-drift2 9s ease-in-out infinite; }
+.fa-blob.b3 { width: 30px; height: 30px; background: #ff9dbb; left: 18px; bottom: -12px; animation: fa-drift3 8s ease-in-out infinite; }
+.fa-glyph { position: relative; z-index: 2; color: #fff; font-size: 22px; line-height: 60px; text-shadow: 0 1px 6px rgba(12, 15, 29, 0.35); }
+.fa-orb.is-open .fa-glyph { font-size: 30px; }
+@keyframes fa-drift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(26px, -18px); } }
+@keyframes fa-drift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-22px, 24px); } }
+@keyframes fa-drift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(18px, -22px); } }
+.fa-orb::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(36, 48, 217, 0.35); animation: fa-pulse 2.8s ease-out infinite; pointer-events: none; }
+.fa-orb.is-open::after { display: none; }
+@keyframes fa-pulse { 0% { transform: scale(0.85); opacity: 0.9; } 100% { transform: scale(1.35); opacity: 0; } }
+
+.fa-hint {
+  position: absolute; right: 74px; bottom: 18px; padding: 6px 12px; border-radius: 999px; background: var(--ink); color: #fff;
+  font-size: 13px; font-weight: 600; white-space: nowrap; opacity: 0; transform: translateX(6px); transition: opacity 0.18s ease, transform 0.18s ease; pointer-events: none;
+}
+.fa-orb:hover ~ .fa-hint, .fa-orb:focus-visible ~ .fa-hint { opacity: 1; transform: none; }
+
+.fa-panel {
+  width: min(400px, calc(100vw - 32px)); height: min(580px, calc(100vh - 130px)); display: flex; flex-direction: column;
+  background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: 22px; overflow: hidden;
+  box-shadow: 0 24px 70px rgba(12, 15, 29, 0.28); animation: fa-in 0.2s ease-out;
+}
+@keyframes fa-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+.fa-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--ink); color: #fff; }
+.fa-head strong { font-family: var(--font-display); font-weight: 400; font-size: 20px; flex: 1; }
+.fa-mini { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff9dbb, #e11d5a 55%, #2430d9); }
+.fa-full { color: #c4c8d8; font-size: 12.5px; }
+.fa-full:hover { color: #fff; }
+.fa-close { background: transparent; border: 0; color: #fff; font-size: 24px; line-height: 1; padding: 0 6px; border-radius: 8px; }
+.fa-close:hover { background: rgba(255, 255, 255, 0.14); }
+.fa-body { flex: 1; min-height: 0; padding: 12px; overflow: hidden; }
+
+@media (max-width: 520px) { .fa { right: 14px; bottom: 14px; } }
+@media (prefers-reduced-motion: reduce) { .fa-blob, .fa-orb::after, .fa-panel { animation: none; } }
+
+.fa-orb, .fa-orb:hover, .fa-orb:active, .fa-orb:focus { background: radial-gradient(circle at 35% 30%, #5b63e8, #2430d9 55%, #12185f); border-color: transparent; }
