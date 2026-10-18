@@ -21,6 +21,7 @@ We tried the obvious thing first: run a small Granite model on the VM's 3 CPUs a
 | Granite 4.0 350M | 2 s per short question | attached numbers to the wrong facts ("two likely victims" for a ring with one) |
 | Granite 4.0 H 1B | prompt 12 tokens/s, writing 2.2 tokens/s | wrong facts in the answer |
 | Granite 4.2 3B | prompt 5 tokens/s, writing 0.9 tokens/s; 333 s for one answer | rambling reasoning, far too slow |
+| Qwen2.5 1.5B Instruct (not Granite; Apache 2.0, 4-bit, tried because it is a stronger open model) | 160 to 195 prompt tokens, 11 to 117 new tokens: 15 s, 28 s and 70 s on the idle VM | 1 of 3 answers right: it named one of three tied rings with a mangled id ("RING-50C67B"), and ran past the three-sentence limit on the second question; the third answer was right |
 | Granite 4.2 30B | does not fit: 58.6 GB of weights, the VM has 7.5 GB of RAM | not possible |
 
 We also tried making the small models only **pick a letter** for the intent of the question (grammar-constrained, 48 questions): 350M got 17%, 1B got 40%, and the keyword rules got 71%. So a small generative model is not good enough here, in either role.
