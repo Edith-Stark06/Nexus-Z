@@ -1,0 +1,10 @@
+Raw output of: bash infra/accel_counters.sh
+Run on the LinuxONE VM (s390x, RHEL 9.8, 3 vCPUs) on 2026-10-18 13:13 to 13:13 UTC, VM idle (load average 0.00 before the run).
+Counts are NNPA operations executed machine-wide while each workload ran (processor counters, pai_ext). Trees must show 0.
+Workloads (ml/accel_probe.py, inside the platform container): trees = XGBoost, dense = TensorFlow network, granite = Granite 4.0 350M base through llama.cpp.
+This proves some operations ran on the accelerator for the network and Granite and none for trees. It does not show that NEXUS Z detection uses it (it does not), and it is not a speed-up measurement.
+
+workload  speed                                           ALL        MATMUL_OP          SIGMOID
+trees     rows per second 566,609                           0                0                0
+dense     rows per second 1,207,138                      6504              471              157
+granite   tokens per second 9.6                         36368             6160                0
