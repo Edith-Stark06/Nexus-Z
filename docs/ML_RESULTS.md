@@ -2,14 +2,14 @@
 
 Everything here was measured by running the code in `ml/`. Nothing is projected. Where a number is weak, it is shown anyway.
 
-Sections 1 to 4 use general laundering data (IBM AML, Elliptic). Pig-butchering rings are only tested in section 5, on **stand-in rings written by the modelling side**, because the data workstream's generator was not available. Treat section 5 with the circularity caution given there.
+Sections 1 to 4 use general laundering data (IBM AML, Elliptic). Pig-butchering rings are tested in sections 5 and 7: section 5 on **stand-in rings written by the modelling side**, section 7 on the generator `data/rings.py` written by the data side; both are our own team's simulations. Treat both with the circularity caution given there.
 
 ## What was built
 
 | Piece | File |
 |---|---|
 | Label and time rule (no look-ahead) | `ml/PROTOCOL.md` |
-| 48 account features (transaction, behavioral, graph, structure) | `ml/features.py` |
+| 57 account features (transaction, timing, graph, structure, burst and motif; the payment model takes 130 inputs: 16 about the payment and its flow plus the 57 account features of each endpoint) | `ml/features.py` |
 | XGBoost, calibration, ablation | `ml/model.py`, `ml/ablation.py` |
 | Rings: top accounts, linked by payments, optionally grown through weaker accounts, Louvain split to at most 40 | `ml/rings.py` |
 | Payment-level model: each payment scored, an account takes its riskiest payment | `ml/edge_model.py` |
@@ -135,7 +135,7 @@ Full rescore of the last 48 hours of HI-Small (862,792 transactions, 354,447 acc
 | Peak memory | 742 MB |
 
 - **Predictions on s390x match the laptop** to within 9×10⁻¹⁶ over 300 rows, so the big-endian machine gives the same answers.
-- This is a full recompute, not an incremental update. New transactions appear after the next rescore (a few seconds), not instantly. The cost grows with the history used: on the laptop, rebuilding features from all 5M transactions takes about 25 s.
+- This is a full recompute, not an incremental update. New transactions appear after the next rescore: about ten seconds when the machine is idle and up to about thirty-six while payments stream in (PLATFORM_RESULTS.md 3c), not instantly. The cost grows with the history used: on the laptop, rebuilding features from all 5M transactions takes about 25 s.
 - The committed model was trained on this VM (next section). Earlier experiments ran on a laptop and on Kaggle CPU notebooks. No accelerator-specific gains are claimed or used.
 - scikit-learn, SHAP and numba could not be built on the VM's own Python environment, so serving uses XGBoost's own explanations and no scikit-learn. Training uses the platform container, which does include scikit-learn.
 
@@ -182,7 +182,7 @@ What would make this convincing: rings from an independent generator, more varie
 
 ### A second generator with varied timing and adversarial look-alikes
 
-Verona wrote `data/rings.py`: 8 ring shapes (including batched, delayed, split and mixed-speed forwarding, and rings whose accounts already have ordinary history) and 5 look-alike types (merchant, payroll, landlord, charity, new customer), half of them adversarial (fast pass-through). Evaluated with the independent harness `python -m eval.run` (metrics checked against scikit-learn), 3 seeds, test window, account models only. Full tables and six robustness scenarios: [eval/results/RESULTS.md](../eval/results/RESULTS.md).
+Verona wrote `data/rings.py`: 8 ring shapes (including batched, delayed, split and mixed-speed forwarding, and rings whose accounts already have ordinary history) and 5 look-alike types (merchant, payroll, landlord, charity, new customer), each look-alike adversarial (fast pass-through) with probability 0.5. Evaluated with the independent harness `python -m eval.run` (metrics checked against scikit-learn), 3 seeds, test window, account models only. Full tables and six robustness scenarios: [eval/results/RESULTS.md](../eval/results/RESULTS.md).
 
 | Features | PR-AUC, injected fraud accounts | Rings recovered |
 |---|---|---|
@@ -255,7 +255,7 @@ The same payment-level model (57 features, 5% of non-laundering payments in trai
 
 ## 7. The typology demo bundle: trained with injected pig-butchering rings
 
-The committed IBM-only model (sections 1 to 6) learned IBM's own laundering patterns. Asked about the synthetic pig-butchering rings from `data/rings.py` (section 5), it finds none of them: on 90 rings and 90 look-alikes injected with seed 1 into the last 48 hours of HI-Small, it recovers **0 of 10** rings in the last-24-hour window and **0 of 20** in the 48-hour window, and none of its 10 riskiest rings contains an injected account (`python -m ml.pig_eval HI-Small ml/artifacts/HI-Small 1`). A pig-butchering demo therefore needs a model that has seen the typology.
+The committed IBM-only model (sections 1 to 6) learned IBM's own laundering patterns. Asked about the synthetic pig-butchering rings from `data/rings.py` (section 5), it finds none of them: on 90 rings and 90 look-alikes injected with seed 1 across the 10-day period of HI-Small (the last 48 hours are cut out afterwards, so most rings have fewer than two active fraud accounts in the window), it recovers **0 of 10** rings in the last-24-hour window and **0 of 20** in the 48-hour window, and none of its 10 riskiest rings contains an injected account (`python -m ml.pig_eval HI-Small ml/artifacts/HI-Small 1`). A pig-butchering demo therefore needs a model that has seen the typology.
 
 `ml/artifacts/HI-Small-pig` is the same payment-level pipeline trained on IBM's labels **plus** injected rings (`python -m ml.bundle HI-Small <folder> payment 0`, seed 0), trained on the LinuxONE VM in the platform container in 31 min 46 s including building the feature snapshots for the injected data (account model 691 trees, payment model 800 trees; 800 is the cap, so the payment model had not stopped improving). The demo serves `HI-Pig-Slice`, the last 48 hours of **seed 1**, a different random draw of rings, made with `python -m ml.make_demo_slice HI-Small 48 HI-Pig-Slice 1`. Scored the way the API scores it (`python -m ml.pig_eval HI-Small ml/artifacts/HI-Small-pig <seed>`, run on the VM):
 
@@ -263,8 +263,8 @@ The committed IBM-only model (sections 1 to 6) learned IBM's own laundering patt
 |---|---|---|---|---|---|
 | IBM-only model, seed 1 | 24 h | 10 | 0 (0%) | 0 | 0 of 90 |
 | IBM-only model, seed 1 | 48 h | 20 | 0 (0%) | 0 | 0 of 90 |
-| **Demo bundle, seeds 1 to 4 pooled (rings it never saw)** | 24 h | 43 | **36 (84%)** | 21 of 40 | 6 of 360 |
-| **Demo bundle, seeds 1 to 4 pooled (rings it never saw)** | 48 h | 89 | **61 (69%)** | 35 of 40 | 3 of 360 |
+| **Demo bundle, seeds 1 to 4 pooled (other random draws of the training generator)** | 24 h | 43 | **36 (84%)** | 21 of 40 | 6 of 360 |
+| **Demo bundle, seeds 1 to 4 pooled (other random draws of the training generator)** | 48 h | 89 | **61 (69%)** | 35 of 40 | 3 of 360 |
 | Demo bundle, seed 0 (trained on, but these are later payments than it trained on) | 24 h | 9 | 7 (78%) | 4 | 0 of 90 |
 | Demo bundle, seed 0 | 48 h | 19 | 14 (74%) | 9 | 0 of 90 |
 
@@ -307,7 +307,7 @@ The LinuxONE VM has the NNPA facility (the CPU reports `nnpa`) and the platform 
 | TensorFlow dense network (120, 256, 128, 1), 200,000 random rows | 1,305,552 rows/s | 5,459 | 471 | 157 |
 | IBM Granite 4.0 350M through llama.cpp, 40 tokens | 7.4 tokens/s | 36,106 | 6,160 | 0 |
 
-So the claim that is true and measured: **networks and Granite run on the accelerator on this VM; trees do not.** The counters are machine-wide while nothing else ran, and in an earlier probe the relu counter stayed at 0, so not every operation of the network is offloaded. Counts are operations, not a speed-up: we did not compare against the same network with the accelerator off.
+So the claim that is true and measured: **some operations of a network and of Granite 4.0 350M (through llama.cpp, which leaves 235 tensors on the CPU) run on the accelerator on this VM; trees do not.** The raw counter output was not archived (the capture image 10 was never made); re-run `bash infra/accel_counters.sh` on the idle VM and keep the output before quoting the counts. The counters are machine-wide while nothing else ran, and in an earlier probe the relu counter stayed at 0, so not every operation of the network is offloaded. Counts are operations, not a speed-up: we did not compare against the same network with the accelerator off.
 
 **NEXUS Z's detection does not use the accelerator**, because the network we tried was worse than the trees:
 
