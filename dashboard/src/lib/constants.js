@@ -65,6 +65,23 @@ export function formatDateTime(iso) {
   });
 }
 
+// The data is replayed from 2022, so "3 hours ago" against today's clock is meaningless. Show the data's own time, in UTC.
+export function formatUtc(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso);
+  const text = d.toLocaleString("en-GB", {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return `${text} UTC`;
+}
+
 // Format a duration in minutes as "Xh Ym" or "Ym".
 export function formatDurationMinutes(totalMinutes) {
   if (totalMinutes == null || Number.isNaN(totalMinutes)) return "—";
