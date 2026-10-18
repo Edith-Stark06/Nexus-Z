@@ -305,7 +305,9 @@ The LinuxONE VM has the NNPA facility (the CPU reports `nnpa`) and the platform 
 |---|---|---|---|---|
 | XGBoost trees, 200 trees, 200,000 rows (control) | 534,793 rows/s | **0** | 0 | 0 |
 | TensorFlow dense network (120, 256, 128, 1), 200,000 random rows | 1,305,552 rows/s | 5,459 | 471 | 157 |
+| *Archived re-run, 2026-10-18 (`docs/evidence/accelerator_counters.txt`), same network* | 1,207,138 rows/s | 6,504 | 471 | 157 |
 | IBM Granite 4.0 350M through llama.cpp, 40 tokens | 7.4 tokens/s | 36,106 | 6,160 | 0 |
+| *Archived re-run, 2026-10-18 (`docs/evidence/accelerator_counters.txt`)* | 9.6 tokens/s | 36,368 | 6,160 | 0 |
 
 So the claim that is true and measured: **some operations of a network and of Granite 4.0 350M (through llama.cpp, which leaves 235 tensors on the CPU) run on the accelerator on this VM; trees do not.** The raw counter output was not archived (the capture image 10 was never made); re-run `bash infra/accel_counters.sh` on the idle VM and keep the output before quoting the counts. The counters are machine-wide while nothing else ran, and in an earlier probe the relu counter stayed at 0, so not every operation of the network is offloaded. Counts are operations, not a speed-up: we did not compare against the same network with the accelerator off.
 
