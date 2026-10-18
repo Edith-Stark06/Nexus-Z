@@ -48,15 +48,15 @@ Start the stream when you are ready to show it (a second terminal on the VM):
 1. The terminal on the VM: `podman ps` (the Jupyter container and the API container), `bash infra/podman_api.sh check` (the security settings), `ss -ltn` (only loopback).
 2. The home page: the flagged rings, highest risk first. Read the ring ids off the screen; they depend on the data seen so far and change as the stream arrives.
 3. Open one ring: the flow graph (victims, collectors, mules, cash-out), the payments, **why it was flagged**.
-4. Start the replay. Within about 12 seconds the ring list changes; refreshes go on while payments arrive.
+4. Start the replay. Within about 10 seconds the ring list changes (up to about 36 seconds while payments stream in); refreshes go on while payments arrive.
 5. The alerts page: ring alerts and likely-victim alerts. Open "Preview" on a victim alert: the screen shows the ring account that was paid.
 6. Back to the VM terminal: `curl -s http://127.0.0.1:8000/health` shows the model backend, rebuild time and data time.
 6b. Optional, 1 minute: the **Assistant** page. Click a suggestion, or type a paraphrase such as "which clusters carry the most risk" or "who is likely to be cheated next". The badge reads "IBM Granite Embedding · on this machine": Granite works out which question it is, and the answer is a fixed sentence with facts from our API. Say exactly that; it writes no text. Off-topic questions get the help text. `docs/CHATBOT.md` has the measured accuracy (87% on 31 fresh questions of ours).
-7. Optional, 2 minutes, **VM idle (stop the replay first)**: `bash infra/accel_counters.sh` prints the processor's NNPA counters for XGBoost (0), a neural network and Granite (thousands). Say exactly this: "the accelerator is real and we can count it; networks and Granite use it, trees do not; we tested a network on our data and it lost to the trees, so detection stays on trees." Do not say NEXUS Z runs on the accelerator.
+7. Optional, 2 minutes, **VM idle (stop the replay first)**: `bash infra/accel_counters.sh` prints the processor's NNPA counters for XGBoost (0), a neural network (5,459) and a small Granite 4.0 350M model (36,106). Save the output and take the screenshot (evidence image 10): the raw output was never archived. Say exactly this: "the accelerator is real and we can count it; some operations of a network and a small Granite model run on it, trees do not; we tested a network on our data and it lost to the trees, so detection stays on trees." Do not say NEXUS Z runs on the accelerator.
 
 ## Say, and do not say
 
-- Say: "synthetic data", "estimated roles", "near real time, about 12 seconds on the idle VM".
+- Say: "synthetic data", "estimated roles", "near real time, about 10 seconds on the idle VM".
 - Do not say: real-time or instant; that an account is a criminal (say flagged); that warnings were sent (we flag likely victims); that NEXUS Z detection runs on the accelerator (it does not; only the measurement in step 7 does).
 - Reasons marked "(absent)" mean the model is flagging the *lack* of something (for example no history); explain it that way if asked.
 
