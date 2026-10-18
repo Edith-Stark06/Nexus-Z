@@ -118,7 +118,7 @@ describe("home page", () => {
     top_reasons: [{ feature: "s_pt_median", label: "Sender: money leaves within minutes", contribution: 0.9 }],
   };
 
-  it("loads the graph and the reasons of a ring when it is selected, and says likely victims are flagged, not warned", async () => {
+  it("loads the graph and the reasons of a ring when it is selected, and says likely-victim flags, not warnings", async () => {
     fakeApi({ "/health": { status: "ok" }, "/rings": [summary], "/alerts?limit=50": [], "/rings/RNG-1": full });
     at("/", "/", <Dashboard />);
     fireEvent.click(await screen.findByText("RNG-1"));
@@ -126,7 +126,7 @@ describe("home page", () => {
     await waitFor(() => expect(screen.getAllByText("Sender: money leaves within minutes").length).toBeGreaterThan(0));
     expect(document.querySelector("svg.d3-graph")).not.toBeNull();
     expect(screen.queryByText(/No explanation available/i)).toBeNull();
-    expect(document.body.textContent).toMatch(/likely victims flagged/i);
+    expect(document.body.textContent).toMatch(/likely-victim flags/i);
     expect(document.body.textContent).not.toMatch(/warnings sent/i);
   });
 });

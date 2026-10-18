@@ -7,11 +7,14 @@ import PaymentTable from "../components/PaymentTable";
 import ReplaySlider from "../components/ReplaySlider";
 import { CaseSummary, RoleLegend } from "../components/CaseSummary";
 import { ROLE_COLORS, formatUtc } from "../lib/constants";
+import { useHome } from "../auth/session";
 import Layout from "./Layout";
 import "./RingDetail.css";
+import InfoTip from "../components/InfoTip";
 
 export default function RingDetail() {
   const { ringId } = useParams();
+  const home = useHome();
   const [ring, setRing] = useState(null);
   const [gone, setGone] = useState(false); // the API said 404: the ring was rebuilt under a new id, or never existed
   const [usingMock, setUsingMock] = useState(true);
@@ -26,8 +29,8 @@ export default function RingDetail() {
         setRing(res.data);
         setGone(Boolean(res.notFound));
         setUsingMock(res.usingMock);
-        // Start the replay at the ring's first seen moment.
-        setCutoff(res.data ? res.data.first_seen : null);
+        // Open on the whole ring. The slider replays it from the first payment when asked.
+        setCutoff(null);
       }
     }
     load();
@@ -39,7 +42,7 @@ export default function RingDetail() {
     return (
       <Layout usingMock={usingMock}>
         <div className="empty">
-          This ring changed after the last refresh, or no longer exists. <Link to="/">Back to the list of rings</Link> to
+          This ring changed after the last refresh, or no longer exists. <Link to={home}>Back to the list of rings</Link> to
           find it again.
         </div>
       </Layout>
@@ -64,7 +67,7 @@ export default function RingDetail() {
     <Layout usingMock={usingMock}>
       <div className="ring-detail">
         <div className="crumb">
-          <Link to="/">Rings</Link> / <span>{ring.ring_id}</span>
+          <Link to="/monitor">Rings</Link> / <span>{ring.ring_id}</span>
         </div>
 
         <div className="detail-head">
@@ -94,7 +97,7 @@ export default function RingDetail() {
 
         <div className="detail-grid">
           <div className="detail-col">
-            <h3>Flow graph</h3>
+            <h3>Flow graph <InfoTip k="flowGraph" /></h3>
             <D3Graph ringId={ring.ring_id} ring={ring} cutoff={cutoff} />
             <ReplaySlider
               edges={ring.edges || []}
@@ -106,18 +109,18 @@ export default function RingDetail() {
             <RoleLegend colors={ROLE_COLORS} />
           </div>
           <div className="detail-col">
-            <h3>Why flagged</h3>
+            <h3>Why flagged <InfoTip k="whyFlagged" /></h3>
             <SHAPPanel ringId={ring.ring_id} ring={ring} />
           </div>
         </div>
 
         <div className="detail-section">
-          <h3>Payments</h3>
-          <PaymentTable edges={ring.edges || []} />
+          <h3>Payments <InfoTip k="payments" /></h3>
+          <PaymentTable edges={ring.edges || []} roles={Object.fromEntries((ring.members || []).map((m) => [m.id, m.role]))} />
         </div>
 
         <div className="detail-foot">
-          <span className="badge">{victims.length} likely {victims.length === 1 ? "victim" : "victims"} in this ring (estimated)</span>
+          <span className="badge">{victims.length} likely-victim {victims.length === 1 ? "flag" : "flags"} in this ring (estimated)</span>
           <span className="footer-note">
             Roles are estimated by the model. A victim is a recent payer into the ring.
           </span>
