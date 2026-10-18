@@ -1,0 +1,52 @@
+### python -m ml.pig_eval HI-Small ml/artifacts/HI-Small-pig 5
+HI-Small + 90 rings and 90 look-alikes (seed 5); last 48 h: 866,766 payments; bundle trained with injected seed 0 ; scored with settings default
+
+active window 24 h: 61 rings detected. Injected rings with at least 2 active fraud accounts: 10; recovered 8 (80%).
+  by shape: {'aged': '2/3', 'chain': '1/1', 'delayed': '0/1', 'fan-in': '2/2', 'mixed': '1/1', 'split': '2/2'}
+  look-alike hubs inside a detected ring: 0 of 90
+  of the 10 riskiest rings, 6 contain injected fraud accounts
+
+active window 48 h: 186 rings detected. Injected rings with at least 2 active fraud accounts: 23; recovered 14 (61%).
+  by shape: {'aged': '3/5', 'batched': '1/2', 'chain': '1/1', 'delayed': '1/5', 'dispersed': '0/1', 'fan-in': '2/2', 'mixed': '2/3', 'split': '4/4'}
+  look-alike hubs inside a detected ring: 2 of 90
+  of the 10 riskiest rings, 9 contain injected fraud accounts
+
+### python -m ml.pig_eval HI-Small ml/artifacts/HI-Small-pig 6
+HI-Small + 90 rings and 90 look-alikes (seed 6); last 48 h: 866,908 payments; bundle trained with injected seed 0 ; scored with settings default
+
+active window 24 h: 63 rings detected. Injected rings with at least 2 active fraud accounts: 8; recovered 5 (62%).
+  by shape: {'aged': '1/3', 'batched': '1/1', 'delayed': '0/1', 'fan-in': '1/1', 'mixed': '1/1', 'split': '1/1'}
+  look-alike hubs inside a detected ring: 5 of 90
+  of the 10 riskiest rings, 4 contain injected fraud accounts
+
+active window 48 h: 186 rings detected. Injected rings with at least 2 active fraud accounts: 18; recovered 11 (61%).
+  by shape: {'aged': '1/3', 'batched': '1/2', 'chain': '1/1', 'delayed': '0/2', 'dispersed': '2/2', 'fan-in': '2/2', 'mixed': '2/3', 'split': '2/3'}
+  look-alike hubs inside a detected ring: 2 of 90
+  of the 10 riskiest rings, 7 contain injected fraud accounts
+
+### python -m ml.pig_eval HI-Small ml/artifacts/HI-Small-pig 7
+HI-Small + 90 rings and 90 look-alikes (seed 7); last 48 h: 864,997 payments; bundle trained with injected seed 0 ; scored with settings default
+
+active window 24 h: 64 rings detected. Injected rings with at least 2 active fraud accounts: 10; recovered 7 (70%).
+  by shape: {'aged': '1/3', 'batched': '1/1', 'chain': '2/2', 'delayed': '0/1', 'fan-in': '1/1', 'mixed': '1/1', 'split': '1/1'}
+  look-alike hubs inside a detected ring: 3 of 90
+  of the 10 riskiest rings, 4 contain injected fraud accounts
+
+active window 48 h: 187 rings detected. Injected rings with at least 2 active fraud accounts: 22; recovered 11 (50%).
+  by shape: {'aged': '1/5', 'batched': '1/2', 'chain': '4/4', 'delayed': '1/5', 'fan-in': '2/3', 'mixed': '1/2', 'split': '1/1'}
+  look-alike hubs inside a detected ring: 1 of 90
+  of the 10 riskiest rings, 8 contain injected fraud accounts
+
+### python -m ml.pig_eval HI-Small ml/artifacts/HI-Small-pig 8
+HI-Small + 90 rings and 90 look-alikes (seed 8); last 48 h: 869,773 payments; bundle trained with injected seed 0 ; scored with settings default
+
+active window 24 h: 62 rings detected. Injected rings with at least 2 active fraud accounts: 9; recovered 8 (89%).
+  by shape: {'aged': '1/1', 'delayed': '1/1', 'dispersed': '1/1', 'fan-in': '1/1', 'mixed': '0/1', 'split': '4/4'}
+  look-alike hubs inside a detected ring: 2 of 90
+  of the 10 riskiest rings, 6 contain injected fraud accounts
+
+active window 48 h: 182 rings detected. Injected rings with at least 2 active fraud accounts: 21; recovered 12 (57%).
+  by shape: {'aged': '2/4', 'chain': '1/1', 'delayed': '1/5', 'dispersed': '3/3', 'fan-in': '1/1', 'mixed': '0/3', 'split': '4/4'}
+  look-alike hubs inside a detected ring: 1 of 90
+  of the 10 riskiest rings, 9 contain injected fraud accounts
+
