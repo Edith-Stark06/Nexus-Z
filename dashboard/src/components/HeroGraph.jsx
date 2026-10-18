@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { flowPath, flowPoint, ROLE_LABEL, ROLE_TEXT } from "../lib/graphLayout";
+import { linePath, ROLE_LABEL, ROLE_TEXT } from "../lib/graphLayout";
 import { INK, LAV, LAV_DARK, ROSE, nodePrimitives } from "../lib/nodeStyle";
-import { makeNodes, settled, stepNodes } from "../lib/heroPhysics";
+import { along, makeNodes, settled, stepNodes } from "../lib/heroPhysics";
+
+// firm, not springy: nodes lean toward the cursor and settle without swinging
+const FIRM = { spring: 0.14, damping: 0.7, pull: 0.45, maxShift: 20 };
 
 // An illustration of the shape NEXUS Z looks for, that reacts to the cursor. It is not data.
 // It uses the same account marks as the ring graph (lib/nodeStyle.js).
@@ -45,9 +48,7 @@ export default function HeroGraph() {
 
   useEffect(() => {
     const svg = svgRef.current;
-    const wrap = wrapRef.current;
-    if (!svg || !wrap) return undefined;
-    const hero = svg.closest(".l-hero");
+    if (!svg) return undefined;
     const quiet = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const nodes = makeNodes(POINTS);
     const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -58,7 +59,6 @@ export default function HeroGraph() {
     for (const [a, b] of LINKS) { neighbours.get(a).add(b); neighbours.get(b).add(a); }
 
     let pointer = null; // in the picture's own coordinates
-    const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
     let visible = true;
     let raf = 0;
     let last = performance.now();
@@ -76,7 +76,7 @@ export default function HeroGraph() {
         const [a, b, kind] = LINKS[i];
         const A = byId.get(a);
         const B = byId.get(b);
-        el.setAttribute("d", flowPath(A, B, A.r, B.r));
+        el.setAttribute("d", linePath(A, B, A.r, B.r));
         el.style.opacity = hov == null ? (kind === "deposit" ? 0.75 : 0.6) : a === hov || b === hov ? 1 : 0.08;
       });
       dotEls.forEach((el, i) => {
@@ -84,22 +84,17 @@ export default function HeroGraph() {
         if (!quiet) phase[i] = (phase[i] + dt * (kind === "deposit" ? 0.00022 : 0.00034)) % 1;
         const A = byId.get(a);
         const B = byId.get(b);
-        const p = flowPoint(A, B, A.r, B.r, phase[i]);
+        const p = along(A, B, phase[i]);
         el.setAttribute("cx", p.x.toFixed(2));
         el.setAttribute("cy", p.y.toFixed(2));
         el.style.opacity = hov == null || a === hov || b === hov ? 0.95 : 0.1;
       });
-      if (!quiet) {
-        tilt.x += (tilt.tx - tilt.x) * 0.08;
-        tilt.y += (tilt.ty - tilt.y) * 0.08;
-        wrap.style.transform = `perspective(1000px) rotateY(${(tilt.x * 5).toFixed(2)}deg) rotateX(${(-tilt.y * 4).toFixed(2)}deg)`;
-      }
     }
 
     function frame(now) {
       const dt = Math.min(now - last, 50);
       last = now;
-      if (!quiet) stepNodes(nodes, pointer);
+      if (!quiet) stepNodes(nodes, pointer, FIRM);
       paint(dt);
       raf = visible && !document.hidden && (!quiet || !settled(nodes)) ? requestAnimationFrame(frame) : 0;
     }
@@ -109,16 +104,9 @@ export default function HeroGraph() {
       const box = svg.getBoundingClientRect();
       if (!box.width) return;
       pointer = { x: ((e.clientX - box.left) / box.width) * W, y: ((e.clientY - box.top) / box.height) * H };
-      tilt.tx = clamp((e.clientX / window.innerWidth - 0.5) * 2, -1, 1);
-      tilt.ty = clamp((e.clientY / window.innerHeight - 0.5) * 2, -1, 1);
-      if (hero) {
-        const hb = hero.getBoundingClientRect();
-        hero.style.setProperty("--mx", `${e.clientX - hb.left}px`);
-        hero.style.setProperty("--my", `${e.clientY - hb.top}px`);
-      }
       wake();
     }
-    function onLeave() { pointer = null; tilt.tx = 0; tilt.ty = 0; wake(); }
+    function onLeave() { pointer = null; wake(); }
 
     const io = typeof IntersectionObserver !== "undefined" ? new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) wake(); }, { threshold: 0.05 }) : null;
     if (io) io.observe(svg);
@@ -194,4 +182,3 @@ export default function HeroGraph() {
   );
 }
 
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));

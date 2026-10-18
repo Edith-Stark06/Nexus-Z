@@ -30,8 +30,8 @@ export const ROLES = {
     blurb: "Watch system health, data freshness and how the service is configured.",
     sees: ["Backend mode, rebuild time and state age", "How much history is loaded", "What is synthetic in this deployment"],
     home: "/admin",
-    nav: [{ to: "/admin", label: "System" }, { to: "/monitor", label: "Rings" }, { to: "/alerts", label: "Alerts" }],
-    allow: ["/admin", "/monitor", "/alerts", "/ring"],
+    nav: [{ to: "/admin", label: "System" }, { to: "/monitor", label: "Rings" }, { to: "/alerts", label: "Alerts" }, { to: "/assistant", label: "Assistant" }],
+    allow: ["/admin", "/monitor", "/alerts", "/ring", "/assistant"],
   },
   regulator: {
     id: "regulator", label: "Government and regulator", short: "Regulator",

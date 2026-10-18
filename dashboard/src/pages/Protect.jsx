@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getAccount } from "../services/api";
 import Layout from "./Layout";
 import "./RolePages.css";
+import InfoTip from "../components/InfoTip";
 
 const KEY = "nexusz.checks";
 
@@ -62,7 +63,7 @@ export default function Protect() {
         </p>
 
         <section className="rp-card" aria-labelledby="check-title">
-          <h2 id="check-title">Check an account</h2>
+          <h2 id="check-title">Check an account <InfoTip k="protectCheck" /></h2>
           <p>Enter the account you are about to pay.</p>
           <form className="check-form" onSubmit={submit}>
             <label className="sr-only" htmlFor="acct">Recipient account</label>
@@ -85,7 +86,7 @@ export default function Protect() {
         </section>
 
         <section className="rp-card" aria-labelledby="recent-title">
-          <h2 id="recent-title">Your checks in this session</h2>
+          <h2 id="recent-title">Your checks in this session <InfoTip k="protectRecent" /></h2>
           {checks.length === 0 ? (
             <p className="empty-note">Nothing checked yet. Checks are kept in this browser tab only.</p>
           ) : (
@@ -101,7 +102,7 @@ export default function Protect() {
         </section>
 
         <section className="rp-card">
-          <h3>Stop and think</h3>
+          <h3>Stop and think <InfoTip k="protectThink" /></h3>
           <p>
             Did someone you met online promise returns on an investment? Stop and talk to someone you trust before you pay. Scam networks
             collect payments from many people into a few accounts, then pass the money on within hours.

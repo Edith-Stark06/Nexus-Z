@@ -4,6 +4,7 @@ import { startPolling } from '../services/api'
 import { formatDateTime, relativeTime, SEVERITY_COLORS } from '../lib/constants'
 import Layout from './Layout'
 import './Alerts.css'
+import InfoTip from "../components/InfoTip";
 
 export default function Alerts() {
   const [alerts, setAlerts] = useState([])
@@ -25,7 +26,7 @@ export default function Alerts() {
       <div className="alerts">
         <section className="panel">
           <div className="panel-head">
-            <h2>Ring alerts</h2>
+            <h2>Ring alerts <InfoTip k="ringAlerts" /></h2>
             <span className="badge">{rings.length} active</span>
           </div>
           {rings.length === 0 ? (
@@ -68,7 +69,7 @@ export default function Alerts() {
 
         <section className="panel">
           <div className="panel-head">
-            <h2>Likely-victim flags</h2>
+            <h2>Likely-victim flags <InfoTip k="likelyVictims" /></h2>
             <span className="badge">{victims.length} flagged</span>
           </div>
           {victims.length === 0 ? (

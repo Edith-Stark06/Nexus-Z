@@ -5,6 +5,7 @@ import Landing from "../pages/Landing";
 import { RoleChooser, RoleLogin } from "../pages/Login";
 import RequireRole from "../auth/RequireRole";
 import { ROLES, ROLE_LIST, allowed, getSession, homeFor, signIn, signOut } from "../auth/session";
+import { _setIterations, signUp } from "../auth/accounts";
 
 vi.mock("../services/api", () => ({
   API_BASE: "http://localhost:8000",
@@ -23,7 +24,7 @@ function Where() {
   return <div data-testid="where">{useLocation().pathname}</div>;
 }
 
-beforeEach(() => { window.sessionStorage.clear(); });
+beforeEach(() => { window.sessionStorage.clear(); window.localStorage.clear(); _setIterations(1000); });
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 describe("demo session", () => {
@@ -50,7 +51,9 @@ describe("demo session", () => {
     expect(allowed("bank", "/ring/RNG-1")).toBe(true);
     expect(allowed("bank", "/admin")).toBe(false);
     expect(allowed("admin", "/admin")).toBe(true);
-    expect(allowed("admin", "/assistant")).toBe(false);
+    expect(allowed("admin", "/assistant")).toBe(true);
+    expect(allowed("regulator", "/assistant")).toBe(false);
+    expect(allowed("customer", "/assistant")).toBe(false);
     expect(allowed("regulator", "/oversight")).toBe(true);
     expect(allowed("regulator", "/account/ACC-1")).toBe(false);
     expect(allowed("regulator", "/alerts")).toBe(false);
@@ -101,14 +104,16 @@ describe("landing and sign-in", () => {
     expect(document.body.textContent).not.toMatch(/real-time|instant/i);
   });
 
-  it("the chooser lists the four roles and says no password is checked", () => {
+  it("the chooser lists the four roles and says where accounts are kept", () => {
     render(<MemoryRouter><RoleChooser /></MemoryRouter>);
     expect(screen.getAllByRole("link", { name: /Customer|Bank analyst|Administrator|Government and regulator/ }).length).toBeGreaterThanOrEqual(4);
-    expect(screen.getByRole("note").textContent).toMatch(/No password is asked, checked or stored/);
+    expect(screen.getByRole("note").textContent).toMatch(/Demo accounts/);
+    expect(screen.getByRole("note").textContent).toMatch(/this browser only/);
     expect(document.querySelector('input[type="password"]')).toBeNull();
   });
 
-  it("submitting the form stores the role and goes to that role's home", async () => {
+  it("a signed-up user signs in with the password and lands on that role's home", async () => {
+    await signUp({ username: "drrao", name: "Dr Rao", password: "correct horse 9", role: "regulator" });
     render(
       <MemoryRouter initialEntries={["/login/regulator"]}>
         <Routes>
@@ -118,10 +123,21 @@ describe("landing and sign-in", () => {
         </Routes>
       </MemoryRouter>
     );
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Dr Rao" } });
-    fireEvent.click(screen.getByRole("button", { name: /Continue as regulator/i }));
+    fireEvent.change(screen.getByLabelText("Username"), { target: { value: "drrao" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "correct horse 9" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
     await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/oversight"));
     expect(getSession()).toMatchObject({ role: "regulator", name: "Dr Rao" });
+  });
+
+  it("a wrong password is refused, says so, and does not sign in", async () => {
+    await signUp({ username: "asha", password: "correct horse 9", role: "bank" });
+    render(<MemoryRouter initialEntries={["/login/bank"]}><Routes><Route path="/login/:role" element={<RoleLogin />} /></Routes></MemoryRouter>);
+    fireEvent.change(screen.getByLabelText("Username"), { target: { value: "asha" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "wrong password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    expect((await screen.findByRole("alert")).textContent).toMatch(/not right/);
+    expect(getSession()).toBeNull();
   });
 
   it("an unknown role goes back to the chooser", () => {

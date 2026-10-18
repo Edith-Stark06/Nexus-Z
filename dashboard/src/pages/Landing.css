@@ -1,4 +1,5 @@
-.landing { min-height: 100vh; background: var(--bg); overflow-x: clip; }
+.landing { min-height: 100vh; position: relative; overflow-x: clip; }
+.landing > *:not(canvas) { position: relative; z-index: 1; }
 
 .l-nav {
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
@@ -22,16 +23,10 @@
 .l-cta { display: flex; flex-wrap: wrap; gap: 12px; }
 .l-fine { margin: 22px 0 0; font-size: 13px; color: var(--text-faint); }
 
-.l-hero { position: relative; isolation: isolate; }
-.l-hero::before {
-  content: ""; position: absolute; inset: -60px -40px; z-index: -1; pointer-events: none;
-  background: radial-gradient(440px circle at var(--mx, 72%) var(--my, 28%), rgba(36, 48, 217, 0.11), rgba(225, 29, 90, 0.05) 45%, transparent 70%);
-}
-.l-hero-art { perspective: 1000px; }
+.l-hero-art { }
 .hero-card {
-  background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: 28px;
+  background: rgba(255, 255, 255, 0.9); border: 1px solid var(--border-soft); border-radius: 28px; backdrop-filter: blur(6px);
   padding: 18px 18px 10px; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center;
-  will-change: transform; transform-style: preserve-3d;
 }
 .ring-art { width: 100%; height: auto; display: block; touch-action: pan-y; }
 .hero-node { cursor: pointer; outline: none; transition: opacity 0.18s ease; }
@@ -83,4 +78,11 @@
   .l-roles { grid-template-columns: 1fr; }
   .l-nav { padding: 16px; }
   .l-hero, .l-section, .l-foot { padding-left: 16px; padding-right: 16px; }
+}
+
+/* a soft wash behind the headline and paragraph, so the network never runs through the words */
+.l-hero-copy { position: relative; }
+.l-hero-copy::before {
+  content: ""; position: absolute; inset: -34px -48px -28px -60px; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(243, 244, 247, 0.94) 58%, rgba(243, 244, 247, 0) 100%);
 }

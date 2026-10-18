@@ -4,6 +4,7 @@ import { getAccount } from '../services/api'
 import { featureLabel, ROLE_COLORS, formatDateTime } from '../lib/constants'
 import Layout from './Layout'
 import './AccountDetail.css'
+import InfoTip from "../components/InfoTip";
 
 export default function AccountDetail() {
   const { accountId } = useParams()
@@ -58,7 +59,7 @@ useEffect(() => {
         </div>
 
         <div className="acct-neighborhood">
-          <h3>Neighborhood</h3>
+          <h3>Neighborhood <InfoTip k="neighborhood" /></h3>
           <div className="nb-grid">
             <div className="nb-cell"><b>{account.neighborhood?.in_degree ?? '—'}</b><span>in</span></div>
             <div className="nb-cell"><b>{account.neighborhood?.out_degree ?? '—'}</b><span>out</span></div>
@@ -67,7 +68,7 @@ useEffect(() => {
         </div>
 
         <div className="acct-reasons">
-          <h3>Why flagged</h3>
+          <h3>Why flagged <InfoTip k="whyFlagged" /></h3>
           <ul className="reason-list">
             {(account.reasons || []).map((r, i) => (
               <li key={i} className="reason-item">

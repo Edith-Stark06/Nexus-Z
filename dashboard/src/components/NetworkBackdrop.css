@@ -1,0 +1,3 @@
+.net-backdrop { pointer-events: none; display: block; }
+.net-fixed { position: fixed; inset: 0; z-index: 0; width: 100vw; height: 100vh; }
+.net-fill { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
