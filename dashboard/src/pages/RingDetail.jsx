@@ -9,6 +9,7 @@ import { CaseSummary, RoleLegend } from "../components/CaseSummary";
 import { ROLE_COLORS, formatUtc } from "../lib/constants";
 import Layout from "./Layout";
 import "./RingDetail.css";
+import InfoTip from "../components/InfoTip";
 
 export default function RingDetail() {
   const { ringId } = useParams();
@@ -64,7 +65,7 @@ export default function RingDetail() {
     <Layout usingMock={usingMock}>
       <div className="ring-detail">
         <div className="crumb">
-          <Link to="/">Rings</Link> / <span>{ring.ring_id}</span>
+          <Link to="/monitor">Rings</Link> / <span>{ring.ring_id}</span>
         </div>
 
         <div className="detail-head">
@@ -94,7 +95,7 @@ export default function RingDetail() {
 
         <div className="detail-grid">
           <div className="detail-col">
-            <h3>Flow graph</h3>
+            <h3>Flow graph <InfoTip k="flowGraph" /></h3>
             <D3Graph ringId={ring.ring_id} ring={ring} cutoff={cutoff} />
             <ReplaySlider
               edges={ring.edges || []}
@@ -106,18 +107,18 @@ export default function RingDetail() {
             <RoleLegend colors={ROLE_COLORS} />
           </div>
           <div className="detail-col">
-            <h3>Why flagged</h3>
+            <h3>Why flagged <InfoTip k="whyFlagged" /></h3>
             <SHAPPanel ringId={ring.ring_id} ring={ring} />
           </div>
         </div>
 
         <div className="detail-section">
-          <h3>Payments</h3>
-          <PaymentTable edges={ring.edges || []} />
+          <h3>Payments <InfoTip k="payments" /></h3>
+          <PaymentTable edges={ring.edges || []} roles={Object.fromEntries((ring.members || []).map((m) => [m.id, m.role]))} />
         </div>
 
         <div className="detail-foot">
-          <span className="badge">{victims.length} likely {victims.length === 1 ? "victim" : "victims"} in this ring (estimated)</span>
+          <span className="badge">{victims.length} likely-victim {victims.length === 1 ? "flag" : "flags"} in this ring (estimated)</span>
           <span className="footer-note">
             Roles are estimated by the model. A victim is a recent payer into the ring.
           </span>

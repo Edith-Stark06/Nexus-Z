@@ -17,17 +17,17 @@ export const FEATURE_LABELS = {
 // Colour for a ring or account role. Roles are *estimated* — the model guesses
 // the function each account plays inside the ring.
 export const ROLE_COLORS = {
-  victim: "#5b8ff9", // blue
-  collector: "#e0502e", // red
-  mule: "#e8a600", // amber
-  cashout: "#7b2fe8", // purple
+  victim: "#2430d9", // ultramarine
+  collector: "#e11d5a", // signal rose
+  mule: "#f08aac", // light rose
+  cashout: "#0c0f1d", // ink
   unknown: "#8a8f99",
 };
 
 export const SEVERITY_COLORS = {
-  high: "#e0502e",
-  medium: "#e8a600",
-  low: "#5b8ff9",
+  high: "#e11d5a",
+  medium: "#d98b00",
+  low: "#2430d9",
 };
 
 // Convert an ISO timestamp to a short, relative label like "2 hours ago".
