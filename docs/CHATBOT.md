@@ -67,6 +67,24 @@ If an IBM Cloud API key, a region URL and a watsonx.ai project id are all config
   `NEXUSZ_WATSONX_URL=https://eu-de.ml.cloud.ibm.com NEXUSZ_WATSONX_PROJECT_ID=<project id> bash infra/podman_api.sh stop && NEXUSZ_WATSONX_URL=... NEXUSZ_WATSONX_PROJECT_ID=... bash infra/podman_api.sh start`, then `bash infra/podman_api.sh check` (it prints "watsonx key secret: stored"; the chat status shows `"mode":"llm"` and the region URL). The region of the URL must be the one where the project lives. The key and the bearer token are never logged, returned or put in an environment variable.
 - **Not verified.** Everything above that talks to the paid or free watsonx.ai service is written from IBM's documentation and exercised only against a scripted fake (12 tests in `api/tests/test_watsonx.py`). We have **not** made one authenticated call: we do not know whether a free (Lite) plan includes this model, what its quota is, or whether the request fields are accepted exactly as written. If the first real call fails, the assistant says why in `note` and answers in `local` mode.
 
+## The hosted mode on NVIDIA NIM (free API key, open models; measured from the laptop)
+
+The same OpenAI-style code path also works against NVIDIA's hosted API (`https://integrate.api.nvidia.com/v1`) with a free key from build.nvidia.com. The key is stored exactly like the Hugging Face token (`bash infra/set_chat_token.sh` on the VM; the secret name is historical) and the provider is chosen with settings:
+
+```
+NEXUSZ_CHAT_BASE_URL=https://integrate.api.nvidia.com/v1 NEXUSZ_CHAT_REASONING_EFFORT= \
+NEXUSZ_CHAT_MODELS=nvidia/nemotron-3-super-120b-a12b,openai/gpt-oss-20b bash infra/podman_api.sh start
+```
+
+Measured on 2026-10-18 from the laptop, through our real chat service (tools and checks) on the stub data, with the key listing 81 models. Of nine candidates only two answered reliably. `ibm/granite-3.0-8b-instruct` is listed but returned HTTP 404 (no live endpoint for it), as did several others; `deepseek-ai/deepseek-v4.1-flash`, `z-ai/glm-5.3-flash`, `google/gemma-4-31b-it` and `nvidia/nemotron-3.5-lightning-30b-a3b` timed out at 60 s (the free tier queues).
+
+| Model | Speed on six questions | What we saw |
+|---|---|---|
+| `nvidia/nemotron-3-super-120b-a12b` (NVIDIA, open weights) | 6 to 37 s while the other candidates were being tested in parallel; 3.8 s for a one-word reply alone | accurate and careful: listed the right rings and figures, said the tools had no freshness data when the status tool had none, refused the joke and the prompt-leak request politely |
+| `openai/gpt-oss-20b` (open weights) | 1 to 5.5 s | fast and tool calling worked, but it wrote ring ids with a typographic hyphen (our id check did not see them until we normalised dashes; fixed, with a test) and it added an unsupported remark ("not the most up-to-date source") |
+
+**Not done:** a sequential run of the two (the second run was blocked), any run from the VM (we have not confirmed the VM can reach this host), and any run on real ring data. This is not an IBM or a Hugging Face model path, and the free tier has no stated guarantee, so the local Granite Embedding mode stays as the fallback.
+
 ## The hosted mode on Hugging Face (optional, needs credits)
 
 - `ibm-granite/granite-4.2-30b`: Apache 2.0, not gated, a reasoning model with tool calling, 131,072-token context ([model page](https://huggingface.co/ibm-granite/granite-4.2-30b)). Hugging Face lists one live provider for it, DeepInfra, at $0.16 per million input tokens and $0.65 per million output tokens (the provider's numbers, not ours).
