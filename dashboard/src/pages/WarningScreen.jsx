@@ -16,6 +16,7 @@ export default function WarningScreen() {
   const { accountId } = useParams();
   const [account, setAccount] = useState(null);
   const [usingMock, setUsingMock] = useState(true);
+  const [showBank, setShowBank] = useState(false);
 
   useEffect(() => {
     let stopped = false;
@@ -48,13 +49,16 @@ export default function WarningScreen() {
             <span className="wm-label">Message shown to the customer</span>
             <p>{UNKNOWN_MESSAGE}</p>
           </div>
+          {showBank && (
+            <p className="warning-sub">Contact your bank using the number on the back of your card.</p>
+          )}
           <div className="warning-actions">
             <Link to="/" className="ghost">
               Cancel payment
             </Link>
-            <a href="tel:0" className="ghost">
+            <button type="button" className="ghost" onClick={() => setShowBank(true)}>
               Talk to my bank
-            </a>
+            </button>
             <Link to="/" className="primary">
               I understand the risk, continue
             </Link>
@@ -77,8 +81,10 @@ export default function WarningScreen() {
     unknown: "an account under review",
   }[role] || "an account under review";
 
+  // The word has to match the number: 20% is not "high risk".
+  const riskWord = riskPct >= 80 ? "high risk" : riskPct >= 50 ? "elevated risk" : "some risk";
   const message =
-    `Payment to this account is high risk (${riskPct}%). ` +
+    `Payment to this account is ${riskWord} (${riskPct}%). ` +
     `It is linked to ${ringId || "a flagged ring"}, ${roleCopy}. ` +
     `If you have not already done so, verify the recipient before sending.`;
 
@@ -105,7 +111,7 @@ export default function WarningScreen() {
           </div>
           <h2>Check before you send</h2>
           <p className="warning-sub">
-            This account is flagged as part of a fraud ring.
+            This account is flagged as part of a ring under review.
           </p>
 
           <div className="warning-meta">
@@ -134,13 +140,16 @@ export default function WarningScreen() {
             <p>{message}</p>
           </div>
 
+          {showBank && (
+            <p className="warning-sub">Contact your bank using the number on the back of your card.</p>
+          )}
           <div className="warning-actions">
             <Link to="/" className="ghost">
               Cancel payment
             </Link>
-            <a href="tel:0" className="ghost">
+            <button type="button" className="ghost" onClick={() => setShowBank(true)}>
               Talk to my bank
-            </a>
+            </button>
             <Link to={`/account/${account.account_id}`} className="primary">
               I understand the risk, continue
             </Link>

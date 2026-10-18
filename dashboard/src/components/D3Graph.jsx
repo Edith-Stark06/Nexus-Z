@@ -29,6 +29,21 @@ function draw(svgEl, ring, cutoff) {
   const height = 340;
   const svg = d3.select(svgEl).attr("width", width).attr("height", height);
 
+  // An arrowhead on every payment shows which way the money moved.
+  svg
+    .append("defs")
+    .append("marker")
+    .attr("id", "payment-arrow")
+    .attr("viewBox", "0 -4 8 8")
+    .attr("refX", 16)
+    .attr("refY", 0)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-4L8,0L0,4")
+    .attr("fill", "#6e7681");
+
   const g = svg.append("g");
 
   const visibleEdges = edgesUpTo(ring.edges || [], cutoff);
@@ -61,7 +76,8 @@ function draw(svgEl, ring, cutoff) {
     .selectAll("line")
     .data(links)
     .join("line")
-    .attr("stroke-width", (d) => Math.max(1, Math.cbrt((d.amount || 0) / 500)));
+    .attr("stroke-width", (d) => Math.max(1, Math.cbrt((d.amount || 0) / 500)))
+    .attr("marker-end", "url(#payment-arrow)");
 
   const node = g
     .append("g")
@@ -79,6 +95,18 @@ function draw(svgEl, ring, cutoff) {
         .on("drag", dragged)
         .on("end", dragEnded)
     );
+
+  // The last characters of the account id, so a node can be matched with the payments table.
+  const label = g
+    .append("g")
+    .selectAll("text")
+    .data(nodes)
+    .join("text")
+    .attr("font-size", 9)
+    .attr("fill", "#8b949e")
+    .attr("text-anchor", "middle")
+    .attr("pointer-events", "none")
+    .text((d) => String(d.id).slice(-4));
 
   const tooltip = g
     .append("text")
@@ -113,6 +141,7 @@ function draw(svgEl, ring, cutoff) {
       .attr("x2", (d) => d.target.x)
       .attr("y2", (d) => d.target.y);
     node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+    label.attr("x", (d) => d.x).attr("y", (d) => d.y + 5 + (d.score ?? 0.5) * 9 + 10);
   });
 
   function dragStarted(event, d) {
