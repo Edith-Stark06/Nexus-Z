@@ -6,7 +6,7 @@ React 18 + Vite + react-router + d3. It reads the NEXUS Z API and helps an analy
 cd dashboard
 npm ci
 npm run dev          # http://localhost:3000, expects the API at http://localhost:8000 (set VITE_API_URL to change it)
-npm test             # vitest, 160 tests
+npm test             # vitest, 161 tests
 npm run build        # production build into dist/
 ```
 
@@ -90,6 +90,6 @@ A **404 on a ring** is treated as information, not an error: ring ids are derive
 
 ## Tests
 
-`npm test` runs 160 tests: the provenance rules (a bare HTTP 200 is not "model active"; the data time is never the browser clock; stub, degraded, stale, unreachable and demo are told apart), score and amount formatting, the label planner (collisions, zoom, forced labels, determinism), the shell and status control, the alerts filters and sorts (numeric severity rank, search across ids and message), the accounts page, the homepage (including that an unreachable API draws nothing and offers a retry), the graph maths, the data provider's connection modes, the explorer's wiring, the payment form, and the older suites (warning screen, payment table, replay, assistant, fallback).
+`npm test` runs 161 tests: the provenance rules (a bare HTTP 200 is not "model active"; the data time is never the browser clock; stub, degraded, stale, unreachable and demo are told apart), score and amount formatting, the label planner (collisions, zoom, forced labels, determinism), the shell and status control, the alerts filters and sorts (numeric severity rank, search across ids and message), the accounts page, the homepage (including that an unreachable API draws nothing and offers a retry), the graph maths, the data provider's connection modes, the explorer's wiring, the payment form, and the older suites (warning screen, payment table, replay, assistant, fallback).
 
 jsdom has no layout engine, so the d3 canvas is replaced by a stand-in in the component tests. The real canvas was exercised separately in Chrome against the real model API: label collisions measured at the overview, zoomed and focused views of a 21-account ring; selection, Focus neighbours, layouts, role hiding, replay, list filters, account lookup, a retired ring id (no retry loop across two poll cycles), an API outage followed by Retry, the opt-in demo sample, and the phone layout with no horizontal page scroll. That browser script is not part of the repository.

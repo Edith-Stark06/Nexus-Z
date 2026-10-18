@@ -5,7 +5,8 @@ import Layout from "./Layout";
 import ReasonList from "../components/ReasonList";
 import RoleGlyph from "../components/RoleGlyph";
 import { useAccountRecord } from "../state/hooks";
-import { ROLE_LABELS, riskTone } from "../lib/constants";
+import { ROLE_LABELS } from "../lib/constants";
+import { accountScore } from "../lib/scores";
 import "./WarningScreen.css";
 
 // Friendly, jargon-free copy for an account we have no data on.
@@ -87,13 +88,14 @@ export default function WarningScreen() {
 
   const role = account.role || "unknown";
   const ringId = account.ring_id;
-  const riskPct = Math.round((account.risk ?? 0) * 100);
-  const tone = riskTone(riskPct);
+  // the account score stays on its own 0 to 1 scale: printing it as a percentage would read as a probability, and the ring's
+  // severity cut-offs (50 and 25) do not apply to it
+  const score = accountScore(account.risk);
   const message = ringId
-    ? `This payment would go to an account that is flagged for review (risk signal ${riskPct}%). ` +
+    ? `This payment would go to an account that is flagged for review (account score ${score} on a 0 to 1 scale). ` +
       `It is linked to ${ringId}, ${ROLE_COPY[role] || ROLE_COPY.unknown}. ` +
       `This is not proof of wrongdoing, but please verify the recipient before sending.`
-    : `This account is not currently linked to a flagged ring (risk signal ${riskPct}%). That does not guarantee it is safe: verify the recipient before sending.`;
+    : `This account is not currently linked to a flagged ring (account score ${score} on a 0 to 1 scale). That does not guarantee it is safe: verify the recipient before sending.`;
 
   return (
     <Layout title="Payment pre-check" subtitle="Customer screen prototype">
@@ -101,7 +103,7 @@ export default function WarningScreen() {
         <Prototype />
         <div className="ws-cols">
           <div className="ws-card">
-            <ShieldAlert size={28} className="ws-icon" style={{ color: tone === "high" ? "var(--danger)" : "var(--warn)" }} aria-hidden="true" />
+            <ShieldAlert size={28} className="ws-icon" style={{ color: ringId ? "var(--warn-mark)" : "var(--text-2)" }} aria-hidden="true" />
             <h2>Check before you send</h2>
             <p className="ws-sub">{ringId ? "This account is flagged as part of a ring under review." : "This account is not in a flagged ring right now."}</p>
 
@@ -109,7 +111,7 @@ export default function WarningScreen() {
               <div><dt>Account</dt><dd className="mono">{account.account_id}</dd></div>
               <div><dt>Estimated role</dt><dd><RoleGlyph role={role} label /></dd></div>
               {ringId && <div><dt>Ring</dt><dd className="mono">{ringId}</dd></div>}
-              <div><dt>Risk signal</dt><dd className="num">{riskPct}%</dd></div>
+              <div><dt>Account score</dt><dd className="num">{score} <span className="faint">/ 1</span></dd></div>
             </dl>
 
             <div className="ws-message">
@@ -129,7 +131,7 @@ export default function WarningScreen() {
             <p className="faint ws-n">Real response of <span className="mono">GET /accounts/{account.account_id}</span>. The wording is a fixed template; no model writes it.</p>
             <div className="ws-n-block"><div className="eyebrow">Why the account scores this way</div><ReasonList reasons={account.reasons} limit={3} /></div>
             <ul className="ws-points faint">
-              <li>The risk signal is automated and has not been evaluated as a payment-blocking rule.</li>
+              <li>The account score (0–1) is automated, is not a probability of fraud, and has not been evaluated as a payment-blocking rule.</li>
               <li>The role ({ROLE_LABELS[role]}) is guessed from the ring's payments.</li>
               <li>An unknown account is shown as "cannot confirm it is safe", never as safe.</li>
             </ul>
