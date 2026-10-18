@@ -1,0 +1,156 @@
+{
+ "seed": 8,
+ "history": "full",
+ "inject_options": {
+  "hard_kinds": [
+   "landlord"
+  ]
+ },
+ "variant": "HI-Small",
+ "bundle": "ml\\artifacts\\HI-Small-pig",
+ "threshold": 0.6091967225074768,
+ "rings_injected": 90,
+ "hubs_injected": 90,
+ "windows": {
+  "24": {
+   "candidates": 148116,
+   "injected_fraud_active": 74,
+   "pr_auc_injected": 0.9928736245482606,
+   "chance": 0.0005020318722396727,
+   "precision": 0.592,
+   "recall": 1.0,
+   "f1": 0.743718592964824,
+   "flagged": 125,
+   "positives": 74,
+   "pr_auc_all_labels": 0.5739102001930783,
+   "rings": {
+    "detected": 68,
+    "true_rings_ours": 9,
+    "recovered_ours": 6,
+    "recovery_ours": 0.6666666666666666,
+    "mean_cover_ours": 0.7676434676434676,
+    "in_scope_pig_eval": 9,
+    "recovered_pig_eval": 9,
+    "pure_rings": 0.8823529411764706,
+    "rings_with_injected_account": 9,
+    "top10_with_injected": 6,
+    "by_shape_ours": {
+     "aged": "1/1",
+     "delayed": "0/1",
+     "dispersed": "0/1",
+     "fan-in": "1/1",
+     "mixed": "0/1",
+     "split": "4/4"
+    },
+    "by_shape_pig_eval": {
+     "aged": "1/1",
+     "delayed": "1/1",
+     "dispersed": "1/1",
+     "fan-in": "1/1",
+     "mixed": "1/1",
+     "split": "4/4"
+    }
+   },
+   "hub_rings": 0.0,
+   "hubs": {
+    "all_any_in_ring (pig_eval's count)": 0,
+    "hub_in_ring": 0,
+    "settlement_only_in_ring": 0,
+    "active": 3,
+    "hub_flagged": 0,
+    "by_type": {
+     "landlord": {
+      "hubs": 90,
+      "active": 3,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     }
+    },
+    "by_adversarial": {
+     "False": {
+      "active": 3,
+      "flagged": 0,
+      "hub_in_ring": 0
+     },
+     "True": {
+      "active": 0,
+      "flagged": 0,
+      "hub_in_ring": 0
+     }
+    }
+   }
+  },
+  "48": {
+   "candidates": 354717,
+   "injected_fraud_active": 154,
+   "pr_auc_injected": 0.9608766742645997,
+   "chance": 0.00043586550435865506,
+   "precision": 0.6297872340425532,
+   "recall": 0.961038961038961,
+   "f1": 0.7609254498714653,
+   "flagged": 235,
+   "positives": 154,
+   "pr_auc_all_labels": 0.5402804930378787,
+   "rings": {
+    "detected": 149,
+    "true_rings_ours": 21,
+    "recovered_ours": 14,
+    "recovery_ours": 0.6666666666666666,
+    "mean_cover_ours": 0.6837490551776266,
+    "in_scope_pig_eval": 21,
+    "recovered_pig_eval": 18,
+    "pure_rings": 0.7248322147651006,
+    "rings_with_injected_account": 18,
+    "top10_with_injected": 8,
+    "by_shape_ours": {
+     "aged": "2/4",
+     "chain": "1/1",
+     "delayed": "2/5",
+     "dispersed": "3/3",
+     "fan-in": "1/1",
+     "mixed": "1/3",
+     "split": "4/4"
+    },
+    "by_shape_pig_eval": {
+     "aged": "4/4",
+     "chain": "1/1",
+     "delayed": "2/5",
+     "dispersed": "3/3",
+     "fan-in": "1/1",
+     "mixed": "3/3",
+     "split": "4/4"
+    }
+   },
+   "hub_rings": 2.0,
+   "hubs": {
+    "all_any_in_ring (pig_eval's count)": 3,
+    "hub_in_ring": 3,
+    "settlement_only_in_ring": 0,
+    "active": 15,
+    "hub_flagged": 5,
+    "by_type": {
+     "landlord": {
+      "hubs": 90,
+      "active": 15,
+      "flagged": 5,
+      "hub_in_ring": 3,
+      "any_in_ring": 3
+     }
+    },
+    "by_adversarial": {
+     "False": {
+      "active": 9,
+      "flagged": 3,
+      "hub_in_ring": 1
+     },
+     "True": {
+      "active": 6,
+      "flagged": 2,
+      "hub_in_ring": 2
+     }
+    }
+   }
+  }
+ }
+}
