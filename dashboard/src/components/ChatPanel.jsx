@@ -19,7 +19,9 @@ export function withLinks(text) {
 export function providerName(url) {
   try {
     const host = new URL(url).hostname;
-    return host.endsWith("huggingface.co") ? "Hugging Face" : host;
+    if (host.endsWith("huggingface.co")) return "Hugging Face";
+    if (host.endsWith(".cloud.ibm.com")) return "IBM watsonx.ai";
+    return host;
   } catch {
     return "an external provider";
   }
