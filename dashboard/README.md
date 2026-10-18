@@ -6,7 +6,7 @@ React 18 + Vite + react-router + d3. It reads the NEXUS Z API and helps an analy
 cd dashboard
 npm ci
 npm run dev          # http://localhost:3000, expects the API at http://localhost:8000 (set VITE_API_URL to change it)
-npm test             # vitest, 90 tests
+npm test             # vitest, 118 tests
 npm run build        # production build into dist/
 ```
 
@@ -16,13 +16,26 @@ No external fonts or scripts are loaded, so it runs on a machine with no interne
 
 | Route | What it is |
 |---|---|
-| `/` Overview | Highest-risk rings, likely victims flagged, and the pipeline's freshness (from `/health`). Every figure is derived from what the API returned |
+| `/` Homepage | The front door: headline, a live transaction network of the top flagged rings (or a clearly labelled illustrative one), an interactive "a transaction is a point, the network is the evidence" comparison, the five workflow stages with what each does *not* do, a working preview of the ring explorer, and the LinuxONE target architecture with only documented facts |
+| `/overview` Overview | Highest-risk rings, likely victims flagged, and the pipeline's freshness (from `/health`). Every figure is derived from what the API returned |
 | `/rings`, `/ring/:id` | **Ring explorer.** Ring list (search, risk and size filters, sort) on the left, the interactive payment graph in the middle, the inspector (ring, account or payment) on the right |
 | `/account/:id` | One account: its score and reasons, its direct connections inside its ring, its payments, related alerts |
 | `/alerts` | Sortable, filterable table; every row links to the ring, the account and the payment pre-check. Filters live in the address bar |
 | `/warning/:id` | A **prototype** of the customer "check before you send" screen, built on the real `GET /accounts/{id}`. Not connected to any payment flow; nothing is sent to anyone |
 | `/assistant` | The existing grounded chat (unchanged logic) |
 | `/platform` | What `/health` reports, the connection state, and a validated form for `POST /transactions` |
+
+### The homepage
+
+`src/pages/Home.jsx` and `src/components/home/`. Its data comes from `useHomeSource`, which decides what the page may call real:
+
+| Source | When | Label on screen |
+|---|---|---|
+| live | the API answered and returned rings from its model backend | "Live results · model backend" |
+| stub | the API's stub backend is serving invented data | "Stub backend sample" |
+| illustrative | the API is unreachable, returned no rings, or the demo sample is selected | "Illustrative transaction network", plus a note that it is invented and not system data |
+
+The hero draws the top three flagged rings as outlined clusters in one graph and starts on the highest-scored collector of the top ring. Hover previews an account's connections; click an account, an arrow or a cluster outline to inspect it (a cluster click zooms to it); search, zoom, fit, reset and a legend that hides roles all work, and every node is keyboard-focusable. The comparison section and the architecture schematic use invented or documented content only, labelled as such; the comparison switches to a tall composition on phones so its labels stay readable. If a ring id disappears between the list and its detail (404), the page says the ring changed during a refresh and refreshes the list; it never shows invented detail.
 
 ### The graph
 
@@ -53,6 +66,6 @@ A **404 on a ring** is treated as information, not an error: ring ids come from 
 
 ## Tests
 
-`npm test` runs: the graph maths (aggregation, neighbourhood, layouts, fitting, link geometry), list filters and sorting, UTC time and risk tone, the data provider's connection modes (including that a failed request never becomes sample data, and that a 404 is told apart from a network failure), the explorer's wiring (select, account lookup, filters, a retired ring id, narrow tabs), the payment form's validation and submit behaviour, and the older suites (warning screen, payment table, replay, assistant, fallback).
+`npm test` runs: the cluster geometry and merging helpers, the homepage (hero, which data it may call real, comparison, workflow honesty, preview with a changed ring, architecture claims, links and sections), the graph maths (aggregation, neighbourhood, layouts, fitting, link geometry), list filters and sorting, UTC time and risk tone, the data provider's connection modes (including that a failed request never becomes sample data, and that a 404 is told apart from a network failure), the explorer's wiring (select, account lookup, filters, a retired ring id, narrow tabs), the payment form's validation and submit behaviour, and the older suites (warning screen, payment table, replay, assistant, fallback).
 
 jsdom has no layout engine, so the d3 canvas itself is replaced by a stand-in in those tests. It was exercised separately in Chrome against the real model API (select, drag, zoom, pan, fit, layouts, role hiding, find, replay, filters, an unknown ring id, streaming payments with the simulator, the payment form). That browser script is not part of the repository.

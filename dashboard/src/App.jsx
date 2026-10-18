@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import Home from "./pages/Home";
 import Overview from "./pages/Overview";
 import Explorer from "./pages/Explorer";
 import Alerts from "./pages/Alerts";
@@ -11,7 +12,8 @@ import Platform from "./pages/Platform";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Overview />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/overview" element={<Overview />} />
       <Route path="/rings" element={<Explorer />} />
       <Route path="/ring/:ringId" element={<Explorer />} />
       <Route path="/account/:accountId" element={<AccountDetail />} />

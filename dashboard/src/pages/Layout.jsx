@@ -5,7 +5,7 @@ import { formatUtc } from "../lib/constants";
 import "./Layout.css";
 
 const NAV = [
-  { to: "/", label: "Overview", Icon: Gauge, match: (p) => p === "/" },
+  { to: "/overview", label: "Overview", Icon: Gauge, match: (p) => p.startsWith("/overview") },
   { to: "/rings", label: "Ring explorer", Icon: Network, match: (p) => p.startsWith("/rings") || p.startsWith("/ring/") || p.startsWith("/account/") },
   { to: "/alerts", label: "Alerts", Icon: ShieldAlert, match: (p) => p.startsWith("/alerts") || p.startsWith("/warning/") },
   { to: "/assistant", label: "Assistant", Icon: MessageSquareText, match: (p) => p.startsWith("/assistant") },
@@ -13,9 +13,9 @@ const NAV = [
 ];
 
 // Three accounts joined by payments, drawn as the letter Z.
-function Mark() {
+export function Mark({ size = 28 }) {
   return (
-    <svg viewBox="0 0 28 28" width="28" height="28" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 28 28" width={size} height={size} aria-hidden="true" focusable="false">
       <path d="M6 7h16L6 21h16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       <circle cx="6" cy="7" r="2.6" fill="var(--bg)" stroke="currentColor" strokeWidth="1.6" />
       <circle cx="22" cy="7" r="2.6" fill="currentColor" />
@@ -151,7 +151,7 @@ export default function Layout({ title, subtitle, actions, flush = false, childr
   return (
     <div className="shell">
       <nav className="rail" aria-label="Main">
-        <Link to="/" className="rail-brand" aria-label="NEXUS Z home">
+        <Link to="/" className="rail-brand" aria-label="NEXUS Z home page">
           <Mark />
         </Link>
         {NAV.map(({ to, label, Icon, match }) => (

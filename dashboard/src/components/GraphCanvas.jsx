@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
-import { buildGraph, neighborhood, flowLayout, seedPositions, fitTransform, linkPath, nodeRadius, linkId, DEFAULT_SIZE } from "../lib/graph";
-import { ROLE_COLORS, ROLE_LABELS } from "../lib/constants";
+import { buildGraph, neighborhood, flowLayout, seedPositions, fitTransform, linkPath, nodeRadius, linkId, clusterAnchors, hullGeometry, clusterFocus, DEFAULT_SIZE } from "../lib/graph";
+import { ROLE_COLORS, ROLE_LABELS, riskTone } from "../lib/constants";
 import "./GraphCanvas.css";
 
 const FLOW_BOX = { width: 900, height: 600 };
@@ -22,17 +22,21 @@ function usePrefersReducedMotion() {
 
 // Force layout computed up front (no animation): the same ring always settles into the same picture, and nothing keeps
 // moving while the analyst reads. `prev` keeps nodes where they were when only the node set changes slightly.
-function computeForce(nodes, links, prev) {
+function computeForce(nodes, links, prev, anchors = null) {
   const seeds = seedPositions(nodes);
-  const simNodes = nodes.map((n) => ({ id: n.id, r: nodeRadius(n.score), ...(prev.get(n.id) || seeds.get(n.id)) }));
+  const at = (n) => (anchors && anchors.get(n.cluster)) || { x: 0, y: 0 };
+  const simNodes = nodes.map((n) => {
+    const s = prev.get(n.id) || seeds.get(n.id);
+    return { id: n.id, cluster: n.cluster, r: nodeRadius(n.score), x: s.x + at(n).x, y: s.y + at(n).y };
+  });
   const simLinks = links.map((l) => ({ source: l.source, target: l.target }));
   const sim = d3
     .forceSimulation(simNodes)
     .force("link", d3.forceLink(simLinks).id((d) => d.id).distance(74).strength(0.45))
     .force("charge", d3.forceManyBody().strength(-280))
     .force("collide", d3.forceCollide((d) => d.r + 12))
-    .force("x", d3.forceX(0).strength(0.05))
-    .force("y", d3.forceY(0).strength(0.05))
+    .force("x", d3.forceX((d) => at(d).x).strength(anchors ? 0.16 : 0.05))
+    .force("y", d3.forceY((d) => at(d).y).strength(anchors ? 0.16 : 0.05))
     .stop();
   const steps = Math.ceil(Math.log(sim.alphaMin()) / Math.log(1 - sim.alphaDecay()));
   for (let i = 0; i < steps; i++) sim.tick();
@@ -75,6 +79,12 @@ const GraphCanvas = forwardRef(function GraphCanvas(
     onSelectNode,
     onSelectLink,
     onClear,
+    clusters = NO_CLUSTERS, // [{ id, label, risk }]: groups of accounts drawn as outlined regions
+    selectedClusterId = null,
+    onSelectCluster,
+    hoverHighlight = false, // highlight an account's connections while the pointer or keyboard focus is on it
+    fitMaxZoom = 1.7, // how far the automatic framing may enlarge a small graph
+    softDim = false, // keep what is not selected clearly visible (the homepage), instead of fading it right back
     ariaLabel = "Transaction graph",
   },
   ref
@@ -91,6 +101,7 @@ const GraphCanvas = forwardRef(function GraphCanvas(
   const [version, setVersion] = useState(0); // any position change: redraw
   const [fitToken, setFitToken] = useState(0); // a new layout: frame it (not on drags)
   const [hover, setHover] = useState(null);
+  const [focusId, setFocusId] = useState(null);
   const reduced = usePrefersReducedMotion();
   const hidden = hiddenRoles || EMPTY;
 
@@ -100,6 +111,7 @@ const GraphCanvas = forwardRef(function GraphCanvas(
   const graph = useMemo(() => buildGraph(ring, { cutoff, hiddenRoles: hidden }), [ring, cutoff, hidden]);
   const nodeKey = full.nodes.map((n) => n.id).join("|");
   const linkKey = full.links.map((l) => l.id).join("|");
+  const clusterKey = clusters.map((c) => c.id).join("|");
 
   // measure the container
   useLayoutEffect(() => {
@@ -131,7 +143,7 @@ const GraphCanvas = forwardRef(function GraphCanvas(
 
   const fit = (animate = true) => {
     const pts = graph.nodes.map((n) => pos.current.get(n.id)).filter(Boolean);
-    applyTransform(fitTransform(pts, sizeRef.current, { pad: 48, padRight: labels === "none" ? 48 : 120 }), animate);
+    applyTransform(fitTransform(pts, sizeRef.current, { pad: 40, padRight: labels === "none" ? 40 : 90, padTop: clusters.length ? 64 : 40, maxK: fitMaxZoom }), animate);
   };
 
   // zoom and pan
@@ -151,11 +163,11 @@ const GraphCanvas = forwardRef(function GraphCanvas(
 
   // layout, then frame the picture
   useLayoutEffect(() => {
-    pos.current = !full.nodes.length ? new Map() : layout === "flow" ? flowLayout(full.nodes, FLOW_BOX) : computeForce(full.nodes, full.links, new Map());
+    pos.current = !full.nodes.length ? new Map() : layout === "flow" ? flowLayout(full.nodes, FLOW_BOX) : computeForce(full.nodes, full.links, new Map(), clusters.length ? clusterAnchors(clusters.map((c) => c.id), anchorRadius(full.nodes, clusters)) : null);
     setVersion((v) => v + 1);
     setFitToken((t) => t + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ring?.ring_id, layout, nodeKey, linkKey]);
+  }, [ring?.ring_id, layout, nodeKey, linkKey, clusterKey]);
 
   useLayoutEffect(() => {
     if (fitToken && (measured || typeof ResizeObserver === "undefined")) fit(false);
@@ -164,6 +176,11 @@ const GraphCanvas = forwardRef(function GraphCanvas(
 
   useImperativeHandle(ref, () => ({
     fit: () => fit(true),
+    // frame just some of the accounts (for example one cluster), leaving room for their labels
+    fitNodes: (ids) => {
+      const pts = ids.map((id) => pos.current.get(id)).filter(Boolean);
+      if (pts.length) applyTransform(fitTransform(pts, sizeRef.current, { pad: 60, padRight: 110, padTop: 80, maxK: 3 }));
+    },
     zoomIn: () => d3.select(svgRef.current).transition().duration(reduced ? 0 : 160).call(zoomRef.current.scaleBy, 1.4),
     zoomOut: () => d3.select(svgRef.current).transition().duration(reduced ? 0 : 160).call(zoomRef.current.scaleBy, 1 / 1.4),
     locate: (id) => {
@@ -177,17 +194,28 @@ const GraphCanvas = forwardRef(function GraphCanvas(
 
   // selection: dim everything outside the selected node's connections, or outside the selected arrow
   const focus = useMemo(() => {
+    // the account under the pointer (or keyboard focus) previews its connections, even over a selection; leaving restores the selection
+    const over = hoverHighlight ? hover?.n?.id || focusId : null;
+    if (over && graph.nodes.some((n) => n.id === over)) return neighborhood(graph, over);
     if (selectedLinkId) {
       const l = graph.links.find((x) => x.id === selectedLinkId);
       if (l) return { nodeIds: new Set([l.source, l.target]), linkIds: new Set([l.id]) };
     }
     if (selectedNodeId && graph.nodes.some((n) => n.id === selectedNodeId)) return neighborhood(graph, selectedNodeId);
+    if (selectedClusterId && graph.nodes.some((n) => n.cluster === selectedClusterId)) return clusterFocus(graph, selectedClusterId);
     return null;
-  }, [graph, selectedNodeId, selectedLinkId]);
+  }, [graph, selectedNodeId, selectedLinkId, selectedClusterId, hoverHighlight, hover, focusId]);
 
   const topScored = useMemo(() => new Set([...graph.nodes].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 3).map((n) => n.id)), [graph]);
+  // with a busy neighbourhood only the best-scored neighbours are named, so labels do not pile on top of each other
+  const focusNamed = useMemo(() => {
+    if (!focus) return null;
+    const ranked = graph.nodes.filter((n) => focus.nodeIds.has(n.id)).sort((x, y) => (y.score ?? 0) - (x.score ?? 0) || (x.id < y.id ? -1 : 1));
+    return new Set(ranked.slice(0, 4).map((n) => n.id));
+  }, [focus, graph]);
   const labelled = (n) =>
-    labels === "all" || (labels !== "none" && (focus?.nodeIds.has(n.id) || graph.nodes.length <= 12 || tf.k >= 1.5 || topScored.has(n.id) || n.id === selectedNodeId));
+    labels === "all" ||
+    (labels !== "none" && (focusNamed?.has(n.id) || n.id === selectedNodeId || graph.nodes.length <= 12 || tf.k >= 1.5 || topScored.has(n.id)));
 
   const linkSet = useMemo(() => new Set(graph.links.map((l) => l.id)), [graph]);
   const radius = (n) => nodeRadius(n.score);
@@ -231,7 +259,7 @@ const GraphCanvas = forwardRef(function GraphCanvas(
   void version;
 
   return (
-    <div className="gc" ref={wrapRef}>
+    <div className={`gc${softDim ? " gc-soft" : ""}`} ref={wrapRef}>
       <svg
         ref={svgRef}
         className="gc-svg"
@@ -251,6 +279,34 @@ const GraphCanvas = forwardRef(function GraphCanvas(
         </defs>
         <rect data-bg="1" width="100%" height="100%" fill="transparent" />
         <g transform={`translate(${tf.x},${tf.y}) scale(${tf.k})`}>
+          <g className="gc-hulls">
+            {clusters.map((c) => {
+              const members = graph.nodes.filter((n) => n.cluster === c.id);
+              const items = members.map((n) => ({ ...pos.current.get(n.id), r: radius(n) })).filter((p) => p.x != null);
+              const hull = hullGeometry(items);
+              if (!hull) return null;
+              const tone = riskTone(c.risk);
+              const active = selectedClusterId === c.id;
+              const dim = focus && !members.some((n) => focus.nodeIds.has(n.id));
+              const select = () => onSelectCluster?.(c.id);
+              return (
+                <g key={c.id} className={`gc-hull tone-${tone}${active ? " sel" : ""}${dim ? " dim" : ""}`}>
+                  <path d={hull.d} className="gc-hullpath" onClick={(e) => { e.stopPropagation(); select(); }} />
+                  <g
+                    className="gc-cluster-label"
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={active}
+                    aria-label={`Cluster ${c.label}, ${members.length} accounts`}
+                    onClick={(e) => { e.stopPropagation(); select(); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(); } }}
+                  >
+                    <text x={hull.label.x} y={hull.label.y} textAnchor="middle" style={{ fontSize: 10.5 / tf.k, strokeWidth: 3.5 / tf.k }}>{c.label}</text>
+                  </g>
+                </g>
+              );
+            })}
+          </g>
           <g className="gc-links">
             {graph.links.map((l) => {
               const a = pos.current.get(l.source), b = pos.current.get(l.target);
@@ -298,7 +354,8 @@ const GraphCanvas = forwardRef(function GraphCanvas(
                   onPointerMove={(e) => { onNodeMove(e); if (!drag.current) tip(e, n); }}
                   onPointerUp={(e) => onNodeUp(e, n)}
                   onPointerLeave={() => setHover(null)}
-                  onFocus={() => setHover(null)}
+                  onFocus={() => { setHover(null); setFocusId(n.id); }}
+                  onBlur={() => setFocusId(null)}
                   onKeyDown={(e) => onNodeKey(e, n)}
                 >
                   <circle r={r + 6} className="gc-hitarea" />
@@ -328,6 +385,7 @@ const GraphCanvas = forwardRef(function GraphCanvas(
         <div className="gc-tip" style={{ left: hover.x, top: hover.y }}>
           <div className="mono gc-tip-id">{hover.n.id}</div>
           <div>Estimated role: {ROLE_LABELS[hover.n.role] || hover.n.role}</div>
+          {hover.n.cluster && <div className="mono">{hover.n.cluster}</div>}
           {hover.n.score != null && <div>Model score {hover.n.score.toFixed(2)}</div>}
           <div className="faint">
             {hover.n.paymentsIn} in · {hover.n.paymentsOut} out in view
@@ -338,5 +396,14 @@ const GraphCanvas = forwardRef(function GraphCanvas(
   );
 });
 
+// how far apart the cluster anchors sit: enough for the largest cluster, no more
+function anchorRadius(nodes, clusters) {
+  const size = {};
+  for (const n of nodes) if (n.cluster) size[n.cluster] = (size[n.cluster] || 0) + 1;
+  const biggest = Math.max(1, ...clusters.map((c) => size[c.id] || 0));
+  return Math.max(100, Math.min(260, 55 + 24 * Math.sqrt(biggest)));
+}
+
 const EMPTY = new Set();
+const NO_CLUSTERS = [];
 export default GraphCanvas;
