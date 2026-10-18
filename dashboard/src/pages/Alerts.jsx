@@ -69,10 +69,10 @@ export default function Alerts() {
         <section className="panel">
           <div className="panel-head">
             <h2>Victim warnings</h2>
-            <span className="badge">{victims.length} sent</span>
+            <span className="badge">{victims.length} flagged</span>
           </div>
           {victims.length === 0 ? (
-            <div className="empty">No victim warnings sent yet.</div>
+            <div className="empty">No likely victims flagged yet.</div>
           ) : (
             <table className="alert-table">
               <thead>
@@ -104,7 +104,7 @@ export default function Alerts() {
                     </td>
                     <td>{a.message}</td>
                     <td>
-                      <Link to={`/warning/${a.account_id}`}>Preview</Link>
+                      <Link to={`/warning/${a.recipient_id || a.account_id}`}>Preview</Link>
                     </td>
                   </tr>
                 ))}

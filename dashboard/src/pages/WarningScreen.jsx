@@ -52,7 +52,7 @@ export default function WarningScreen() {
             <Link to="/" className="ghost">
               Cancel payment
             </Link>
-            <a href="tel:0" className="ghost">
+            <a href="#" className="ghost" onClick={(e) => { e.preventDefault(); alert("Contact your bank using the number on your card"); }}>
               Talk to my bank
             </a>
             <Link to="/" className="primary">
@@ -105,7 +105,7 @@ export default function WarningScreen() {
           </div>
           <h2>Check before you send</h2>
           <p className="warning-sub">
-            This account is flagged as part of a fraud ring.
+            This account is flagged as part of a flagged ring under review.
           </p>
 
           <div className="warning-meta">
@@ -138,7 +138,7 @@ export default function WarningScreen() {
             <Link to="/" className="ghost">
               Cancel payment
             </Link>
-            <a href="tel:0" className="ghost">
+            <a href="#" className="ghost" onClick={(e) => { e.preventDefault(); alert("Contact your bank using the number on your card"); }}>
               Talk to my bank
             </a>
             <Link to={`/account/${account.account_id}`} className="primary">

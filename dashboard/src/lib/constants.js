@@ -33,22 +33,14 @@ export const SEVERITY_COLORS = {
 // Convert an ISO timestamp to a short, relative label like "2 hours ago".
 export function relativeTime(iso) {
   if (!iso) return "—";
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return "—";
-  const now = Date.now();
-  const diffMs = now - then;
-  const abs = Math.abs(diffMs);
-  const future = diffMs < 0;
-  const mins = Math.floor(abs / 60000);
-  const hrs = Math.floor(mins / 60);
-  const days = Math.floor(hrs / 24);
-  let label;
-  if (mins < 1) label = "just now";
-  else if (mins < 60) label = `${mins} min`;
-  else if (hrs < 24) label = `${hrs} hour${hrs === 1 ? "" : "s"}`;
-  else if (days < 7) label = `${days} day${days === 1 ? "" : "s"}`;
-  else label = new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-  return future ? `in ${label}` : `${label} ago`;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso);
+  const mon = d.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+  const day = d.getUTCDate();
+  const year = d.getUTCFullYear();
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${mon} ${day}, ${year} ${hh}:${mm} UTC`;
 }
 
 // Format an ISO timestamp to a readable local string.
