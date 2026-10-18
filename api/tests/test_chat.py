@@ -150,7 +150,7 @@ def test_without_a_token_no_request_is_made_and_the_rules_answer(tmp_path, monke
     p = FakeProvider(say("should not be asked"))
     svc = ChatService(ChatConfig(token_file=str(tmp_path / "missing")), transport=p.transport)
     out = ask(svc, "Which rings are riskiest?")
-    assert out.mode == "rules" and "No Hugging Face token" in out.note and p.requests == []
+    assert out.mode == "rules" and "No hosted-model credential" in out.note and p.requests == []
     assert svc.status().mode == "rules" and svc.status().token_configured is False
 
 

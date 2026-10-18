@@ -33,6 +33,12 @@ DEFAULT_BASE_URL = "https://router.huggingface.co/v1"
 # Granite 4.2 30B is served by one provider that announced its retirement for 2026-10-18; 8B and 3B are the fallbacks, then rules.
 DEFAULT_MODELS = ["ibm-granite/granite-4.2-30b", "ibm-granite/granite-4.2-8b", "ibm-granite/granite-4.2-3b"]
 DEFAULT_TOKEN_FILE = "/run/secrets/nexusz_hf_token"
+# IBM watsonx.ai as a Service: an IBM Cloud API key is exchanged for a short-lived bearer token, then /ml/v1/text/chat is called.
+DEFAULT_WATSONX_KEY_FILE = "/run/secrets/nexusz_watsonx_key"
+# The only chat Granite that the public model list of the eu-de and us-south regions showed on 2026-10-18 (32B, tool calling).
+DEFAULT_WATSONX_MODELS = ["ibm/granite-4-h-small"]
+IAM_URL = "https://iam.cloud.ibm.com/identity/token"
+WATSONX_VERSION = "2024-10-08"
 MAX_TOOL_ROUNDS = 4
 MAX_TOOL_RESULT_CHARS = 6000
 MAX_ANSWER_CHARS = 1800
@@ -116,7 +122,11 @@ class ChatStatus(BaseModel):
 class ChatConfig:
     def __init__(self, base_url: str = DEFAULT_BASE_URL, models: list[str] | None = None, token_file: str = DEFAULT_TOKEN_FILE,
                  max_tokens: int = 1200, timeout: float = 60.0, per_minute: int = 12, reasoning_effort: str = "low", enabled: bool = True,
-                 intent_model: str | None = None):
+                 intent_model: str | None = None, watsonx_url: str | None = None, watsonx_project: str | None = None,
+                 watsonx_key_file: str = DEFAULT_WATSONX_KEY_FILE, watsonx_models: list[str] | None = None):
+        self.watsonx_url = watsonx_url.rstrip("/") if watsonx_url else None       # e.g. https://eu-de.ml.cloud.ibm.com
+        self.watsonx_project, self.watsonx_key_file = watsonx_project, watsonx_key_file
+        self.watsonx_models = watsonx_models or list(DEFAULT_WATSONX_MODELS)
         self.base_url, self.models, self.token_file = base_url.rstrip("/"), models or list(DEFAULT_MODELS), token_file
         self.max_tokens, self.timeout, self.per_minute = max_tokens, timeout, per_minute
         self.reasoning_effort, self.enabled = reasoning_effort, enabled
@@ -130,7 +140,10 @@ class ChatConfig:
                    max_tokens=int(env("NEXUSZ_CHAT_MAX_TOKENS", "1200")), timeout=float(env("NEXUSZ_CHAT_TIMEOUT", "60")),
                    per_minute=int(env("NEXUSZ_CHAT_RATE_PER_MIN", "12")), reasoning_effort=env("NEXUSZ_CHAT_REASONING_EFFORT", "low"),
                    enabled=env("NEXUSZ_CHAT", "auto").lower() != "off",
-                   intent_model=(env("NEXUSZ_CHAT_INTENT_MODEL", "").strip() or None))
+                   intent_model=(env("NEXUSZ_CHAT_INTENT_MODEL", "").strip() or None),
+                   watsonx_url=(env("NEXUSZ_WATSONX_URL", "").strip() or None), watsonx_project=(env("NEXUSZ_WATSONX_PROJECT_ID", "").strip() or None),
+                   watsonx_key_file=env("NEXUSZ_WATSONX_KEY_FILE", DEFAULT_WATSONX_KEY_FILE),
+                   watsonx_models=[m.strip() for m in env("NEXUSZ_WATSONX_MODELS", "").split(",") if m.strip()] or None)
 
     def read_token(self) -> str | None:
         path = Path(self.token_file)
@@ -139,6 +152,28 @@ class ChatConfig:
             if text:
                 return text
         return os.environ.get("HF_TOKEN", "").strip() or None
+
+    def read_watsonx_key(self) -> str | None:
+        path = Path(self.watsonx_key_file)
+        if path.is_file():
+            text = path.read_text(encoding="utf-8").strip()
+            if text:
+                return text
+        return os.environ.get("WATSONX_APIKEY", "").strip() or None
+
+    # which hosted service a question goes to: IBM watsonx.ai when it is fully configured (url, project and key), otherwise Hugging Face
+    @property
+    def provider(self) -> str:
+        return "watsonx" if self.watsonx_url and self.watsonx_project and self.read_watsonx_key() else "huggingface"
+
+    def secret(self) -> str | None:
+        return self.read_watsonx_key() if self.provider == "watsonx" else self.read_token()
+
+    def hosted_models(self) -> list[str]:
+        return self.watsonx_models if self.provider == "watsonx" else self.models
+
+    def hosted_url(self) -> str:
+        return self.watsonx_url if self.provider == "watsonx" else self.base_url
 
 
 # -- the tools: compact, capped answers from our own API
@@ -313,6 +348,7 @@ class ChatService:
         self.config, self.transport = config or ChatConfig.from_env(), transport
         self.router = router if router is not None else (IntentRouter(self.config.intent_model) if self.config.enabled and self.config.intent_model else None)
         self._calls: deque[float] = deque()
+        self._iam: tuple[str, str, float] | None = None       # (api key, IAM token, expiry) for watsonx.ai
         self._lock = threading.Lock()
 
     # -- public
@@ -325,10 +361,10 @@ class ChatService:
         return self.router is not None and self.router.failure is None
 
     def status(self) -> ChatStatus:
-        have = self.config.enabled and self.config.read_token() is not None
+        have = self.config.enabled and self.config.secret() is not None
         local = not have and self._local_ready()
-        return ChatStatus(mode="llm" if have else "local" if local else "rules", models=self.config.models if have else [], provider=self.config.base_url,
-                          token_configured=self.config.read_token() is not None, intent_model=self.router.name if self._local_ready() else None)
+        return ChatStatus(mode="llm" if have else "local" if local else "rules", models=self.config.hosted_models() if have else [], provider=self.config.hosted_url(),
+                          token_configured=self.config.secret() is not None, intent_model=self.router.name if self._local_ready() else None)
 
     def allow(self) -> bool:
         now = time.monotonic()
@@ -344,16 +380,16 @@ class ChatService:
         started = time.perf_counter()
         tools, used = Tools(backend), []
         note = ""
-        token = self.config.read_token() if self.config.enabled else None
+        token = self.config.secret() if self.config.enabled else None
         if not self.config.enabled:
             note = "The language model is switched off (NEXUSZ_CHAT=off)."
         elif token is None:
-            note = "No Hugging Face token is configured."
+            note = "No hosted-model credential is configured."
         else:
-            for model in self.config.models:
+            for model in self.config.hosted_models():
                 try:
                     text, used, warnings = self._ask_model(model, token, request, tools)
-                    return ChatResponse(answer=text, mode="llm", model=model, provider=self.config.base_url, tools_used=used, warnings=warnings,
+                    return ChatResponse(answer=text, mode="llm", model=model, provider=self.config.hosted_url(), tools_used=used, warnings=warnings,
                                         seconds=round(time.perf_counter() - started, 2))
                 except _Failure as failure:
                     note = self._redact(failure.note, token)
@@ -380,12 +416,41 @@ class ChatService:
         return ChatResponse(answer=answer, mode="rules", tools_used=used, note=f"{note} Answered by rules.".strip(), seconds=elapsed)
 
     # -- one model, with the tool loop and the checks
-    def _post(self, client: httpx.Client, token: str, payload: dict) -> dict:
+    def _bearer(self, client: httpx.Client, secret: str) -> str:
+        """The token sent with a request: the Hugging Face token itself, or (watsonx.ai) a short-lived IBM Cloud IAM token made from the API key."""
+        if self.config.provider != "watsonx":
+            return secret
+        with self._lock:
+            cached = self._iam
+            if cached and cached[0] == secret and cached[2] - time.monotonic() > 120:
+                return cached[1]
         try:
-            r = client.post(f"{self.config.base_url}/chat/completions", json=payload,
-                            headers={"Authorization": f"Bearer {token}", "User-Agent": "nexusz-chat"})
+            r = client.post(IAM_URL, data={"grant_type": "urn:ibm:params:oauth:grant-type:apikey", "apikey": secret},
+                            headers={"Accept": "application/json", "User-Agent": "nexusz-chat"})
+        except httpx.HTTPError as exc:
+            raise _Failure(f"could not reach IBM Cloud to sign in ({type(exc).__name__})") from None
+        if r.status_code in (400, 401, 403):
+            raise _Failure("IBM Cloud rejected the API key", stop=True)
+        try:
+            body = r.json()
+            iam, ttl = body["access_token"], float(body.get("expires_in", 3600))
+        except (ValueError, KeyError, TypeError):
+            raise _Failure("IBM Cloud sent a sign-in reply that was not understood") from None
+        with self._lock:
+            self._iam = (secret, iam, time.monotonic() + ttl)
+        return iam
+
+    def _post(self, client: httpx.Client, token: str, payload: dict) -> dict:
+        name = payload.get("model") or payload.get("model_id")
+        bearer = self._bearer(client, token)
+        if self.config.provider == "watsonx":
+            url = f"{self.config.watsonx_url}/ml/v1/text/chat?version={WATSONX_VERSION}"
+        else:
+            url = f"{self.config.base_url}/chat/completions"
+        try:
+            r = client.post(url, json=payload, headers={"Authorization": f"Bearer {bearer}", "User-Agent": "nexusz-chat", "Accept": "application/json"})
         except httpx.TimeoutException:
-            raise _Failure(f"{payload['model']} timed out") from None
+            raise _Failure(f"{name} timed out") from None
         except httpx.HTTPError as exc:
             raise _Failure(f"could not reach the provider ({type(exc).__name__})") from None
         if r.status_code in (401, 403):
@@ -398,7 +463,7 @@ class ChatService:
             payload.pop("reasoning_effort")           # this model does not take the parameter; try again without it
             return self._post(client, token, payload)
         if r.status_code >= 400:
-            raise _Failure(f"{payload['model']} is not available (HTTP {r.status_code})")
+            raise _Failure(f"{name} is not available (HTTP {r.status_code})")
         try:
             return r.json()
         except ValueError:
@@ -412,10 +477,15 @@ class ChatService:
         results_text = ""
         with httpx.Client(transport=self.transport, timeout=httpx.Timeout(connect=5.0, read=self.config.timeout, write=10.0, pool=5.0)) as client:
             for _ in range(MAX_TOOL_ROUNDS + 1):
-                payload = {"model": model, "messages": messages, "tools": TOOL_SPECS, "tool_choice": "auto",
-                           "max_tokens": self.config.max_tokens, "temperature": 0.2}
-                if self.config.reasoning_effort:
-                    payload["reasoning_effort"] = self.config.reasoning_effort
+                if self.config.provider == "watsonx":
+                    payload = {"model_id": model, "project_id": self.config.watsonx_project, "messages": messages, "tools": TOOL_SPECS,
+                               "tool_choice_option": "auto", "max_tokens": self.config.max_tokens, "temperature": 0.2,
+                               "time_limit": int(self.config.timeout * 1000)}
+                else:
+                    payload = {"model": model, "messages": messages, "tools": TOOL_SPECS, "tool_choice": "auto",
+                               "max_tokens": self.config.max_tokens, "temperature": 0.2}
+                    if self.config.reasoning_effort:
+                        payload["reasoning_effort"] = self.config.reasoning_effort
                 body = self._post(client, token, payload)
                 try:
                     message = body["choices"][0]["message"]

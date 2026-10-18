@@ -60,6 +60,15 @@ describe("the assistant page", () => {
     expect(await screen.findByText(/through 127.0.0.1 in/)).toBeInTheDocument();
   });
 
+  it("names IBM watsonx.ai when the hosted model is served from an IBM Cloud address", async () => {
+    const WX = "https://eu-de.ml.cloud.ibm.com";
+    fakeApi({ status: { ...llmStatus, provider: WX, models: ["ibm/granite-4-h-small"] }, chat: reply({ provider: WX, model: "ibm/granite-4-h-small" }) });
+    open();
+    expect(await screen.findByText(/IBM Granite · IBM watsonx.ai/)).toBeInTheDocument();
+    ask("Tell me about RNG-0417");
+    expect(await screen.findByText(/Answered by ibm\/granite-4-h-small through IBM watsonx.ai in 12.3 s/)).toBeInTheDocument();
+  });
+
   it("says plainly when no language model is configured and shows no hosted-model notice", async () => {
     fakeApi({ status: rulesStatus, chat: reply() });
     open();
