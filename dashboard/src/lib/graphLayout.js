@@ -9,7 +9,7 @@ import { edgesUpTo } from "./replay";
 
 export const COLUMNS = { victim: 0.09, collector: 0.34, unknown: 0.5, mule: 0.62, cashout: 0.92 };
 export const ROLE_ORDER = ["victim", "collector", "mule", "cashout"];
-export const ROLE_LABEL = { victim: "Payers", collector: "Collectors", mule: "Mule chain", cashout: "Cash-out", unknown: "Unclassified" };
+export const ROLE_LABEL = { victim: "Likely victim", collector: "Collector", mule: "Mule", cashout: "Cash-out", unknown: "Unclassified" };
 export const ROLE_TEXT = {
   victim: "An account that paid into the ring (estimated role)",
   collector: "Receives payments from many accounts and forwards them (estimated role)",
@@ -142,10 +142,10 @@ export function layoutRing(members, edges, width, height, pad = 40) {
 
   const cols = []; // each column: { ids, label }
   const payers = [...byId.keys()].filter(isPayer);
-  if (payers.length) cols.push({ ids: payers, label: "Payers" });
+  if (payers.length) cols.push({ ids: payers, label: "Likely victims" });
   for (let r = 1; r <= maxRank; r++) {
     const ids = middle.filter((id) => rank.get(id) === r);
-    if (ids.length) cols.push({ ids, label: ids.filter((id) => roleOf(id) === "collector").length >= ids.length / 2 ? "Collectors" : "Pass-through" });
+    if (ids.length) cols.push({ ids, label: ids.filter((id) => roleOf(id) === "collector").length >= ids.length / 2 ? "Collectors" : "Mules" });
   }
   const cash = [...byId.keys()].filter(isCash);
   if (cash.length) cols.push({ ids: cash, label: "Cash-out" });

@@ -37,3 +37,4 @@
   white-space: nowrap;
   width: 1%;
 }
+.alert-table td a { white-space: nowrap; }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { health, startPolling } from "../services/api";
-import { formatDateTime } from "../lib/constants";
+import { formatUtc } from "../lib/constants";
 import Layout from "./Layout";
 import "./RolePages.css";
 import InfoTip from "../components/InfoTip";
@@ -102,7 +102,7 @@ export default function Oversight() {
           <section className="rp-card">
             <h2>How current <InfoTip k="osCurrent" /></h2>
             <dl className="kv">
-              <dt>Data as of</dt><dd>{asOf ? formatDateTime(asOf) : "n/a"}</dd>
+              <dt>Data as of</dt><dd>{asOf ? formatUtc(asOf) : "n/a"}</dd>
               <dt>Source</dt><dd>{usingMock ? "Bundled sample data" : "Live API"}</dd>
             </dl>
           </section>

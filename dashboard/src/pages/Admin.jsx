@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { API_BASE, health } from "../services/api";
-import { formatDateTime } from "../lib/constants";
+import { formatUtc } from "../lib/constants";
 import Layout from "./Layout";
 import "./RolePages.css";
 import InfoTip from "../components/InfoTip";
@@ -77,7 +77,7 @@ export default function Admin() {
             <h2>Details <InfoTip k="adminDetails" /></h2>
             <dl className="kv">
               <dt>Status</dt><dd>{h ? h.status : "n/a"}</dd>
-              <dt>Data as of</dt><dd>{h && h.data_as_of ? formatDateTime(h.data_as_of) : "n/a"}</dd>
+              <dt>Data as of</dt><dd>{h && h.data_as_of ? formatUtc(h.data_as_of) : "n/a"}</dd>
               <dt>Refresh mode</dt><dd>{h && h.refresh_mode ? h.refresh_mode : "n/a"}</dd>
               <dt>Minimum refresh gap</dt><dd>{h ? seconds(h.refresh_interval_seconds) : "n/a"}</dd>
               <dt>Refreshes completed</dt><dd>{h && h.refreshes_completed != null ? h.refreshes_completed : "n/a"}</dd>

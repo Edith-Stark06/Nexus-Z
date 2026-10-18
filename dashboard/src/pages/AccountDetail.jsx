@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getAccount } from '../services/api'
-import { featureLabel, ROLE_COLORS, formatDateTime } from '../lib/constants'
+import { featureLabel, ROLE_COLORS } from '../lib/constants'
 import Layout from './Layout'
 import './AccountDetail.css'
 import InfoTip from "../components/InfoTip";
