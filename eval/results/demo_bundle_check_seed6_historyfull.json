@@ -1,0 +1,209 @@
+{
+ "seed": 6,
+ "history": "full",
+ "variant": "HI-Small",
+ "bundle": "ml\\artifacts\\HI-Small-pig",
+ "threshold": 0.6091967225074768,
+ "rings_injected": 90,
+ "hubs_injected": 90,
+ "windows": {
+  "24": {
+   "candidates": 148380,
+   "injected_fraud_active": 50,
+   "pr_auc_injected": 0.9297721334482223,
+   "chance": 0.0003386042731859276,
+   "precision": 0.4895833333333333,
+   "recall": 0.94,
+   "f1": 0.6438356164383562,
+   "flagged": 96,
+   "positives": 50,
+   "pr_auc_all_labels": 0.5532608657560736,
+   "rings": {
+    "detected": 71,
+    "true_rings_ours": 8,
+    "recovered_ours": 4,
+    "recovery_ours": 0.5,
+    "mean_cover_ours": 0.5667606516290726,
+    "in_scope_pig_eval": 8,
+    "recovered_pig_eval": 7,
+    "pure_rings": 0.8450704225352113,
+    "rings_with_injected_account": 7,
+    "top10_with_injected": 3,
+    "by_shape_ours": {
+     "aged": "1/3",
+     "batched": "1/1",
+     "delayed": "0/1",
+     "fan-in": "1/1",
+     "mixed": "0/1",
+     "split": "1/1"
+    },
+    "by_shape_pig_eval": {
+     "aged": "3/3",
+     "batched": "1/1",
+     "delayed": "0/1",
+     "fan-in": "1/1",
+     "mixed": "1/1",
+     "split": "1/1"
+    }
+   },
+   "hub_rings": 0.0,
+   "hubs": {
+    "all_any_in_ring (pig_eval's count)": 0,
+    "hub_in_ring": 0,
+    "settlement_only_in_ring": 0,
+    "active": 24,
+    "hub_flagged": 0,
+    "by_type": {
+     "charity": {
+      "hubs": 18,
+      "active": 0,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     },
+     "landlord": {
+      "hubs": 18,
+      "active": 1,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     },
+     "merchant": {
+      "hubs": 18,
+      "active": 18,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     },
+     "new-customer": {
+      "hubs": 18,
+      "active": 5,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     },
+     "payroll": {
+      "hubs": 18,
+      "active": 0,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     }
+    },
+    "by_adversarial": {
+     "False": {
+      "active": 12,
+      "flagged": 0,
+      "hub_in_ring": 0
+     },
+     "True": {
+      "active": 12,
+      "flagged": 0,
+      "hub_in_ring": 0
+     }
+    }
+   }
+  },
+  "48": {
+   "candidates": 355138,
+   "injected_fraud_active": 144,
+   "pr_auc_injected": 0.9673187701809444,
+   "chance": 0.00040707749455109815,
+   "precision": 0.6376146788990825,
+   "recall": 0.9652777777777778,
+   "f1": 0.7679558011049723,
+   "flagged": 218,
+   "positives": 144,
+   "pr_auc_all_labels": 0.5387481831152814,
+   "rings": {
+    "detected": 148,
+    "true_rings_ours": 18,
+    "recovered_ours": 15,
+    "recovery_ours": 0.8333333333333334,
+    "mean_cover_ours": 0.7090688794636163,
+    "in_scope_pig_eval": 18,
+    "recovered_pig_eval": 16,
+    "pure_rings": 0.7094594594594594,
+    "rings_with_injected_account": 16,
+    "top10_with_injected": 6,
+    "by_shape_ours": {
+     "aged": "3/3",
+     "batched": "2/2",
+     "chain": "1/1",
+     "delayed": "1/2",
+     "dispersed": "2/2",
+     "fan-in": "2/2",
+     "mixed": "2/3",
+     "split": "2/3"
+    },
+    "by_shape_pig_eval": {
+     "aged": "3/3",
+     "batched": "2/2",
+     "chain": "1/1",
+     "delayed": "1/2",
+     "dispersed": "2/2",
+     "fan-in": "2/2",
+     "mixed": "2/3",
+     "split": "3/3"
+    }
+   },
+   "hub_rings": 0.0,
+   "hubs": {
+    "all_any_in_ring (pig_eval's count)": 1,
+    "hub_in_ring": 1,
+    "settlement_only_in_ring": 0,
+    "active": 37,
+    "hub_flagged": 1,
+    "by_type": {
+     "charity": {
+      "hubs": 18,
+      "active": 3,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     },
+     "landlord": {
+      "hubs": 18,
+      "active": 4,
+      "flagged": 1,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     },
+     "merchant": {
+      "hubs": 18,
+      "active": 18,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     },
+     "new-customer": {
+      "hubs": 18,
+      "active": 7,
+      "flagged": 0,
+      "hub_in_ring": 0,
+      "any_in_ring": 0
+     },
+     "payroll": {
+      "hubs": 18,
+      "active": 5,
+      "flagged": 0,
+      "hub_in_ring": 1,
+      "any_in_ring": 1
+     }
+    },
+    "by_adversarial": {
+     "False": {
+      "active": 19,
+      "flagged": 1,
+      "hub_in_ring": 0
+     },
+     "True": {
+      "active": 18,
+      "flagged": 0,
+      "hub_in_ring": 1
+     }
+    }
+   }
+  }
+ }
+}
