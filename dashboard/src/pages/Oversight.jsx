@@ -3,6 +3,7 @@ import { health, startPolling } from "../services/api";
 import { formatDateTime } from "../lib/constants";
 import Layout from "./Layout";
 import "./RolePages.css";
+import InfoTip from "../components/InfoTip";
 
 const RISK_BANDS = [
   { key: "high", label: "Risk 80 or more", test: (r) => r >= 80, cls: "rose" },
@@ -80,33 +81,33 @@ export default function Oversight() {
         ) : null}
 
         <div className="kpi-row" aria-label="Summary">
-          <div className="kpi"><div className="kpi-n">{rings.length}</div><div className="kpi-l">Rings flagged</div></div>
-          <div className="kpi"><div className="kpi-n rose">{minRisk == null ? "n/a" : `${minRisk}-${maxRisk}`}</div><div className="kpi-l">Ring risk range (lowest to highest)</div></div>
-          <div className="kpi"><div className="kpi-n">{accountsInRings}</div><div className="kpi-l">Accounts inside flagged rings</div></div>
-          <div className="kpi"><div className="kpi-n">{flags}</div><div className="kpi-l">Recent payers flagged for review</div></div>
+          <div className="kpi"><div className="kpi-n">{rings.length}</div><div className="kpi-l">Rings flagged <InfoTip k="kpiRings" /></div></div>
+          <div className="kpi"><div className="kpi-n rose">{minRisk == null ? "n/a" : `${minRisk}-${maxRisk}`}</div><div className="kpi-l">Ring risk range (lowest to highest) <InfoTip k="kpiRisk" /></div></div>
+          <div className="kpi"><div className="kpi-n">{accountsInRings}</div><div className="kpi-l">Accounts inside flagged rings <InfoTip k="osAccounts" /></div></div>
+          <div className="kpi"><div className="kpi-n">{flags}</div><div className="kpi-l">Recent payers flagged for review <InfoTip k="kpiVictims" /></div></div>
         </div>
 
         <div className="rp-grid">
           <section className="rp-card">
-            <h2>Rings by risk</h2>
+            <h2>Rings by risk <InfoTip k="osBands" /></h2>
             <Bars rows={riskRows} total={rings.length} />
           </section>
           <section className="rp-card">
-            <h2>Rings by size</h2>
+            <h2>Rings by size <InfoTip k="osSizes" /></h2>
             <Bars rows={sizeRows} total={rings.length} />
           </section>
         </div>
 
         <div className="rp-grid">
           <section className="rp-card">
-            <h2>How current</h2>
+            <h2>How current <InfoTip k="osCurrent" /></h2>
             <dl className="kv">
               <dt>Data as of</dt><dd>{asOf ? formatDateTime(asOf) : "n/a"}</dd>
               <dt>Source</dt><dd>{usingMock ? "Bundled sample data" : "Live API"}</dd>
             </dl>
           </section>
           <section className="rp-card">
-            <h2>Limits of the evidence</h2>
+            <h2>Limits of the evidence <InfoTip k="osLimits" /></h2>
             <ul className="limit-list">
               <li>Synthetic data. The rings are simulated by the team that built the model, so results on them are optimistic.</li>
               <li>On IBM's own labels most laundering groups are still missed.</li>

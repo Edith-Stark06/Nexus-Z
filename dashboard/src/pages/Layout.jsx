@@ -2,7 +2,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
 import { ROLES, signOut, useSession } from "../auth/session";
 import "./Layout.css";
+import InfoTip from "../components/InfoTip";
+import FloatingAssistant from "../components/FloatingAssistant";
 
+const HELP_KEY = { "/monitor": "pageMonitor", "/alerts": "pageAlerts", "/assistant": "pageAssistant", "/admin": "pageAdmin", "/oversight": "pageOversight", "/protect": "pageProtect" };
 const TITLES = {
   "/monitor": "Flagged rings",
   "/alerts": "Alerts",
@@ -18,7 +21,9 @@ export default function Layout({ children, usingMock, title }) {
   const session = useSession();
   const role = session ? ROLES[session.role] : null;
   const nav = role ? role.nav : [];
-  const heading = title || TITLES["/" + (loc.pathname.split("/")[1] || "")] || "";
+  const section = "/" + (loc.pathname.split("/")[1] || "");
+  const heading = title || TITLES[section] || "";
+  const helpKey = HELP_KEY[section];
 
   const leave = () => {
     signOut();
@@ -59,13 +64,14 @@ export default function Layout({ children, usingMock, title }) {
         </div>
       </header>
       <main className="main">
-        {heading ? <h1 className="page-title">{heading}</h1> : null}
+        {heading ? <h1 className="page-title">{heading}{helpKey ? <InfoTip k={helpKey} /> : null}</h1> : null}
         {children}
       </main>
       <footer className="app-footer">
         Synthetic data and simulated rings. Accuracy is modest; many laundering groups in IBM's data are still missed. Flags are
         for review, not verdicts. See docs/ML_RESULTS.md.
       </footer>
+      <FloatingAssistant />
     </div>
   );
 }

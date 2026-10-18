@@ -239,3 +239,15 @@ export function flowPoint(a, b, ra, rb, t) {
     y: u * u * u * a.y + 3 * u * u * t * a.y + 3 * u * t * t * b.y + t * t * t * b.y,
   };
 }
+
+/** A straight link between two accounts, stopping at the edge of each mark (the room for an arrowhead is kept at the end). */
+export function linePath(a, b, ra, rb) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const d = Math.hypot(dx, dy) || 1;
+  const x0 = a.x + (dx / d) * (ra + 1);
+  const y0 = a.y + (dy / d) * (ra + 1);
+  const x1 = b.x - (dx / d) * (rb + 6);
+  const y1 = b.y - (dy / d) * (rb + 6);
+  return `M${x0.toFixed(1)},${y0.toFixed(1)} L${x1.toFixed(1)},${y1.toFixed(1)}`;
+}

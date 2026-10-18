@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Landing from './pages/Landing'
-import { RoleChooser, RoleLogin } from './pages/Login'
+import { RoleChooser, RoleLogin, RoleSignup } from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Alerts from './pages/Alerts'
 import RingDetail from './pages/RingDetail'
@@ -21,6 +21,7 @@ function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<RoleChooser />} />
       <Route path="/login/:role" element={<RoleLogin />} />
+      <Route path="/signup/:role" element={<RoleSignup />} />
       <Route path="/monitor" element={guard(<Dashboard />)} />
       <Route path="/alerts" element={guard(<Alerts />)} />
       <Route path="/ring/:ringId" element={guard(<RingDetail />)} />

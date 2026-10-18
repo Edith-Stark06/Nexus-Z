@@ -1,0 +1,15 @@
+.info { position: relative; display: inline-flex; vertical-align: middle; margin-left: 8px; font-family: var(--font-body); font-size: 14px; font-weight: 400; text-transform: none; letter-spacing: normal; }
+.info-btn {
+  width: 20px; height: 20px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1.5px solid var(--text-faint); color: var(--text-faint);
+  font-family: var(--font-display); font-style: italic; font-size: 14px; line-height: 1; cursor: help;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.info-btn:hover, .info-btn[aria-expanded="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.info-pop {
+  position: absolute; z-index: 60; top: calc(100% + 10px); left: 50%; width: 288px; max-width: 80vw;
+  padding: 12px 14px; border-radius: 14px; background: var(--ink); color: #e9ebf5; text-align: left;
+  box-shadow: 0 14px 40px rgba(12, 15, 29, 0.28); display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.45;
+}
+.info-pop strong { color: #fff; font-size: 13.5px; font-weight: 600; }
+.info-pop::before { content: ""; position: absolute; top: -5px; left: calc(50% - var(--shift, 0px)); width: 10px; height: 10px; margin-left: -5px; background: var(--ink); transform: rotate(45deg); }

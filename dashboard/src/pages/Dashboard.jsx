@@ -6,6 +6,7 @@ import { D3Graph } from "../components/D3Graph";
 import { SHAPPanel } from "../components/SHAPPanel";
 import Layout from "./Layout";
 import "./Dashboard.css";
+import InfoTip from "../components/InfoTip";
 
 function riskColor(r) {
   if (r == null) return "var(--text-faint)";
@@ -51,15 +52,15 @@ export default function Dashboard() {
     <Layout usingMock={usingMock}>
       <div className="dash-kpis">
         <div className="kpi-row" aria-label="Summary">
-          <div className="kpi"><div className="kpi-n">{rings.length}</div><div className="kpi-l">Rings flagged</div></div>
-          <div className="kpi"><div className="kpi-n rose">{rings.length ? `${Math.min(...rings.map((r) => r.risk))}-${Math.max(...rings.map((r) => r.risk))}` : "n/a"}</div><div className="kpi-l">Ring risk range (lowest to highest)</div></div>
-          <div className="kpi"><div className="kpi-n">{victimAlerts.length}</div><div className="kpi-l">Recent payers flagged for review</div></div>
+          <div className="kpi"><div className="kpi-n">{rings.length}</div><div className="kpi-l">Rings flagged <InfoTip k="kpiRings" /></div></div>
+          <div className="kpi"><div className="kpi-n rose">{rings.length ? `${Math.min(...rings.map((r) => r.risk))}-${Math.max(...rings.map((r) => r.risk))}` : "n/a"}</div><div className="kpi-l">Ring risk range (lowest to highest) <InfoTip k="kpiRisk" /></div></div>
+          <div className="kpi"><div className="kpi-n">{victimAlerts.length}</div><div className="kpi-l">Recent payers flagged for review <InfoTip k="kpiVictims" /></div></div>
         </div>
       </div>
       <div className="dash">
         <section className="panel">
           <div className="panel-head">
-            <h2>Rings</h2>
+            <h2>Rings <InfoTip k="rings" /></h2>
             <input
               className="search"
               placeholder="Search ring id…"
@@ -129,7 +130,7 @@ export default function Dashboard() {
 
         <section className="panel">
           <div className="panel-head">
-            <h2>Ring detail</h2>
+            <h2>Ring detail <InfoTip k="ringDetail" /></h2>
             {selected && (
               <button onClick={() => navigate(`/ring/${selected.ring_id}`)}>
                 Open full ring
@@ -157,11 +158,11 @@ export default function Dashboard() {
 
               <div className="detail-grid">
                 <div className="detail-col">
-                  <h3>Flow graph</h3>
+                  <h3>Flow graph <InfoTip k="flowGraph" /></h3>
                   <D3Graph ringId={selected.ring_id} ring={selectedRing} />
                 </div>
                 <div className="detail-col">
-                  <h3>Why flagged</h3>
+                  <h3>Why flagged <InfoTip k="whyFlagged" /></h3>
                   <SHAPPanel ringId={selected.ring_id} ring={selectedRing} />
                 </div>
               </div>

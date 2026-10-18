@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Logo from "../components/Logo";
 import HeroGraph from "../components/HeroGraph";
+import NetworkBackdrop from "../components/NetworkBackdrop";
 import { ROLE_LIST } from "../auth/session";
 import "./Landing.css";
 
@@ -19,6 +20,7 @@ const LIMITS = [
 export default function Landing() {
   return (
     <div className="landing">
+      <NetworkBackdrop />
       <header className="l-nav">
         <Logo size={30} />
         <nav aria-label="Sections" className="l-links">
@@ -32,7 +34,6 @@ export default function Landing() {
       <main>
         <section className="l-hero">
           <div className="l-hero-copy">
-            <span className="l-pill">Synthetic data, demo environment</span>
             <h1>Find the ring, not just the payment.</h1>
             <p className="l-lead">
               Pig-butchering scams move money through a few collector accounts to a cash-out. Each payment looks
@@ -42,7 +43,6 @@ export default function Landing() {
               <Link to="/login" className="btn-primary">Sign in to the demo</Link>
               <a href="#how" className="btn-ghost">See how it works</a>
             </div>
-            <p className="l-fine">Runs on IBM LinuxONE. Built for the IBM Z Datathon 2026.</p>
           </div>
           <div className="l-hero-art">
             <HeroGraph />

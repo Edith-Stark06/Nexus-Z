@@ -54,3 +54,32 @@
   .login-side h1 { font-size: 32px; }
   .login-card { padding: 24px; border-radius: 22px; }
 }
+
+/* sign-in panel: the network sits behind the heading */
+.login-side { position: relative; overflow: hidden; }
+.login-side > *:not(canvas) { position: relative; z-index: 1; }
+
+.pw-wrap { position: relative; display: block; font-weight: 400; }
+.pw-wrap input { width: 100%; padding-right: 64px; }
+.pw-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  padding: 4px 10px; font-size: 12px; border-radius: 999px; background: var(--bg-elev-2);
+}
+.field input { width: 100%; }
+.field-hint { font-weight: 400; font-size: 12px; color: var(--text-faint); }
+.field-hint.bad { color: var(--rose); }
+.form-error { margin: 0 0 14px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--danger-soft); color: #9c1240; font-size: 14px; }
+.login-switch { margin: 14px 0 0; text-align: center; font-size: 14px; color: var(--text-dim); }
+
+.pw-meter { display: flex; align-items: center; gap: 10px; margin: -8px 0 16px; font-size: 12px; color: var(--text-dim); }
+.pw-bar { display: inline-flex; gap: 3px; }
+.pw-bar i { width: 26px; height: 5px; border-radius: 3px; background: var(--border); }
+.pw-bar.s1 i:nth-child(-n+1) { background: var(--rose); }
+.pw-bar.s2 i:nth-child(-n+2) { background: #d98b00; }
+.pw-bar.s3 i:nth-child(-n+3) { background: #5b63e8; }
+.pw-bar.s4 i { background: var(--ok); }
+
+.field > label { font-weight: 600; font-size: 14px; }
+.field label em { font-style: normal; font-weight: 400; color: var(--text-faint); }
+
+.pw-wrap input::-ms-reveal, .pw-wrap input::-ms-clear { display: none; }

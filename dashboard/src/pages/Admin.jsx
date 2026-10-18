@@ -3,6 +3,7 @@ import { API_BASE, health } from "../services/api";
 import { formatDateTime } from "../lib/constants";
 import Layout from "./Layout";
 import "./RolePages.css";
+import InfoTip from "../components/InfoTip";
 
 const POLL_MS = 5000;
 
@@ -55,25 +56,25 @@ export default function Admin() {
         <div className="kpi-row" aria-label="Service status">
           <div className="kpi">
             <div className="kpi-n text">{h ? (model ? "Model" : "Sample data") : "n/a"}</div>
-            <div className="kpi-l">Backend</div>
+            <div className="kpi-l">Backend <InfoTip k="adminBackend" /></div>
           </div>
           <div className="kpi">
             <div className="kpi-n">{h && h.state_age_seconds != null ? Math.round(h.state_age_seconds) : "n/a"}{h && h.state_age_seconds != null ? <small>s</small> : null}</div>
-            <div className="kpi-l">Time since the last rebuild</div>
+            <div className="kpi-l">Time since the last rebuild <InfoTip k="adminSince" /></div>
           </div>
           <div className="kpi">
             <div className="kpi-n">{h && h.last_rebuild_seconds != null ? Number(h.last_rebuild_seconds).toFixed(1) : "n/a"}{h && h.last_rebuild_seconds != null ? <small>s</small> : null}</div>
-            <div className="kpi-l">Last rebuild took</div>
+            <div className="kpi-l">Last rebuild took <InfoTip k="adminRebuild" /></div>
           </div>
           <div className="kpi">
             <div className="kpi-n">{h && h.history_transactions != null ? h.history_transactions.toLocaleString("en-US") : "n/a"}</div>
-            <div className="kpi-l">Payments of history loaded</div>
+            <div className="kpi-l">Payments of history loaded <InfoTip k="adminHistory" /></div>
           </div>
         </div>
 
         <div className="rp-grid">
           <section className="rp-card">
-            <h2>Details</h2>
+            <h2>Details <InfoTip k="adminDetails" /></h2>
             <dl className="kv">
               <dt>Status</dt><dd>{h ? h.status : "n/a"}</dd>
               <dt>Data as of</dt><dd>{h && h.data_as_of ? formatDateTime(h.data_as_of) : "n/a"}</dd>
@@ -87,7 +88,7 @@ export default function Admin() {
           </section>
 
           <section className="rp-card">
-            <h2>What this deployment is</h2>
+            <h2>What this deployment is <InfoTip k="adminDeployment" /></h2>
             <ul className="limit-list">
               <li>The background data is IBM's synthetic anti-money-laundering data; the rings are simulated by our own team.</li>
               <li>Scoring runs on CPU (XGBoost). No on-chip accelerator is used for detection.</li>

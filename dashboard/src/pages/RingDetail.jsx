@@ -8,6 +8,7 @@ import ReplaySlider from "../components/ReplaySlider";
 import { ROLE_COLORS } from "../lib/constants";
 import Layout from "./Layout";
 import "./RingDetail.css";
+import InfoTip from "../components/InfoTip";
 
 export default function RingDetail() {
   const { ringId } = useParams();
@@ -77,7 +78,7 @@ export default function RingDetail() {
 
         <div className="detail-grid">
           <div className="detail-col">
-            <h3>Flow graph</h3>
+            <h3>Flow graph <InfoTip k="flowGraph" /></h3>
             <D3Graph ringId={ring.ring_id} ring={ring} cutoff={cutoff} />
             <ReplaySlider
               edges={ring.edges || []}
@@ -88,14 +89,14 @@ export default function RingDetail() {
             />
           </div>
           <div className="detail-col">
-            <h3>Why flagged</h3>
+            <h3>Why flagged <InfoTip k="whyFlagged" /></h3>
             <SHAPPanel ringId={ring.ring_id} ring={ring} />
           </div>
         </div>
 
         <div className="detail-section">
-          <h3>Payments</h3>
-          <PaymentTable edges={ring.edges || []} />
+          <h3>Payments <InfoTip k="payments" /></h3>
+          <PaymentTable edges={ring.edges || []} roles={Object.fromEntries((ring.members || []).map((m) => [m.id, m.role]))} />
         </div>
 
         <div className="detail-foot">
