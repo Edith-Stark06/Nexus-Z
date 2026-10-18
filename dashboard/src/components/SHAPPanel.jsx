@@ -1,3 +1,4 @@
+import './SHAPPanel.css'
 import { featureLabel } from '../lib/constants'
 import './SHAPPanel.css'
 

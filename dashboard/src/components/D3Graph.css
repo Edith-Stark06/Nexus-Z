@@ -1,0 +1,11 @@
+.graph-wrap { position: relative; width: 100%; }
+.graph-wrap .d3-graph {
+  width: 100%; height: auto; display: block; border-radius: 14px;
+  background: #fbfbfd; border: 1px solid var(--border-soft);
+}
+.graph-wrap .node { cursor: grab; outline: none; transition: opacity 0.15s ease; }
+.graph-wrap .node:active { cursor: grabbing; }
+.graph-wrap .node:focus-visible > circle:last-of-type, .graph-wrap .node:focus-visible > rect:last-of-type { stroke: #2430d9; stroke-width: 3; }
+.graph-wrap .graph-tooltip { width: 236px; line-height: 1.35; border-radius: 12px; }
+.graph-wrap .graph-tooltip .tt-id { font-size: 13px; font-weight: 600; color: #fff; }
+.graph-wrap .graph-tooltip div + div { margin-top: 2px; }

@@ -1,62 +1,49 @@
-.pay-table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border-soft);
-  border-radius: 8px;
-  background: var(--bg);
-}
+.pay-table-wrap { border: 1px solid var(--border-soft); border-radius: 16px; background: var(--bg-elev); overflow: hidden; }
+.pay-scroll { overflow-x: auto; }
+.pay-tall { max-height: 560px; overflow-y: auto; }
 
-.pay-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  font-family: ui-monospace, monospace;
-}
+.pay-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; font-family: var(--font-body); }
+.pay-table th, .pay-table td { text-align: left; padding: 0 18px; white-space: nowrap; color: var(--text); }
 
-.pay-table th,
-.pay-table td {
-  text-align: left;
-  padding: 8px 12px;
+.pay-table thead th {
+  position: sticky; top: 0; z-index: 2; background: var(--bg-elev-2); height: 40px;
+  color: var(--text-faint); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
   border-bottom: 1px solid var(--border-soft);
-  color: var(--text);
-  white-space: nowrap;
 }
+.pay-table .pay-amt-h { text-align: right; }
 
-.pay-table th {
-  color: var(--text-dim);
-  font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  position: sticky;
-  top: 0;
-  background: var(--bg-elev);
-  z-index: 2;
+.pay-day th {
+  height: 44px; padding-top: 8px; background: transparent; border-bottom: 1px solid var(--border-soft);
+  font-size: 13px; font-weight: 700; color: var(--text); text-transform: none; letter-spacing: 0;
 }
+.pay-day th span { margin-left: 10px; font-weight: 400; color: var(--text-faint); }
+.pay-row td { height: 52px; border-bottom: 1px solid var(--border-soft); }
+.pay-row:last-child td { border-bottom: none; }
+.pay-row:hover td { background: var(--accent-soft); }
 
-.pay-table tr:last-child td {
-  border-bottom: none;
+.pay-time { color: var(--text-dim); font-variant-numeric: tabular-nums; width: 1%; }
+.pay-arrow { color: var(--text-faint); width: 1%; padding: 0 4px !important; text-align: center !important; }
+.pay-amt { text-align: right !important; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 4px 11px 4px 9px; border-radius: 999px;
+  background: var(--bg-elev-2); border: 1px solid var(--border-soft); font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--text);
 }
+.chip-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; border: 2px solid #8a90a8; flex: none; }
+.chip-dot.victim { border-color: var(--ink); }
+.chip-dot.collector { background: var(--rose); border-color: var(--rose); }
+.chip-dot.mule { border-color: var(--rose); }
+.chip-dot.cashout { background: var(--ink); border-color: var(--ink); border-radius: 2px; }
 
-.pay-table tr:hover td {
-  background: var(--bg-elev-2);
+.pay-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px;
+  border-top: 1px solid var(--border-soft); background: var(--bg-elev-2); font-size: 13px; color: var(--text-dim);
 }
+.pay-foot button { padding: 6px 14px; font-size: 13px; }
 
-.pay-time {
-  color: var(--text-dim);
-}
+.pay-empty { color: var(--text-faint); font-size: 13px; padding: 16px; text-align: center; }
 
-.pay-id {
-  color: var(--accent);
-}
-
-.pay-amt {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.pay-empty {
-  color: var(--text-faint);
-  font-size: 13px;
-  padding: 16px;
-  text-align: center;
+@media (max-width: 640px) {
+  .pay-table th, .pay-table td { padding: 0 12px; }
+  .pay-row td { height: 48px; }
 }

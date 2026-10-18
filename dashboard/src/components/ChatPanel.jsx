@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { askAssistant, getChatStatus } from "../services/chat";
 import "./ChatPanel.css";
+import InfoTip from "../components/InfoTip";
 
 const SUGGESTIONS = ["Which rings are riskiest?", "Why was the top ring flagged?", "Who may pay in next?", "How current is the data?"];
 const ID = /\b((?:RNG|ACC)-[0-9A-Za-z]{4,})\b/g;
@@ -70,7 +71,7 @@ function Meta({ m }) {
   );
 }
 
-export default function ChatPanel() {
+export default function ChatPanel({ compact = false }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
@@ -108,10 +109,11 @@ export default function ChatPanel() {
   }
 
   return (
-    <section className="chat" aria-label="Assistant">
+    <section className={`chat${compact ? " chat-compact" : ""}`} aria-label="Assistant">
       <header className="chat-head">
-        <h2>Ask NEXUS Z</h2>
+        {compact ? null : <h2>Ask NEXUS Z <InfoTip k="chat" /></h2>}
         {status !== undefined && <Badge status={status} />}
+        {compact ? <InfoTip k="chat" /> : null}
       </header>
       <p className="chat-disclaimer">
         Synthetic data. Answers come only from NEXUS Z's own data; roles are estimates and "flagged" does not mean guilty.
@@ -159,6 +161,7 @@ export default function ChatPanel() {
           value={input}
           maxLength={MAX}
           rows={2}
+          autoFocus={compact}
           placeholder="Ask about a ring, an account or the alerts"
           aria-label="Your question"
           onChange={(e) => setInput(e.target.value)}
