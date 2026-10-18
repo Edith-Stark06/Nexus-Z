@@ -162,7 +162,7 @@ export default function Dashboard() {
                 </div>
                 <div className="detail-col">
                   <h3>Why flagged</h3>
-                  <SHAPPanel ringId={selected.ring_id} />
+                  <SHAPPanel ringId={selected.ring_id} ring={selectedRing} />
                 </div>
               </div>
 

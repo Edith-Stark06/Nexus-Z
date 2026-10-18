@@ -1,4 +1,4 @@
-.landing { min-height: 100vh; background: var(--bg); }
+.landing { min-height: 100vh; background: var(--bg); overflow-x: clip; }
 
 .l-nav {
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
