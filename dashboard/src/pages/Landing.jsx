@@ -1,39 +1,8 @@
 import { Link } from "react-router-dom";
 import Logo from "../components/Logo";
+import HeroGraph from "../components/HeroGraph";
 import { ROLE_LIST } from "../auth/session";
 import "./Landing.css";
-
-// A static, made-up example of the shape NEXUS Z looks for. It is an illustration, not data.
-function RingIllustration() {
-  const victims = [[40, 40], [34, 92], [46, 146], [30, 200], [42, 252], [36, 300]];
-  const collectors = [[176, 96], [168, 200], [182, 286]];
-  const mules = [[290, 70], [300, 160], [286, 250]];
-  const cashout = [392, 160];
-  const links = [
-    ...victims.map((v, i) => [v, collectors[Math.floor(i / 2)], "victim"]),
-    [collectors[0], mules[0], "ring"], [collectors[1], mules[1], "ring"], [collectors[2], mules[2], "ring"],
-    [collectors[1], mules[0], "ring"], [mules[0], cashout, "ring"], [mules[1], cashout, "ring"], [mules[2], cashout, "ring"],
-  ];
-  return (
-    <svg className="ring-art" viewBox="0 0 440 340" role="img"
-      aria-label="Example of a ring: many payers pay a few collector accounts, money passes through mule accounts to one cash-out. Illustration only.">
-      <ellipse cx="270" cy="170" rx="170" ry="140" fill="rgba(225,29,90,0.06)" stroke="rgba(225,29,90,0.45)" strokeDasharray="5 5" />
-      {links.map(([a, b, kind], i) => (
-        <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={kind === "victim" ? "#9aa0ee" : "#E11D5A"} strokeWidth={kind === "victim" ? 1.4 : 2.4} />
-      ))}
-      {victims.map(([x, y], i) => <circle key={`v${i}`} cx={x} cy={y} r="7" fill="#fff" stroke="#0C0F1D" strokeWidth="2" />)}
-      {collectors.map(([x, y], i) => <circle key={`c${i}`} cx={x} cy={y} r={i === 1 ? 14 : 11} fill="#E11D5A" />)}
-      {mules.map(([x, y], i) => <circle key={`m${i}`} cx={x} cy={y} r="9" fill="#fff" stroke="#E11D5A" strokeWidth="3" />)}
-      <rect x={cashout[0] - 11} y={cashout[1] - 11} width="22" height="22" rx="3" fill="#0C0F1D" />
-      <g fontFamily="Hanken Grotesk, sans-serif" fontSize="12" fill="#4F566B">
-        <text x="14" y="18">Payers</text>
-        <text x="150" y="68">Collectors</text>
-        <text x="266" y="40">Mule chain</text>
-        <text x="358" y="204">Cash-out</text>
-      </g>
-    </svg>
-  );
-}
 
 const STEPS = [
   { n: "1", title: "Watch how money moves", text: "Every payment becomes a link between two accounts. The system looks at who pays whom, how quickly money is passed on, and how groups of accounts connect." },
@@ -75,9 +44,8 @@ export default function Landing() {
             </div>
             <p className="l-fine">Runs on IBM LinuxONE. Built for the IBM Z Datathon 2026.</p>
           </div>
-          <div className="l-hero-art" aria-hidden={false}>
-            <RingIllustration />
-            <span className="l-caption">Illustration of the shape we look for. Not real data.</span>
+          <div className="l-hero-art">
+            <HeroGraph />
           </div>
         </section>
 
