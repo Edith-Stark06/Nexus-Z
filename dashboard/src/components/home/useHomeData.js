@@ -2,64 +2,34 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useData } from "../../state/DataContext";
 import { sortRings } from "../../lib/filters";
 import { mergeRings } from "../../lib/graph";
+import { describeSystem } from "../../lib/provenance";
 
 /**
- * Where the homepage gets its rings from, and what it may call them.
+ * Where the homepage gets its rings from, and what it may call them. There is no fallback to invented data: when the API cannot
+ * supply rings the page says so and offers a retry.
  *
- *   live          the API answered and returned rings from its model backend
- *   stub          the API answered, but its stub backend serves invented sample data
- *   illustrative  no usable API data (unreachable, no rings, or the demo sample): the invented rings bundled with the
- *                 dashboard, drawn as an "Illustrative transaction network". Never presented as findings.
- *   connecting    still waiting for the first answer
+ *   connecting   still waiting for the first answer
+ *   live         the API answered and returned rings from its model backend
+ *   stale        the API stopped answering; these are the last rings it returned
+ *   stub         the API answered, but its stub backend serves invented sample data
+ *   demo         the analyst chose the bundled demo sample (invented), on purpose
+ *   unreachable  the API has never answered
+ *   empty        the API answered with no rings
  */
-let bundled = null;
-async function loadBundled() {
-  if (!bundled) {
-    const m = await import("../../lib/mock.js");
-    const rings = await m.loadMockRings();
-    bundled = {
-      rings,
-      async getDetail(id) {
-        const d = await m.loadMockRing(id);
-        return d ? { status: "ok", data: d } : { status: "notfound" };
-      },
-    };
-  }
-  return bundled;
-}
-
 export function useHomeSource() {
   const data = useData();
-  const [sample, setSample] = useState(null);
-  const live = (data.mode === "live" || data.mode === "stale") && data.rings.length > 0;
-  const waiting = !data.loaded && (data.mode === "connecting" || data.mode === "standalone");
-
-  useEffect(() => {
-    if (!live && !waiting && !sample) {
-      let cancelled = false;
-      loadBundled().then((b) => !cancelled && setSample(b));
-      return () => {
-        cancelled = true;
-      };
-    }
-    return undefined;
-  }, [live, waiting, sample]);
-
   return useMemo(() => {
-    if (live) {
-      const stub = data.health?.backend === "stub";
-      return {
-        source: stub ? "stub" : "live",
-        backend: data.health?.backend || null,
-        summaries: sortRings(data.rings, "risk"),
-        getDetail: data.getRing,
-        reason: null,
-      };
-    }
-    if (waiting || !sample) return { source: "connecting", backend: null, summaries: [], getDetail: async () => ({ status: "error" }), reason: null };
-    const reason = data.mode === "demo" ? "demo" : data.mode === "live" || data.mode === "stale" ? "no-rings" : "unreachable";
-    return { source: "illustrative", backend: null, summaries: sortRings(sample.rings, "risk"), getDetail: sample.getDetail, reason };
-  }, [live, waiting, sample, data.health, data.rings, data.getRing, data.mode]);
+    const waiting = !data.loaded && (data.mode === "connecting" || data.mode === "standalone");
+    const base = { backend: data.health?.backend || null, backendLabel: describeSystem(data).backend.label, summaries: [], getDetail: data.getRing, error: data.lastError || "", retry: data.retryLive };
+    if (waiting) return { ...base, source: "connecting", getDetail: async () => ({ status: "error" }) };
+    if (data.mode === "unreachable") return { ...base, source: "unreachable" };
+    if (data.rings.length === 0) return { ...base, source: "empty" };
+    const summaries = sortRings(data.rings, "risk");
+    if (data.mode === "demo") return { ...base, source: "demo", summaries };
+    if (data.mode === "stale") return { ...base, source: "stale", summaries };
+    return { ...base, source: data.health?.backend === "stub" ? "stub" : "live", summaries };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.loaded, data.mode, data.health, data.rings, data.getRing, data.lastError, data.retryLive]);
 }
 
 /**
@@ -69,8 +39,9 @@ export function useHomeSource() {
 export function useHeroNetwork(home, count = 3) {
   const { refresh } = useData();
   const [state, setState] = useState({ phase: "loading", network: null, changed: false, error: "" });
+  const [nonce, setNonce] = useState(0);
   const top = home.summaries.slice(0, count);
-  const key = `${home.source}:${top.map((r) => r.ring_id).join(",")}`;
+  const key = `${home.source}:${top.map((r) => r.ring_id).join(",")}:${nonce}`;
   const getDetail = useRef(home.getDetail);
   getDetail.current = home.getDetail;
 
@@ -97,7 +68,7 @@ export function useHeroNetwork(home, count = 3) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return state;
+  return { ...state, reload: () => setNonce((n) => n + 1) };
 }
 
 export function useReducedMotion() {
@@ -111,28 +82,4 @@ export function useReducedMotion() {
     return () => mq.removeEventListener?.("change", on);
   }, []);
   return reduced;
-}
-
-// Fades a section in once when it scrolls into view. Content is visible by default; this only adds the transition, and not at all
-// when the viewer prefers reduced motion or the browser cannot observe intersections.
-export function useReveal() {
-  const ref = useRef(null);
-  const reduced = useReducedMotion();
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || reduced || typeof IntersectionObserver === "undefined") return undefined;
-    el.dataset.reveal = "pending";
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          el.dataset.reveal = "done";
-          io.disconnect();
-        }
-      },
-      { threshold: 0.12 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [reduced]);
-  return ref;
 }

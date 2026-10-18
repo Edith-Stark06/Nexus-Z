@@ -6,6 +6,9 @@ import RiskMeter from "../components/RiskMeter";
 import { useData } from "../state/DataContext";
 import { filterAlerts, sortAlerts, sortRings, victimFlagCounts, overviewNumbers } from "../lib/filters";
 import { formatUtc } from "../lib/constants";
+import { StatusRows } from "../components/SystemStatus";
+import { describeSystem } from "../lib/provenance";
+import { RING_SCORE_NOTE } from "../lib/scores";
 import "./Overview.css";
 
 function Figure({ value, label, hint, ready }) {
@@ -17,17 +20,9 @@ function Figure({ value, label, hint, ready }) {
   );
 }
 
-function Row({ k, v, title }) {
-  return (
-    <div className="ov-kv" title={title}>
-      <dt>{k}</dt>
-      <dd>{v}</dd>
-    </div>
-  );
-}
-
 export default function Overview() {
-  const { rings, alerts, loaded, mode, health } = useData();
+  const data = useData();
+  const { rings, alerts, loaded, mode } = data;
   const navigate = useNavigate();
   const nums = useMemo(() => overviewNumbers(rings, alerts), [rings, alerts]);
   const victimCounts = useMemo(() => victimFlagCounts(alerts), [alerts]);
@@ -36,20 +31,20 @@ export default function Overview() {
   const ready = loaded;
 
   return (
-    <Layout title="Investigation overview" subtitle="Where to look next">
+    <Layout title="Overview" subtitle="The highest-scored flagged rings, recent likely-victim flags, and where this data comes from.">
       <div className="ov">
         <div className="ov-figs" aria-label="Summary of the current results">
           <Figure ready={ready} value={nums.rings} label="Rings flagged" hint="Rings in the API's current results" />
-          <Figure ready={ready} value={nums.highRisk} label="High risk (50+)" hint="Rings with an automated risk signal of 50 or more" />
+          <Figure ready={ready} value={nums.highRisk} label="Ring score 50 or more" hint="Rings with a ring score of 50 or more (the cut-off the API uses for high severity)" />
           <Figure ready={ready} value={nums.accountsInRings} label="Accounts in rings" hint="Sum of ring sizes; an account is in one ring at a time" />
-          <Figure ready={ready} value={nums.victimFlags} label="Likely victims flagged" hint="Accounts that recently paid into a flagged ring. Nothing is sent to them." />
+          <Figure ready={ready} value={nums.victimFlags} label="Likely victims flagged" hint="Accounts that recently paid into a flagged ring: a heuristic. Nothing is sent to them." />
         </div>
 
         <div className="ov-cols">
           <section className="ov-main" aria-labelledby="ov-top">
             <header className="ov-head">
-              <h2 id="ov-top" className="eyebrow">Highest-risk rings</h2>
-              <Link to="/rings" className="ov-more">Open the ring explorer <ArrowRight size={13} aria-hidden="true" /></Link>
+              <h2 id="ov-top">Highest-scored rings</h2>
+              <Link to="/rings" className="ov-more">Open investigations <ArrowRight size={13} aria-hidden="true" /></Link>
             </header>
             {!ready ? (
               <div className="ov-skel">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="skel" />)}</div>
@@ -59,9 +54,9 @@ export default function Overview() {
                 {mode === "unreachable" ? "See the banner above to retry." : "When the model flags a group of linked accounts it is listed here."}
               </div>
             ) : (
-              <table className="tbl ov-tbl">
+              <div className="ov-scroll"><table className="tbl ov-tbl">
                 <thead>
-                  <tr><th>Risk</th><th>Ring</th><th className="r">Accounts</th><th className="r" title="Likely victims flagged for the ring. The scorer lists at most 3 per ring, so 3 means 3 or more.">Victims flagged</th><th>Flagged (UTC)</th><th>Why</th></tr>
+                  <tr><th title="Ring score, 0 to 100">Ring score</th><th>Ring</th><th className="r">Accounts</th><th className="r" title="Likely victims flagged for the ring. The scorer lists at most 3 per ring, so 3 means 3 or more.">Victims flagged</th><th>Flagged (UTC)</th><th>Why</th></tr>
                 </thead>
                 <tbody>
                   {top.map((r) => (
@@ -75,17 +70,17 @@ export default function Overview() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
             <p className="ov-note faint">
-              Risk is an automated signal for review, not a finding of fraud. It tends to favour small rings, so the top of this list is often 3-account rings. Ring ids
-              change when a refresh changes a ring's members.
+              {RING_SCORE_NOTE} The score tends to favour small rings, so the top of this list is often 3-account rings. Ring ids change when a refresh changes a
+              ring's members.
             </p>
           </section>
 
           <aside className="ov-side">
             <section aria-labelledby="ov-vic">
-              <header className="ov-head"><h2 id="ov-vic" className="eyebrow">Likely victims flagged</h2><Link to="/alerts?type=victim_warning" className="ov-more">All <ArrowRight size={13} aria-hidden="true" /></Link></header>
+              <header className="ov-head"><h2 id="ov-vic">Likely victims flagged</h2><Link to="/alerts?type=victim_warning" className="ov-more">All <ArrowRight size={13} aria-hidden="true" /></Link></header>
               {flags.length === 0 ? (
                 <div className="empty">No account has recently paid into a flagged ring.</div>
               ) : (
@@ -108,23 +103,12 @@ export default function Overview() {
                   ))}
                 </ul>
               )}
-              <p className="ov-note faint">This rule (recently paid into a flagged ring) has not been evaluated for accuracy.</p>
+              <p className="ov-note faint">A heuristic (recently paid into a flagged ring) that has not been evaluated for accuracy. Alerts cover only the 10 highest-scored rings.</p>
             </section>
 
             <section aria-labelledby="ov-pipe">
-              <header className="ov-head"><h2 id="ov-pipe" className="eyebrow">Pipeline</h2><Link to="/platform" className="ov-more">Details <ArrowRight size={13} aria-hidden="true" /></Link></header>
-              {!health ? (
-                <div className="empty">{mode === "demo" ? "Demo sample: there is no backend to report." : "No health data yet."}</div>
-              ) : (
-                <dl className="ov-kvs">
-                  <Row k="Backend" v={<span className={health.backend === "stub" ? "ov-stub" : ""}>{health.backend}{health.backend === "stub" ? " (invented data)" : ""}</span>} />
-                  {health.data_as_of && <Row k="Data as of" v={<span className="mono">{formatUtc(health.data_as_of)}</span>} title="Time of the newest payment in the served state" />}
-                  {health.state_age_seconds != null && <Row k="State age" v={`${Math.round(health.state_age_seconds)} s`} title="How long ago the served state was built, at the last health check" />}
-                  {health.last_rebuild_seconds != null && <Row k="Last rebuild took" v={`${health.last_rebuild_seconds.toFixed(1)} s`} />}
-                  {health.refresh_interval_seconds != null && <Row k="Refresh interval" v={`${health.refresh_interval_seconds} s minimum`} />}
-                  {health.pending_transactions != null && <Row k="Payments waiting" v={health.pending_transactions.toLocaleString()} title="Accepted, not yet in the served state" />}
-                </dl>
-              )}
+              <header className="ov-head"><h2 id="ov-pipe">System and data</h2><Link to="/platform" className="ov-more">Details <ArrowRight size={13} aria-hidden="true" /></Link></header>
+              <StatusRows sys={describeSystem(data)} />
               <p className="ov-note faint">A new payment shows up after the next background rebuild: the whole history is rescored in micro-batches, not payment by payment.</p>
             </section>
           </aside>

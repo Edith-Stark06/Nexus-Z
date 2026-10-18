@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertTriangle, MousePointerClick } from "lucide-react";
-import Layout from "./Layout";
+import Layout, { PageHeader } from "./Layout";
 import GraphCanvas from "../components/GraphCanvas";
 import ReplaySlider from "../components/ReplaySlider";
 import RingList from "../components/explorer/RingList";
@@ -102,11 +102,13 @@ export default function Explorer() {
   const [cutoff, setCutoff] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [linkSel, setLinkSel] = useState(null);
+  const [retryN, setRetryN] = useState(0);
+  const [optsOpen, setOptsOpen] = useState(false); // narrow screens keep the graph controls folded away until asked for
   const canvas = useRef(null);
 
   const victimCounts = useMemo(() => victimFlagCounts(alerts), [alerts]);
   const visibleRings = useMemo(() => sortRings(filterRings(rings, { ...filters, victimCounts }), filters.sort), [rings, filters, victimCounts]);
-  const { state, ring, stale, message } = useRing(ringId);
+  const { state, ring, stale, message } = useRing(ringId, retryN);
   const successors = useSuccessors(ring, state === "notfound");
   const lookup = useAccountLookup(filters.query);
 
@@ -199,16 +201,24 @@ export default function Explorer() {
       {state === "notfound" && <RingMissing ringId={ringId} ring={ring} successors={successors} onOpen={selectRing} onList={() => setTab("rings")} />}
       {state === "error" && (
         <div className="notice danger" role="alert">
-          <div className="grow">Could not load ring <span className="mono">{ringId}</span>: {message || "unknown error"}</div>
+          <div className="grow">
+            <strong>Could not load ring <span className="mono">{ringId}</span>.</strong> {message || "The API did not answer."}
+            <div className="notice-actions"><button onClick={() => setRetryN((n) => n + 1)}>Retry</button></div>
+          </div>
         </div>
       )}
       {hasRing && (
         <>
-          <GraphToolbar
+          {viewport === "narrow" && (
+            <div className="ex-opts">
+              <button aria-expanded={optsOpen} aria-controls="ex-toolbar" onClick={() => setOptsOpen((o) => !o)}>Graph options</button>
+            </div>
+          )}
+          {(viewport !== "narrow" || optsOpen) && <div id="ex-toolbar"><GraphToolbar
             layout={layout} setLayout={setLayout} emphasis={emphasis} setEmphasis={setEmphasis} labels={labels} setLabels={setLabels}
             members={ring.members || []}
             onLocate={(id) => { selectNode(id); setTimeout(() => canvas.current?.locate(id), 0); }}
-          />
+          /></div>}
           <GraphLegend members={ring.members || []} hiddenRoles={hidden} toggleRole={toggleRole} emphasis={emphasis} />
           <div className="ex-canvas">
             <GraphCanvas
@@ -232,6 +242,13 @@ export default function Explorer() {
               canReset={Boolean(accountId || linkSel)}
             />
             {stale && <div className="ex-stale tag warn">Last copy · ring no longer current</div>}
+            {viewport !== "wide" && (accountId || selectedLink) && (
+              <div className="ex-selchip" role="status">
+                <span className="faint">Selected</span>
+                <span className="mono">{accountId || `${selectedLink.source.slice(-6)} → ${selectedLink.target.slice(-6)}`}</span>
+                <button className="primary" onClick={() => setTab("details")}>View details</button>
+              </div>
+            )}
           </div>
           <div className="ex-replay">
             <ReplaySlider edges={ring.edges || []} t={cutoff} onT={setCutoff} playing={playing} onPlay={onPlay} />
@@ -248,7 +265,7 @@ export default function Explorer() {
           </p>
           {topRing && (
             <button className="primary" onClick={() => selectRing(topRing.ring_id)}>
-              Start with the highest-risk ring: <span className="mono">{topRing.ring_id}</span>
+              Start with the highest-scored ring: <span className="mono">{topRing.ring_id}</span>
             </button>
           )}
           {!loaded && mode === "unreachable" && <p className="faint">The API is not reachable; see the banner above.</p>}
@@ -262,7 +279,7 @@ export default function Explorer() {
       {selectedLink ? (
         <PaymentInspector link={selectedLink} onSelectNode={selectNode} onBack={clearSelection} />
       ) : accountId ? (
-        <AccountInspector accountId={accountId} ring={ring} onSelectNode={selectNode} onBack={clearSelection} />
+        <AccountInspector accountId={accountId} ring={ring} onSelectNode={selectNode} onBack={clearSelection} onFocusNeighbours={(id) => canvas.current?.focusNeighbours(id)} />
       ) : ring ? (
         <RingInspector ring={ring} stale={stale} alerts={alerts} onSelectNode={selectNode} onSelectLink={selectLink} />
       ) : (
@@ -279,7 +296,8 @@ export default function Explorer() {
   const activeTab = viewport === "mid" && tab === "graph" ? "details" : tab;
 
   return (
-    <Layout title="Ring explorer" subtitle={ringId ? `Ring ${ringId}` : "Observe, select, explore, inspect"} flush>
+    <Layout flush>
+      <PageHeader compact title="Investigations" description="Select a flagged ring, read its payment graph, and inspect the accounts and reasons behind it." />
       <div className={`ex ex-${viewport}`}>
         {tabs.length > 0 && (
           <div className="ex-tabs seg" role="tablist" aria-label="Panels">

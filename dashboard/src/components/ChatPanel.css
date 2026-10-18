@@ -3,7 +3,7 @@
 .chat-head h2 { font-size: var(--fs-lg); }
 .chat-badge { font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 8px; border-radius: var(--radius); border: 1px solid var(--line); color: var(--text-2); }
 .chat-badge-llm { color: var(--accent-hi); border-color: var(--accent-line); background: var(--accent-wash); }
-.chat-badge-rules, .chat-badge-off { color: var(--warn); border-color: rgba(229, 175, 98, 0.45); background: var(--warn-wash); }
+.chat-badge-rules, .chat-badge-off { color: var(--warn-text); background: var(--warn-wash); }
 .chat-disclaimer { margin: 0; font-size: var(--fs-sm); color: var(--text-2); line-height: 1.55; }
 .chat-log { min-height: 320px; max-height: 62vh; overflow-y: auto; padding: var(--s4); border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: var(--s3); }
 .chat-empty { color: var(--text-2); font-size: var(--fs-sm); }

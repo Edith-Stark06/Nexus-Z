@@ -1,21 +1,30 @@
-.gt { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: var(--s2) var(--s3); background: var(--surface); border-bottom: 1px solid var(--line); flex: none; }
-.gt-group { display: inline-flex; align-items: center; gap: 6px; }
-.gz { position: absolute; top: var(--s3); right: var(--s3); z-index: 4; display: grid; gap: 4px; }
-.gz button { background: rgba(17, 25, 35, 0.92); }
-.gt select { font-size: var(--fs-sm); padding: 3px 4px; }
-.gt-find { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 8px; background: var(--bg); position: relative; }
-.gt-find:focus-within { border-color: var(--accent-line); }
-.gt-find svg { color: var(--text-3); }
-.gt-find input { border: 0; background: transparent; padding: 4px 0; width: 150px; outline: none !important; font-size: var(--fs-sm); }
-.gt-miss { position: absolute; top: calc(100% + 4px); left: 0; white-space: nowrap; font-size: var(--fs-xs); color: var(--warn); background: var(--raised); border: 1px solid var(--line); padding: 2px 6px; border-radius: var(--radius); z-index: 6; }
+.gt { display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap; padding: var(--s2) var(--s3); background: var(--surface); border-bottom: 1px solid var(--line); flex: none; }
+.gt-group { display: inline-flex; align-items: center; gap: 8px; }
+.gt-group .eyebrow { color: var(--text-2); }
+.gz { position: absolute; top: var(--s3); right: var(--s3); z-index: 4; display: grid; gap: 1px; background: var(--line); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); }
+.gz button { background: var(--surface); border-radius: 0; color: var(--text); }
+.gz button:hover:not(:disabled) { background: var(--layer); }
+.gz button:disabled { color: #c6c6c6; background: var(--surface); }
+.gt select { font-size: var(--fs-sm); }
+.gt-find { display: inline-flex; align-items: center; gap: 6px; padding: 0 var(--s2); background: var(--raised); border-bottom: 1px solid var(--line-strong); position: relative; min-height: var(--control-h); }
+.gt-find:focus-within { outline: 2px solid var(--focus); outline-offset: -2px; }
+.gt-find svg { color: var(--text-2); }
+.gt-find input { border: 0; background: transparent; padding: 0; width: 160px; outline: none !important; font-size: var(--fs-sm); }
+.gt-find input:hover { background: transparent; }
+.gt-miss { position: absolute; top: calc(100% + 4px); left: 0; white-space: nowrap; font-size: var(--fs-xs); color: var(--warn-text); background: var(--warn-wash); padding: 2px 8px; z-index: 6; }
 
-.gl { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: 4px var(--s3); background: var(--surface); border-bottom: 1px solid var(--line-soft); flex: none; position: relative; }
+.gl { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: 2px var(--s3); background: var(--surface); border-bottom: 1px solid var(--line); flex: none; position: relative; }
+.gl .eyebrow { color: var(--text-2); }
 .gl ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px; }
-.gl-role { display: inline-flex; align-items: center; gap: 7px; border: 0; padding: 3px 8px; font-size: var(--fs-sm); }
-.gl-role:hover:not(:disabled) { background: var(--raised); }
-.gl-role[aria-pressed="false"] { opacity: 0.85; }
+.gl-role { display: inline-flex; align-items: center; gap: 7px; padding: 0 var(--s2); min-height: 28px; font-size: var(--fs-sm); color: var(--text); }
+.gl-role:hover:not(:disabled) { background: var(--layer); }
 .gl-off { text-decoration: line-through; color: var(--text-3); }
 .gl-help { margin-left: auto; font-size: var(--fs-sm); }
-.gl-help summary { cursor: pointer; color: var(--accent); list-style: none; user-select: none; }
+.gl-help summary { cursor: pointer; color: var(--accent-hi); list-style: none; user-select: none; }
 .gl-help summary::-webkit-details-marker { display: none; }
-.gl-help[open] .gl-key { position: absolute; right: var(--s3); top: calc(100% + 4px); width: 340px; z-index: 8; background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s3); display: grid; gap: 6px; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-2); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); }
+.gl-help[open] .gl-key { position: absolute; right: var(--s3); top: calc(100% + 4px); width: min(360px, calc(100vw - 32px)); z-index: 8; background: var(--surface); border: 1px solid var(--line); padding: var(--s3); display: grid; gap: 6px; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-2); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18); }
+
+/* role toggles in a legend are on by default: show that with a quiet state, not a blue outline on every chip */
+.gl-role[aria-pressed="true"], .hn-role[aria-pressed="true"] { background: transparent; border-color: transparent; color: var(--text); }
+.gl-role[aria-pressed="false"], .hn-role[aria-pressed="false"] { background: transparent; color: var(--text-3); }
+.gl-role:hover:not(:disabled), .hn-role:hover:not(:disabled) { background: var(--layer); }

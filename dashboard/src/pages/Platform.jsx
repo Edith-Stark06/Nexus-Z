@@ -3,6 +3,9 @@ import Layout from "./Layout";
 import { useData } from "../state/DataContext";
 import { submitTransactions, API_BASE, ApiError } from "../services/api";
 import { formatUtc } from "../lib/constants";
+import { StatusRows } from "../components/SystemStatus";
+import { describeSystem } from "../lib/provenance";
+import { AMOUNT_NOTE } from "../lib/scores";
 import "./Platform.css";
 
 const CONNECTION_WORDS = {
@@ -113,7 +116,8 @@ function PaymentForm({ health, mode }) {
 }
 
 export default function Platform() {
-  const { health, mode, lastOk, lastError } = useData();
+  const data = useData();
+  const { health, mode, lastOk, lastError } = data;
   const rows = health
     ? [
         ["Status", health.status],
@@ -132,24 +136,32 @@ export default function Platform() {
     : [];
 
   return (
-    <Layout title="Platform" subtitle="What the API reports about itself">
+    <Layout title="Platform" subtitle="System status, data provenance, and what the API reports about itself.">
       <div className="pl">
+        <section className="pl-card pl-wide" aria-labelledby="pl-status">
+          <h2 id="pl-status">Status and provenance</h2>
+          <p className="pl-note">
+            Four separate facts. A responding API says nothing about how old the data behind it is, so each is stated on its own.
+          </p>
+          <StatusRows sys={describeSystem(data)} />
+        </section>
+
         <section className="pl-card">
-          <h2 className="eyebrow">Connection</h2>
+          <h2>Connection</h2>
           <dl className="pl-kv">
             <div><dt>API address</dt><dd className="mono">{API_BASE}</dd></div>
             <div><dt>Connection</dt><dd>{CONNECTION_WORDS[mode] || mode}</dd></div>
-            <div><dt>Last successful health check</dt><dd className="mono">{lastOk ? lastOk.toLocaleTimeString([], { hour12: false }) : "never"}</dd></div>
+            <div><dt>Last answer received (this browser)</dt><dd className="mono">{lastOk ? lastOk.toLocaleTimeString([], { hour12: false }) : "never"}</dd></div>
             {lastError && <div><dt>Last problem</dt><dd>{lastError}</dd></div>}
           </dl>
-          <p className="pl-note faint">
+          <p className="pl-note">
             NEXUS Z is built for IBM LinuxONE (s390x). This page cannot tell where the API is running: <span className="mono">/health</span> does not report the machine, so
             nothing here claims LinuxONE.
           </p>
         </section>
 
         <section className="pl-card">
-          <h2 className="eyebrow">/health</h2>
+          <h2>Raw <span className="mono">/health</span> response</h2>
           {rows.length === 0 ? (
             <div className="empty">{mode === "demo" ? "Demo sample: there is no API to report." : "No health response yet."}</div>
           ) : (
@@ -165,8 +177,8 @@ export default function Platform() {
         </section>
 
         <section className="pl-card pl-wide">
-          <h2 className="eyebrow">Submit a test payment</h2>
-          <p className="pl-note faint">Sends one payment to <span className="mono">POST /transactions</span>. Use it to see a new account appear after a refresh. The API accepts amounts without a currency.</p>
+          <h2>Submit a test payment</h2>
+          <p className="pl-note faint">Sends one payment to <span className="mono">POST /transactions</span>. Use it to see a new account appear after a refresh. The API takes no currency. {AMOUNT_NOTE}</p>
           <PaymentForm health={health} mode={mode} />
         </section>
       </div>

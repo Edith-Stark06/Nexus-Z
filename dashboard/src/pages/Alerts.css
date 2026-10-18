@@ -1,15 +1,22 @@
-.al { display: grid; gap: var(--s3); max-width: 1320px; }
+.al { display: grid; gap: var(--s4); }
 .al-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); }
-.al-search { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 8px; background: var(--bg); min-width: 260px; }
-.al-search:focus-within { border-color: var(--accent-line); }
-.al-search svg { color: var(--text-3); }
-.al-search input { border: 0; background: transparent; padding: 6px 0; width: 100%; outline: none !important; }
-.al-count { margin-left: auto; font-size: var(--fs-sm); }
+.al-search { display: flex; align-items: center; gap: 8px; background: var(--surface); border-bottom: 1px solid var(--line-strong); padding: 0 var(--s3); min-width: min(320px, 100%); flex: 1 1 280px; max-width: 420px; min-height: var(--control-h); }
+.al-search:focus-within { outline: 2px solid var(--focus); outline-offset: -2px; }
+.al-search svg { color: var(--text-2); flex: none; }
+.al-search input { border: 0; background: transparent; width: 100%; outline: none !important; padding: 0; }
+.al-search input:hover { background: transparent; }
+.al-bar select { background: var(--surface); }
+.al-count { margin-left: auto; font-size: var(--fs-sm); color: var(--text-2); }
 .al-table { background: var(--surface); border: 1px solid var(--line); overflow: auto; }
-.al-tbl td.al-msg { color: var(--text-2); max-width: 520px; display: table-cell; }
-.al-tbl td.al-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.al-sev { display: inline-flex; align-items: center; gap: 6px; text-transform: capitalize; }
+.al-row { cursor: pointer; }
+.al-tbl td.al-msg { color: var(--text-2); max-width: 520px; min-width: 240px; }
+.al-sev { display: inline-flex; align-items: center; gap: 8px; }
+.al-acc { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; white-space: nowrap; }
 .al-pre { font-size: var(--fs-xs); margin-left: 4px; }
 .al-skel { padding: var(--s4); display: grid; gap: var(--s3); }
-.al-note { font-size: var(--fs-xs); }
-@media (max-width: 900px) { .al-tbl th:nth-child(n+6), .al-tbl td:nth-child(n+6) { display: none; } }
+.al-notes { display: grid; gap: var(--s2); font-size: var(--fs-xs); color: var(--text-2); max-width: 90ch; line-height: 1.5; }
+.al-notes strong { color: var(--text); }
+@media (max-width: 900px) {
+  .al-tbl { min-width: 760px; }
+  .al-count { margin-left: 0; width: 100%; }
+}

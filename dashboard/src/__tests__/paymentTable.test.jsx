@@ -15,19 +15,20 @@ describe("PaymentTable", () => {
       t.textContent
     );
     expect(times).toEqual([
-      "2026-10-14T09:00:00Z",
-      "2026-10-14T10:00:00Z",
-      "2026-10-14T11:00:00Z",
+      "2026-10-14 09:00 UTC",
+      "2026-10-14 10:00 UTC",
+      "2026-10-14 11:00 UTC",
     ]);
   });
 
-  it("renders the mixed-currencies header with no currency symbol", () => {
+  it("labels the amount column as recorded (no currency reported) and draws no currency symbol", () => {
     const { container } = render(<PaymentTable edges={edges} />);
     const headers = [...container.querySelectorAll("th")].map((h) =>
       h.textContent
     );
     const amountHeader = headers.find((h) => /amount/i.test(h));
-    expect(amountHeader).toBe("amount (mixed currencies)");
+    expect(amountHeader).toBe("Amount*");
+    expect(container.textContent).toMatch(/does not report a currency/);
     expect(amountHeader).not.toMatch(/[$€£¥]/);
   });
 

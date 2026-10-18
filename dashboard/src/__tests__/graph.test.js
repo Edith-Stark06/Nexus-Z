@@ -215,7 +215,7 @@ describe("mergeRings", () => {
     const m = mergeRings([d("R1", ["A", "B"]), d("R2", ["C"])]);
     expect(m.members.map((x) => [x.id, x.cluster])).toEqual([["A", "R1"], ["B", "R1"], ["C", "R2"]]);
     expect(m.clusters.map((c) => c.id)).toEqual(["R1", "R2"]);
-    expect(m.clusters[0].label).toBe("R1 · risk 70");
+    expect(m.clusters[0].label).toBe("R1 · ring score 70");
     expect(m.ring_id).toBe("merged:R1+R2");
   });
 

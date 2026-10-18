@@ -4,6 +4,7 @@ import Overview from "./pages/Overview";
 import Explorer from "./pages/Explorer";
 import Alerts from "./pages/Alerts";
 import AccountDetail from "./pages/AccountDetail";
+import Accounts from "./pages/Accounts";
 import WarningScreen from "./pages/WarningScreen";
 import Assistant from "./pages/Assistant";
 import Platform from "./pages/Platform";
@@ -16,6 +17,7 @@ export default function App() {
       <Route path="/overview" element={<Overview />} />
       <Route path="/rings" element={<Explorer />} />
       <Route path="/ring/:ringId" element={<Explorer />} />
+      <Route path="/accounts" element={<Accounts />} />
       <Route path="/account/:accountId" element={<AccountDetail />} />
       <Route path="/alerts" element={<Alerts />} />
       <Route path="/warning/:accountId" element={<WarningScreen />} />

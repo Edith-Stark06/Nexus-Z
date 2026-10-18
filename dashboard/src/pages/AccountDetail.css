@@ -1,16 +1,22 @@
-.ac { display: grid; gap: var(--s4); max-width: 1200px; }
-.ac-crumb { font-size: var(--fs-sm); }
-.ac-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s5); align-items: flex-end; padding-bottom: var(--s4); border-bottom: 1px solid var(--line); }
-.ac-id { font-size: var(--fs-2xl); line-height: 1.2; letter-spacing: 0.01em; }
-.ac-role { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: var(--fs-sm); }
-.ac-risk { display: grid; gap: 4px; }
-.ac-actions { display: flex; gap: var(--s2); flex-wrap: wrap; margin-left: auto; }
-.ac-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: var(--s4); align-items: start; }
-.ac-card { background: var(--surface); border: 1px solid var(--line); padding: var(--s4); display: grid; gap: var(--s2); min-width: 0; }
+.ac { display: grid; gap: var(--s4); }
+.ac-crumb { font-size: var(--fs-sm); color: var(--text-2); }
+.ac-head { background: var(--surface); padding: var(--s4) var(--s5); display: grid; gap: var(--s4); border-top: 3px solid var(--shell); }
+.ac-id { font-size: var(--fs-2xl); line-height: 1.2; font-weight: 600; overflow-wrap: anywhere; }
+.ac-sum { display: flex; flex-wrap: wrap; gap: var(--s6); }
+.ac-sum > div { display: grid; gap: 4px; align-content: start; }
+.ac-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); align-items: start; }
+.ac-card { background: var(--surface); padding: var(--s4) var(--s5); display: grid; gap: var(--s3); min-width: 0; }
+.ac-card h2 { font-size: var(--fs-lg); font-weight: 600; }
+.ac-h3 { font-size: var(--fs-md); font-weight: 600; margin-top: var(--s2); }
 .ac-wide { grid-column: 1 / -1; }
-.ac-hint { font-size: var(--fs-xs); }
-.ac-canvas { height: 340px; border: 1px solid var(--line-soft); }
-.ac-nb { display: flex; gap: var(--s5); flex-wrap: wrap; font-size: var(--fs-sm); }
-.ac-nb .eyebrow { margin-right: 6px; }
+.ac-hint { font-size: var(--fs-sm); color: var(--text-2); line-height: 1.5; }
+.ac-role { font-size: var(--fs-md); }
+.ac-kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3) var(--s4); margin: 0; }
+.ac-kv div { display: grid; gap: 1px; }
+.ac-kv dt { font-size: var(--fs-xs); color: var(--text-2); }
+.ac-kv dd { margin: 0; font-size: var(--fs-lg); }
+.ac-actions { display: flex; gap: var(--s3); flex-wrap: wrap; }
+.ac-canvas { height: 340px; border: 1px solid var(--line); }
 .ac-loading { display: grid; gap: var(--s3); padding: var(--s3) 0; }
-@media (max-width: 960px) { .ac-grid { grid-template-columns: minmax(0, 1fr); } }
+.ac-cp th { position: static; }
+@media (max-width: 960px) { .ac-grid { grid-template-columns: minmax(0, 1fr); } .ac-card { padding: var(--s4); } }

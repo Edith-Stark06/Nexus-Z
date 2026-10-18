@@ -3,5 +3,5 @@
 .replay-now { font-size: var(--fs-xs); color: var(--text-2); }
 .replay-bar { display: flex; align-items: center; gap: var(--s2); }
 .replay-range { flex: 1; accent-color: var(--accent); background: transparent; border: 0; padding: 0; height: 20px; }
-.replay-all { font-size: var(--fs-sm); border: 0; color: var(--accent); }
+.replay-all { font-size: var(--fs-sm); }
 .replay-empty { font-size: var(--fs-sm); padding: var(--s1) 0; }

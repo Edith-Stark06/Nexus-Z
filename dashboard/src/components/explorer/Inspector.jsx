@@ -7,6 +7,7 @@ import RoleGlyph from "../RoleGlyph";
 import { useAccountRecord } from "../../state/hooks";
 import { ROLE_LABELS, formatUtc, riskTone } from "../../lib/constants";
 import { linkId } from "../../lib/graph";
+import { accountScore, RING_SCORE_SHORT, ACCOUNT_SCORE_SHORT, ACCOUNT_SCORE_NOTE, ROLE_NOTE, AMOUNT_NOTE } from "../../lib/scores";
 import "./Inspector.css";
 
 const shortTime = (iso) => (iso ? new Date(iso).toISOString().slice(5, 16).replace("T", " ") : "—");
@@ -67,20 +68,21 @@ export function RingInspector({ ring, stale, alerts, onSelectNode, onSelectLink 
         <div className="eyebrow">Ring</div>
         <div className="ins-title">
           <span className="mono ins-id">{ring.ring_id}</span>
-          <RiskMeter value={ring.risk} />
         </div>
-        <div className="ins-flagline">
-          <span className={`tag ${tone === "high" ? "danger" : tone === "medium" ? "warn" : ""}`}>Automated risk signal</span>
-          <span className="faint">Not a finding of fraud.</span>
+        <div className="ins-score">
+          <div>
+            <div className="eyebrow">Ring score</div>
+            <RiskMeter value={ring.risk} />
+          </div>
+          <span className={`tag ${tone === "high" ? "danger" : tone === "medium" ? "warn" : ""}`}>{tone === "high" ? "High signal" : tone === "medium" ? "Medium signal" : "Lower signal"}</span>
         </div>
+        <p className="ins-hint">{RING_SCORE_SHORT}</p>
         <dl className="ins-facts">
           <div><dt>Accounts</dt><dd className="num">{ring.accounts}</dd></div>
-          <div><dt>Likely victims</dt><dd className="num" title="Estimated roles">{ring.victims}</dd></div>
-          <div><dt>First seen</dt><dd className="mono">{formatUtc(ring.first_seen)}</dd></div>
-          <div><dt>Flagged</dt><dd className="mono">{formatUtc(ring.flagged_at)}</dd></div>
-          {ring.total_amount != null && (
-            <div><dt>Total</dt><dd className="num" title="Amounts in a ring can mix currencies, so this is not a dollar value">{Number(ring.total_amount).toLocaleString()} <span className="faint">mixed currencies</span></dd></div>
-          )}
+          <div><dt>Estimated likely victims</dt><dd className="num" title="A heuristic from payment positions, not a validated classification">{ring.victims}</dd></div>
+          <div><dt>First payment (UTC)</dt><dd className="mono">{formatUtc(ring.first_seen)}</dd></div>
+          <div><dt>Flagged (UTC)</dt><dd className="mono">{formatUtc(ring.flagged_at)}</dd></div>
+          <div><dt>Payments in ring</dt><dd className="num">{(ring.edges || []).length}</dd></div>
         </dl>
       </header>
 
@@ -94,20 +96,20 @@ export function RingInspector({ ring, stale, alerts, onSelectNode, onSelectLink 
         )}
         <div className="ins-sub">
           <div className="eyebrow">Top reasons</div>
-          <p className="ins-hint">How far each signal pushed the ring's score up (+) or down (−). Not a probability.</p>
+          <p className="ins-hint">How far each signal pushed the score up (+) or down (−). These are model contributions, not probabilities.</p>
           <ReasonList reasons={ring.top_reasons} />
         </div>
       </Section>
 
-      <Section title="Accounts in this ring" hint="Roles are estimated from each account's place in the ring's payments; the data has no role labels.">
+      <Section title="Accounts in this ring" hint={`${ROLE_NOTE} Account score is on a 0–1 scale.`}>
         <table className="tbl ins-tbl">
-          <thead><tr><th>Account</th><th>Est. role</th><th className="r">Score</th></tr></thead>
+          <thead><tr><th>Account</th><th>Estimated role</th><th className="r" title={ACCOUNT_SCORE_NOTE}>Account score</th></tr></thead>
           <tbody>
             {(allMembers ? members : members.slice(0, 8)).map((m) => (
               <tr key={m.id}>
                 <td><button className="linkbtn mono" onClick={() => onSelectNode(m.id)}>{m.id}</button></td>
                 <td><RoleGlyph role={m.role} label /></td>
-                <td className="r num mono">{m.score.toFixed(2)}</td>
+                <td className="r num mono">{accountScore(m.score)}</td>
               </tr>
             ))}
           </tbody>
@@ -115,12 +117,12 @@ export function RingInspector({ ring, stale, alerts, onSelectNode, onSelectLink 
         <ShowMore total={members.length} shown={allMembers ? members.length : 8} onMore={() => setAllMembers(true)} />
       </Section>
 
-      <Section title="Payments in this ring" hint="Time order, UTC. Amounts mix currencies; compare counts and timing, not sizes.">
+      <Section title="Payments in this ring" hint={`Time order, UTC. ${(ring.edges || []).length >= 500 ? "The API returns at most the 500 most recent payments of a ring, so earlier ones are not listed. " : ""}${AMOUNT_NOTE}`}>
         {payments.length === 0 ? (
           <div className="empty">No payments are recorded for this ring.</div>
         ) : (
           <table className="tbl ins-tbl">
-            <thead><tr><th>Time</th><th>From → To</th><th className="r">Amount</th></tr></thead>
+            <thead><tr><th>Time (UTC)</th><th>From → To</th><th className="r" title={AMOUNT_NOTE}>Amount*</th></tr></thead>
             <tbody>
               {(allPays ? payments : payments.slice(0, 10)).map((e, i) => (
                 <tr key={`${e.src}${e.dst}${e.ts}${i}`}>
@@ -160,7 +162,7 @@ export function RingInspector({ ring, stale, alerts, onSelectNode, onSelectLink 
         )}
       </Section>
 
-      <Section title="What to examine next" hint="A reading order built from the data above. It is not a model output.">
+      <Section title="What to examine next" hint="A reading order built from the data above, to help decide where to look. It is not a model output and not a conclusion.">
         <ul className="ins-steps">
           {steps.map((s) => (
             <li key={s.key}>
@@ -180,7 +182,7 @@ export function RingInspector({ ring, stale, alerts, onSelectNode, onSelectLink 
 // ---------------------------------------------------------------------------------------------------------------------
 // A selected account: its own record from GET /accounts/{id}, plus what the ring's payments say about it.
 // ---------------------------------------------------------------------------------------------------------------------
-export function AccountInspector({ accountId, ring, onSelectNode, onBack }) {
+export function AccountInspector({ accountId, ring, onSelectNode, onBack, onFocusNeighbours }) {
   const rec = useAccountRecord(accountId);
   const payments = ring?.edges || [];
   const out = payments.filter((e) => e.src === accountId);
@@ -196,13 +198,22 @@ export function AccountInspector({ accountId, ring, onSelectNode, onBack }) {
         <div className="eyebrow">Account</div>
         <div className="ins-title">
           <span className="mono ins-id">{accountId}</span>
-          {a && <RiskMeter value={a.risk * 100} label="account risk" />}
         </div>
-        <div className="ins-flagline">
-          <RoleGlyph role={a?.role || member?.role || "unknown"} label />
-          <span className="faint">estimated role</span>
+        <div className="ins-score">
+          <div>
+            <div className="eyebrow">Account score</div>
+            {a ? <RiskMeter kind="account" value={a.risk} /> : member ? <RiskMeter kind="account" value={member.score} /> : <span className="faint">—</span>}
+          </div>
+          <div className="ins-flagline">
+            <RoleGlyph role={a?.role || member?.role || "unknown"} label />
+            <span className="faint">estimated role</span>
+          </div>
         </div>
-        <button className="ghost ins-back" onClick={onBack}>← Back to ring</button>
+        <p className="ins-hint">{ACCOUNT_SCORE_SHORT} Roles are estimates.</p>
+        <div className="ins-rowbtns">
+          <button className="ghost ins-back" onClick={onBack}>← Back to ring</button>
+          {onFocusNeighbours && <button onClick={() => onFocusNeighbours(accountId)} title="Zoom the graph to this account and the accounts it exchanges payments with">Focus neighbours</button>}
+        </div>
       </header>
 
       {rec.state === "loading" && <div className="ins-loading"><div className="skel" style={{ width: "60%" }} /><div className="skel" /><div className="skel" style={{ width: "80%" }} /></div>}
@@ -271,9 +282,9 @@ export function PaymentInspector({ link, onSelectNode, onBack }) {
         </dl>
         <button className="ghost ins-back" onClick={onBack}>← Back to ring</button>
       </header>
-      <Section title="Each payment" hint="Amounts mix currencies; the model treats them as raw numbers.">
+      <Section title="Each payment" hint={AMOUNT_NOTE}>
         <table className="tbl ins-tbl">
-          <thead><tr><th>Time (UTC)</th><th className="r">Amount</th></tr></thead>
+          <thead><tr><th>Time (UTC)</th><th className="r" title={AMOUNT_NOTE}>Amount*</th></tr></thead>
           <tbody>
             {link.payments.map((p, i) => (
               <tr key={i}><td className="when">{formatUtc(p.ts)}</td><td className="r num mono">{amount(p.amount)}</td></tr>
