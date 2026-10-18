@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import Logo from "../components/Logo";
 import NetworkBackdrop from "../components/NetworkBackdrop";
 import { ROLES, ROLE_LIST, homeFor, signIn, signOut, useSession } from "../auth/session";
 import { signUp, strength, validatePassword, validateUsername, verifyLogin } from "../auth/accounts";
+import { DEMO_PASSWORD, demoEnabled, demoFor, ensureDemoAccounts } from "../auth/demo";
 import "./Login.css";
 
 function Shell({ children }) {
@@ -32,6 +33,23 @@ function AccountNotice() {
   );
 }
 
+function DemoBox({ role, onUse }) {
+  const d = demoFor(role);
+  if (!d) return null;
+  return (
+    <div className="demo-box" role="group" aria-label="Demo login">
+      <div>
+        <strong>Try it with the demo login</strong>
+        <dl>
+          <dt>Username</dt><dd><code>{d.username}</code></dd>
+          <dt>Password</dt><dd><code>{DEMO_PASSWORD}</code></dd>
+        </dl>
+      </div>
+      <button type="button" onClick={() => onUse(d.username, DEMO_PASSWORD)}>Use these</button>
+    </div>
+  );
+}
+
 function PasswordField({ label, value, onChange, autoComplete, id, describedBy }) {
   const [shown, setShown] = useState(false);
   return (
@@ -49,6 +67,7 @@ function PasswordField({ label, value, onChange, autoComplete, id, describedBy }
 
 export function RoleChooser() {
   const session = useSession();
+  useEffect(() => { ensureDemoAccounts(); }, []);
   return (
     <Shell>
       <div className="login-card">
@@ -87,12 +106,14 @@ export function RoleLogin() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const cfg = ROLES[role];
+  useEffect(() => { ensureDemoAccounts(); }, []);
   if (!cfg) return <Navigate to="/login" replace />;
 
   const submit = async (e) => {
     e.preventDefault(); // never a native form post
     setBusy(true);
     setError("");
+    await ensureDemoAccounts();
     const res = await verifyLogin({ username, password, role });
     setBusy(false);
     if (!res.ok) { setError(res.error); setPassword(""); return; }
@@ -107,6 +128,7 @@ export function RoleLogin() {
         <p className="login-crumb"><Link to="/login">← All roles</Link></p>
         <h2 id="role-title">{cfg.label}</h2>
         <p className="login-sub">{cfg.blurb}</p>
+        <DemoBox role={role} onUse={(u, p) => { setUsername(u); setPassword(p); setError(""); }} />
         <div className="field">
           <label htmlFor="username">Username</label>
           <input id="username" name="username" type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={32}

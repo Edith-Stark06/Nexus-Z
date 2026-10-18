@@ -83,3 +83,14 @@
 .field label em { font-style: normal; font-weight: 400; color: var(--text-faint); }
 
 .pw-wrap input::-ms-reveal, .pw-wrap input::-ms-clear { display: none; }
+
+.demo-box {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 0 20px; padding: 14px 16px;
+  border-radius: var(--radius-sm); background: var(--accent-soft); border: 1px dashed rgba(36, 48, 217, 0.4); font-size: 13px;
+}
+.demo-box strong { display: block; margin-bottom: 6px; font-size: 13px; }
+.demo-box dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
+.demo-box dt { color: var(--text-dim); }
+.demo-box dd { margin: 0; }
+.demo-box code { font-family: ui-monospace, monospace; font-size: 13px; background: #fff; padding: 1px 7px; border-radius: 6px; user-select: all; }
+.demo-box button { flex: none; padding: 7px 14px; font-size: 13px; }
