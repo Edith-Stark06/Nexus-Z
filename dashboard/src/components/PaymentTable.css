@@ -1,10 +1,12 @@
-.pay-table-wrap { overflow-x: auto; border: 1px solid var(--line-soft); background: var(--bg); max-height: 320px; overflow-y: auto; }
-.pay-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); font-family: var(--font-mono); }
-.pay-table th, .pay-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line-soft); color: var(--text); white-space: nowrap; }
-.pay-table th { color: var(--text-3); font-family: var(--font-ui); font-weight: 600; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.05em; position: sticky; top: 0; background: var(--surface); z-index: 2; }
-.pay-table tr:last-child td { border-bottom: none; }
-.pay-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+.pay-table-wrap { overflow: auto; background: var(--surface); max-height: 360px; }
+.pay-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.pay-table th, .pay-table td { text-align: left; padding: 8px var(--s3); border-bottom: 1px solid var(--line); white-space: nowrap; }
+.pay-table th { font-weight: 600; font-size: var(--fs-sm); position: sticky; top: 0; background: var(--layer); border-bottom-color: var(--line-strong); z-index: 2; }
+.pay-table tr:hover td { background: var(--raised); }
+.pay-time, .pay-id { font-family: var(--font-mono); font-size: var(--fs-xs); }
 .pay-time { color: var(--text-2); }
-.pay-id { color: var(--accent); }
-.pay-amt { color: var(--text); text-align: right; }
-.pay-empty { color: var(--text-3); font-size: var(--fs-sm); padding: var(--s3) 0; }
+.pay-dir { color: var(--text-2); }
+.pay-amt { text-align: right !important; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+th.pay-amt { font-family: var(--font-ui); }
+.pay-foot { padding: var(--s2) var(--s3); font-size: var(--fs-xs); color: var(--text-2); background: var(--surface); border-top: 1px solid var(--line); }
+.pay-empty { color: var(--text-2); font-size: var(--fs-sm); padding: var(--s3) 0; }

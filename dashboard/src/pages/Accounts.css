@@ -1,0 +1,14 @@
+.acs { display: grid; gap: var(--s4); max-width: 960px; }
+.acs-lookup { display: flex; align-items: flex-end; gap: var(--s3); flex-wrap: wrap; background: var(--surface); padding: var(--s4); }
+.acs-field { display: grid; gap: 6px; flex: 1 1 280px; max-width: 420px; }
+.acs-input { display: flex; align-items: center; gap: 8px; background: var(--raised); border-bottom: 1px solid var(--line-strong); padding: 0 var(--s3); min-height: 40px; }
+.acs-input:focus-within { outline: 2px solid var(--focus); outline-offset: -2px; }
+.acs-input svg { color: var(--text-2); }
+.acs-input input { border: 0; background: transparent; width: 100%; outline: none !important; padding: 0; font-family: var(--font-mono); }
+.acs-input input:hover { background: transparent; }
+.acs-lookup button { min-height: 40px; }
+.acs-note, .acs-sub { font-size: var(--fs-sm); color: var(--text-2); max-width: 80ch; line-height: 1.5; }
+.acs-sec { display: grid; gap: var(--s2); margin-top: var(--s3); }
+.acs-sec h2 { font-size: var(--fs-lg); font-weight: 600; }
+.acs-table { border: 1px solid var(--line); overflow: auto; background: var(--surface); }
+.acs-skel { display: grid; gap: var(--s3); padding: var(--s3); background: var(--surface); }

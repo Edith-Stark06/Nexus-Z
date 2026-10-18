@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, RefreshCw, Search } from "lucide-react";
 import GraphCanvas from "../GraphCanvas";
 import RiskMeter from "../RiskMeter";
 import RoleGlyph from "../RoleGlyph";
@@ -8,29 +8,22 @@ import { GraphZoom } from "../explorer/GraphToolbar";
 import { ROLE_ORDER, ROLE_LABELS, formatUtc, riskTone } from "../../lib/constants";
 import { buildGraph, linkId, pickFocusAccount } from "../../lib/graph";
 import { useAccountRecord } from "../../state/hooks";
+import { accountScore } from "../../lib/scores";
 import { useHeroNetwork } from "./useHomeData";
 import "./HeroNetwork.css";
 
 const SOURCE_COPY = {
-  live: { tone: "ok", title: "Live results", note: (h) => `Top flagged rings from the ${h.backend || "model"} backend. Only flagged rings are drawn; the project's data is synthetic.` },
-  stub: { tone: "warn", title: "Stub backend sample", note: () => "The API is serving invented sample data. Nothing here is a model result." },
-  illustrative: {
-    tone: "warn",
-    title: "Illustrative transaction network",
-    note: (h) =>
-      ({
-        unreachable: "The API is not reachable, so this is a bundled, invented sample. It is not data from the system.",
-        "no-rings": "The API returned no rings, so this is a bundled, invented sample. It is not data from the system.",
-        demo: "Demo sample selected: invented accounts and rings that ship with the dashboard.",
-      })[h.reason] || "Invented accounts and rings that ship with the dashboard. Not real data.",
-  },
+  live: { tone: "ok", title: null, note: () => "Showing accounts within returned flagged rings. The API has no graph of all accounts, so only the top flagged rings are drawn." },
+  stale: { tone: "warn", title: null, suffix: "last results received", note: () => "The API stopped answering. Showing accounts within the flagged rings it last returned; they may be out of date." },
+  stub: { tone: "warn", title: null, note: () => "The API is serving invented sample data. Nothing here is a model result." },
+  demo: { tone: "warn", title: "Demo sample", note: () => "You chose the demo sample: invented accounts and rings that ship with the dashboard. Not model output." },
 };
 
 const amount = (v) => (v == null || Number.isNaN(Number(v)) ? "—" : Number.isInteger(Number(v)) ? String(Number(v)) : Number(v).toFixed(2));
 
 /** What the selection is, in a compact strip under the graph. */
 function Inspector({ sel, network, graph, source, onClear }) {
-  const real = source === "live" || source === "stub";
+  const real = source !== "connecting";
   const nodeId = sel.kind === "node" ? sel.id : null;
   const rec = useAccountRecord(real ? nodeId : null);
 
@@ -49,14 +42,12 @@ function Inspector({ sel, network, graph, source, onClear }) {
         <div className="hi-col">
           <div className="eyebrow">In view</div>
           <div className="hi-line"><span className="num">{n.paymentsIn}</span> payments in · <span className="num">{n.paymentsOut}</span> out</div>
-          {n.score != null && <div className="hi-line">Model score <span className="num mono">{n.score.toFixed(2)}</span></div>}
+          {n.score != null && <div className="hi-line">Account score <span className="num mono">{accountScore(n.score)}</span> <span className="faint">(0–1)</span></div>}
           {cluster && <div className="hi-line faint mono">{cluster.id}</div>}
         </div>
         <div className="hi-col hi-grow">
           <div className="eyebrow">Why it scores this way</div>
-          {!real ? (
-            <div className="faint hi-line">Illustrative account: there is no live record behind it.</div>
-          ) : rec.state === "loading" ? (
+          {rec.state === "loading" ? (
             <div className="skel" style={{ width: "70%" }} />
           ) : reasons.length ? (
             <ul className="hi-reasons">{reasons.map((r) => <li key={r.feature}>{r.label || r.feature}</li>)}</ul>
@@ -65,7 +56,7 @@ function Inspector({ sel, network, graph, source, onClear }) {
           )}
         </div>
         <div className="hi-col hi-actions">
-          {real && <Link to={`/account/${encodeURIComponent(n.id)}`} className="hi-link">Open account <ArrowRight size={13} aria-hidden="true" /></Link>}
+          <Link to={`/account/${encodeURIComponent(n.id)}`} className="hi-link">Open account <ArrowRight size={13} aria-hidden="true" /></Link>
           <button className="ghost" onClick={onClear}>Clear</button>
         </div>
       </div>
@@ -88,7 +79,7 @@ function Inspector({ sel, network, graph, source, onClear }) {
           <div className="hi-line mono">{formatUtc(l.last)}</div>
         </div>
         <div className="hi-col hi-grow">
-          <div className="eyebrow">Amounts <span className="faint">(mixed currencies)</span></div>
+          <div className="eyebrow">Amounts <span className="faint">(as recorded, no currency)</span></div>
           <div className="hi-line mono">{l.payments.slice(0, 4).map((p) => amount(p.amount)).join(" · ")}{l.payments.length > 4 ? " …" : ""}</div>
         </div>
         <div className="hi-col hi-actions"><button className="ghost" onClick={onClear}>Clear</button></div>
@@ -104,9 +95,9 @@ function Inspector({ sel, network, graph, source, onClear }) {
     return (
       <div className="hi" aria-live="polite">
         <div className="hi-col">
-          <div className="eyebrow">{source === "illustrative" ? "Illustrative cluster" : "Flagged ring"}</div>
+          <div className="eyebrow">Flagged ring · ring score</div>
           <div className="mono hi-id">{c.id}</div>
-          <div className="hi-line"><RiskMeter value={c.risk} compact /> <span className="faint">{tone === "high" ? "automated signal, high" : "automated signal"}</span></div>
+          <div className="hi-line"><RiskMeter value={c.risk} compact /> <span className="faint">{tone === "high" ? "high automated signal" : "automated signal"}</span></div>
         </div>
         <div className="hi-col hi-grow">
           <div className="eyebrow">Why it was flagged</div>
@@ -114,11 +105,7 @@ function Inspector({ sel, network, graph, source, onClear }) {
           {reasons.length > 0 && <ul className="hi-reasons">{reasons.map((r) => <li key={r.feature}>{r.label || r.feature}</li>)}</ul>}
         </div>
         <div className="hi-col hi-actions">
-          {source !== "illustrative" ? (
-            <Link to={`/ring/${encodeURIComponent(c.id)}`} className="hi-link">Inspect this ring <ArrowRight size={13} aria-hidden="true" /></Link>
-          ) : (
-            <Link to="/rings" className="hi-link">Open the ring explorer <ArrowRight size={13} aria-hidden="true" /></Link>
-          )}
+          <Link to={`/ring/${encodeURIComponent(c.id)}`} className="hi-link">Inspect this ring <ArrowRight size={13} aria-hidden="true" /></Link>
           <button className="ghost" onClick={onClear}>Clear</button>
         </div>
       </div>
@@ -133,11 +120,11 @@ function Inspector({ sel, network, graph, source, onClear }) {
 }
 
 /**
- * The hero's transaction network: the top flagged rings, each a cluster, in one interactive graph. With no usable API data it
- * draws the bundled illustrative network instead and says so in its header.
+ * The hero's transaction network: the top flagged rings the API returned, each a cluster, in one interactive graph. With no usable
+ * API data it says so (unreachable, no rings) and offers a retry; it never draws invented accounts on its own.
  */
 export default function HeroNetwork({ home }) {
-  const { phase, network, changed, error } = useHeroNetwork(home, 3);
+  const { phase, network, changed, error, reload } = useHeroNetwork(home, 3);
   const canvas = useRef(null);
   const [sel, setSel] = useState({ kind: "none", id: null });
   const [query, setQuery] = useState("");
@@ -200,11 +187,10 @@ export default function HeroNetwork({ home }) {
           <span className="eyebrow">Transaction network</span>
           {copy ? (
             <span className={`tag ${copy.tone}`}>
-              <span className={`dot ${copy.tone}`} /> {copy.title}
-              {home.source === "live" && home.backend ? ` · ${home.backend} backend` : ""}
+              <span className={`dot ${copy.tone}`} aria-hidden="true" /> {copy.title || home.backendLabel}{copy.suffix ? ` · ${copy.suffix}` : ""}
             </span>
           ) : (
-            <span className="tag">Connecting…</span>
+            <span className="tag">{home.source === "connecting" ? "Connecting…" : "No data"}</span>
           )}
         </div>
         <form className="hn-find" onSubmit={find} role="search">
@@ -234,7 +220,7 @@ export default function HeroNetwork({ home }) {
               onSelectLink={select("link")}
               onSelectCluster={select("cluster")}
               onClear={clear}
-              ariaLabel={home.source === "illustrative" ? "Illustrative transaction network" : "Network of the top flagged rings"}
+              ariaLabel="Network of the top flagged rings"
             />
             <GraphZoom
               onZoomIn={() => canvas.current?.zoomIn()}
@@ -255,15 +241,36 @@ export default function HeroNetwork({ home }) {
             </div>
           </>
         )}
-        {phase === "loading" && <div className="hn-state" aria-busy="true"><div className="skel" style={{ width: 180 }} /><span className="faint">Loading the network…</span></div>}
-        {phase === "empty" && <div className="hn-state"><strong>No rings to draw.</strong><span className="faint">The API returned no flagged rings.</span></div>}
-        {phase === "error" && <div className="hn-state"><strong>Could not load the network.</strong><span className="faint">{error || "The API did not answer."}</span></div>}
+        {home.source === "unreachable" ? (
+          <div className="hn-state" role="alert">
+            <strong>The NEXUS Z API is not reachable.</strong>
+            <span className="faint">{home.error || "It has not answered."} No network is drawn, and nothing is substituted.</span>
+            <button className="primary" onClick={home.retry}><RefreshCw size={14} aria-hidden="true" /> Retry</button>
+          </div>
+        ) : home.source === "empty" ? (
+          <div className="hn-state">
+            <strong>The API returned no flagged rings.</strong>
+            <span className="faint">When the model flags a group of linked accounts it is drawn here.</span>
+            <Link to="/rings" className="btn tertiary">Open the investigation workspace</Link>
+          </div>
+        ) : phase === "loading" || home.source === "connecting" ? (
+          <div className="hn-state" aria-busy="true"><div className="skel" style={{ width: 180 }} /><span className="faint">Loading the network…</span></div>
+        ) : phase === "empty" ? (
+          <div className="hn-state"><strong>No ring detail to draw.</strong><span className="faint">The rings listed by the API returned no accounts.</span></div>
+        ) : phase === "error" ? (
+          <div className="hn-state" role="alert">
+            <strong>Could not load the network.</strong>
+            <span className="faint">{error || "The API did not answer."}</span>
+            <button onClick={reload}><RefreshCw size={14} aria-hidden="true" /> Retry</button>
+          </div>
+        ) : null}
       </div>
 
       {changed && (
         <p className="hn-changed" role="status">A ring changed during a data refresh and was left out. The ring list has been refreshed.</p>
       )}
 
+      {phase === "ready" && network && (
       <div className="hn-legend" aria-label="Legend">
         <ul>
           {roles.map((r) => (
@@ -275,11 +282,12 @@ export default function HeroNetwork({ home }) {
               </button>
             </li>
           ))}
-          <li className="hn-key"><span className="hn-swatch hn-swatch-hull" aria-hidden="true" /> Outline: one flagged ring</li>
+          <li className="hn-key"><span className="hn-swatch hn-swatch-hull" aria-hidden="true" /> One flagged ring</li>
           <li className="hn-key">Arrow: payment direction</li>
+          <li className="hn-key">Roles are estimates</li>
         </ul>
-        <span className="faint hn-roles-note">Roles are estimated, not labelled.</span>
       </div>
+      )}
 
       {network && <Inspector sel={sel} network={network} graph={graph} source={home.source} onClear={clear} />}
     </section>

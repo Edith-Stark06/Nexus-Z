@@ -44,7 +44,7 @@ export default function ReplaySlider({ edges, t, onT, playing, onPlay }) {
   return (
     <div className="replay">
       <div className="replay-head">
-        <span className="eyebrow">Replay</span>
+        <span className="eyebrow" title="A replay of the payments recorded for this ring. It is not a live feed.">Replay of recorded payments</span>
         <span className="replay-now mono">
           payments up to {formatUtc(shown)}
           <span className="faint"> · {safeIdx + 1} of {times.length} moments</span>

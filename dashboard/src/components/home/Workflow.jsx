@@ -1,131 +1,81 @@
-import { useState } from "react";
 import "./Workflow.css";
 
 /**
- * The five stages, as they exist in the repository. Every statement here is checked against code or docs named in `refs`;
- * `limits` says what the stage does not do. Status is "Implemented" or "Prototype" only: nothing planned is shown as built.
+ * The six steps, as they exist in the repository. Every statement is checked against code or docs named in `refs`; `limits`
+ * says what the step does not do. Status is "Implemented", "Prototype" or "Not built": nothing planned is shown as working.
  */
 export const STAGES = [
   {
     n: "01",
-    name: "Ingest",
-    line: "Payments arrive as JSON, one at a time or in batches of up to 5,000.",
-    notes: ["POST /transactions"],
+    name: "Receive or simulate transaction activity",
     status: "Implemented",
-    does: [
-      "The API accepts one payment or a list and queues it. The model backend takes the queued payments into its next rebuild.",
-      "A replay tool streams a transaction file through the same endpoint at a chosen speed, in file order, so a demonstration is repeatable.",
-    ],
-    limits: ["Ingested amounts are assumed to be US dollars (there is no currency field), and the history lives in memory: it is lost when the API restarts."],
+    does: "Payments arrive as JSON on POST /transactions, one at a time or in batches of up to 5,000. A replay tool streams a transaction file through the same endpoint in file order, so a demonstration is repeatable.",
+    limits: "The history is held in memory and is lost when the API restarts. There is no currency field.",
     refs: ["api/main.py", "api/async_backend.py", "infra/simulator.py"],
   },
   {
     n: "02",
-    name: "Connect",
-    line: "Accounts become nodes and payments become directed links. Each account gets features that describe who it pays, how often and how fast.",
-    notes: ["57 account features", "PageRank · k-core"],
+    name: "Build the transaction relationships",
     status: "Implemented",
-    does: [
-      "Features cover transaction amounts and channels, timing (how quickly money received is sent on), graph position (counterparties, PageRank) and structure (k-core, clustering, connected component).",
-      "Each payment is also described by the accounts at both ends and by what the receiver did next.",
-    ],
-    limits: ["Features are rebuilt from the whole history on every refresh. There is no per-payment incremental update."],
+    does: "Accounts become nodes and payments become directed links. Each account gets features for amounts, channels, timing (how fast received money is sent on), graph position (counterparties, PageRank) and structure (k-core, clustering, connected component).",
+    limits: "Features are rebuilt from the whole history on every refresh. There is no per-payment incremental update.",
     refs: ["ml/features.py", "ml/edge_model.py"],
   },
   {
     n: "03",
-    name: "Analyse",
-    line: "High-risk accounts are linked by their payments into candidate rings; rings are grown through weaker linked accounts and large groups are split.",
-    notes: ["ring grouping", "Louvain split"],
+    name: "Analyse potentially suspicious structures",
     status: "Implemented",
-    does: [
-      "Ring membership comes from the payment links between flagged accounts. Large groups are split with a community-detection step (NetworkX Louvain).",
-      "A role (victim, collector, mule, cash-out) is estimated for each member from its position in the ring's payments.",
-    ],
-    limits: ["Roles are guesses: the data has no role labels. A ring id is a hash of its members and changes when the ring changes."],
+    does: "High-scoring accounts are linked by their payments into candidate rings, grown through weaker linked accounts, and large groups are split with a community-detection step (NetworkX Louvain). A role is estimated for each member from its position in the ring.",
+    limits: "Roles are estimates: the data has no role labels. A ring id is derived from its members and changes when they change.",
     refs: ["ml/rings.py", "ml/service.py"],
   },
   {
     n: "04",
-    name: "Score",
-    line: "A payment-level XGBoost model scores every payment. An account's risk is its riskiest payment; reasons are exact TreeSHAP values.",
-    notes: ["XGBoost", "TreeSHAP"],
+    name: "Apply the configured fraud-scoring model",
     status: "Implemented",
-    does: [
-      "The API runs with a stub backend (invented sample data) or the model backend (the trained model over a transaction slice). The dashboard shows which.",
-      "Explanations come from XGBoost's own TreeSHAP and say when a signal is absent.",
-    ],
-    limits: [
-      "A risk score is a signal for investigation, not proof of anything.",
-      "It runs on the CPU. No accelerator speed-up is claimed for the fraud model.",
-      "Most laundering groups in the IBM AML data are still missed (docs/ML_RESULTS.md).",
-    ],
+    does: "A payment-level XGBoost model scores payments; an account's score comes from its riskiest payment, and reasons are TreeSHAP values. The API runs a stub backend (invented sample data) or the model backend, and the status control states which.",
+    limits: "It runs on the CPU, and no accelerator speed-up is claimed. A score is a signal for review, not proof. Most laundering groups in the evaluation data are still missed (docs/ML_RESULTS.md).",
     refs: ["ml/edge_model.py", "ml/explain.py", "docs/ML_RESULTS.md"],
   },
   {
     n: "05",
-    name: "Investigate",
-    line: "Rings, accounts and alerts are served by the API and explored in this workspace.",
-    notes: ["GET /rings", "GET /rings/{id}", "GET /accounts/{id}", "GET /alerts"],
+    name: "Expose ring, account and alert information",
     status: "Implemented",
-    does: [
-      "The ring explorer shows each ring's payment graph, its reasons and its accounts; alerts link to the ring, the account and the payment pre-check.",
-      "The pre-check is a prototype screen built on GET /accounts/{id}. No endpoint sends a warning and nothing is sent to anyone.",
-    ],
-    limits: ["Alerts cover only the highest-risk rings and list at most three likely victims each. The rule behind them has not been evaluated for accuracy."],
-    refs: ["api/main.py", "ml/service.py", "dashboard/src/pages/Explorer.jsx"],
-    extra: { label: "Payment pre-check", status: "Prototype" },
+    does: "The API serves GET /rings, /rings/{id}, /accounts/{id}, /alerts and /health. This workspace reads exactly those.",
+    limits: "Alerts cover only the 10 highest-scored rings and at most 3 likely victims each, and the rule behind them has not been evaluated for accuracy.",
+    refs: ["api/main.py", "ml/service.py"],
+  },
+  {
+    n: "06",
+    name: "Support investigation and future intervention",
+    status: "Implemented",
+    does: "Investigations: the ring explorer, alerts, accounts and the reasons behind each score.",
+    limits: "The payment pre-check screen is a prototype built on GET /accounts/{id}: no endpoint sends a warning, and nothing is sent to anyone. Intervention before a payment is not built.",
+    refs: ["dashboard/src/pages/Explorer.jsx", "dashboard/src/pages/WarningScreen.jsx"],
+    extra: [{ label: "Payment pre-check", status: "Prototype" }, { label: "Intervention before payment", status: "Not built" }],
   },
 ];
 
-export default function Workflow() {
-  const [open, setOpen] = useState(0);
-  const s = STAGES[open];
-  const onKey = (e) => {
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      e.preventDefault();
-      setOpen((i) => Math.min(STAGES.length - 1, i + 1));
-    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      e.preventDefault();
-      setOpen((i) => Math.max(0, i - 1));
-    }
-  };
-  return (
-    <div className="wf">
-      <ol className="wf-rail" role="tablist" aria-label="Investigation workflow" onKeyDown={onKey}>
-        {STAGES.map((st, i) => (
-          <li key={st.n} className={`wf-step${i === open ? " on" : ""}${i < open ? " past" : ""}`}>
-            <button role="tab" id={`wf-tab-${i}`} aria-selected={i === open} aria-controls="wf-panel" tabIndex={i === open ? 0 : -1} onClick={() => setOpen(i)}>
-              <span className="wf-n mono">{st.n}</span>
-              <span className="wf-name">{st.name}</span>
-            </button>
-            <p className="wf-line">{st.line}</p>
-            <div className="wf-notes">
-              {st.notes.map((n) => <span key={n} className="mono">{n}</span>)}
-            </div>
-          </li>
-        ))}
-      </ol>
+const TONE = { Implemented: "ok", Prototype: "warn", "Not built": "" };
 
-      <div className="wf-panel" id="wf-panel" role="tabpanel" aria-labelledby={`wf-tab-${open}`}>
-        <header>
-          <div className="eyebrow">Stage {s.n}</div>
-          <h3>{s.name}</h3>
-          <span className="tag ok">{s.status}</span>
-          {s.extra && <span className="tag warn">{s.extra.label}: {s.extra.status}</span>}
-        </header>
-        <div className="wf-cols">
-          <div>
-            <div className="eyebrow">What the code does</div>
-            <ul>{s.does.map((d) => <li key={d}>{d}</li>)}</ul>
+export default function Workflow() {
+  return (
+    <ol className="wf" aria-label="How NEXUS Z works">
+      {STAGES.map((s) => (
+        <li key={s.n} className="wf-step">
+          <div className="wf-n mono" aria-hidden="true">{s.n}</div>
+          <div className="wf-body">
+            <header>
+              <h3>{s.name}</h3>
+              <span className={`tag ${TONE[s.status]}`}>{s.status}</span>
+              {s.extra?.map((x) => <span key={x.label} className={`tag ${TONE[x.status]}`}>{x.label}: {x.status}</span>)}
+            </header>
+            <p>{s.does}</p>
+            <p className="wf-limit"><strong>Limits.</strong> {s.limits}</p>
+            <div className="wf-refs"><span className="faint">In the repository</span> {s.refs.map((r) => <code key={r}>{r}</code>)}</div>
           </div>
-          <div>
-            <div className="eyebrow">What it does not do</div>
-            <ul className="wf-limits">{s.limits.map((d) => <li key={d}>{d}</li>)}</ul>
-          </div>
-        </div>
-        <div className="wf-refs"><span className="eyebrow">In the repository</span> {s.refs.map((r) => <code key={r}>{r}</code>)}</div>
-      </div>
-    </div>
+        </li>
+      ))}
+    </ol>
   );
 }

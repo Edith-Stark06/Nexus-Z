@@ -5,10 +5,10 @@ import { formatUtc, riskTone } from "../../lib/constants";
 import "./RingList.css";
 
 const RISK_STEPS = [
-  { v: 0, t: "Any risk" },
-  { v: 25, t: "Risk 25 or more" },
-  { v: 50, t: "Risk 50 or more (high)" },
-  { v: 80, t: "Risk 80 or more" },
+  { v: 0, t: "Any ring score" },
+  { v: 25, t: "Ring score 25 or more" },
+  { v: 50, t: "Ring score 50 or more (high)" },
+  { v: 80, t: "Ring score 80 or more" },
 ];
 const SIZE_STEPS = [
   { v: 0, t: "Any size" },
@@ -33,13 +33,13 @@ export default function RingList({ rings, total, selectedId, onSelect, victimCou
             type="search"
             value={filters.query}
             onChange={(e) => set({ query: e.target.value })}
-            placeholder="Search ring id, headline or account id"
+            placeholder="Search rings or an account id"
             aria-label="Search rings or an account id"
           />
         </label>
         <div className="rl-filters">
           <SlidersHorizontal size={13} aria-hidden="true" className="faint" />
-          <select aria-label="Minimum ring risk" value={filters.minRisk} onChange={(e) => set({ minRisk: Number(e.target.value) })}>
+          <select aria-label="Minimum ring score" value={filters.minRisk} onChange={(e) => set({ minRisk: Number(e.target.value) })}>
             {RISK_STEPS.map((o) => (
               <option key={o.v} value={o.v}>{o.t}</option>
             ))}
@@ -60,7 +60,7 @@ export default function RingList({ rings, total, selectedId, onSelect, victimCou
           Only rings with likely victims flagged
         </label>
         <div className="rl-count faint">
-          <span className="num">{rings.length}</span> of <span className="num">{total}</span> rings
+          <span className="num">{rings.length}</span> of <span className="num">{total}</span> rings · ring score is 0–100
           {active && (
             <button className="ghost rl-clear" onClick={() => set({ minRisk: 0, minAccounts: 0, onlyWithVictims: false })}>
               Clear filters

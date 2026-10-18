@@ -8,7 +8,7 @@ import { useData } from "./DataContext";
  * On "notfound" the last ring that did load stays in `ring` with `stale: true`, so the analyst keeps the picture they were
  * working with while the page explains that the id changed. It reloads whenever the server publishes a new state.
  */
-export function useRing(ringId) {
+export function useRing(ringId, nonce = 0) {
   const { getRing, dataVersion } = useData();
   const [s, setS] = useState({ state: "idle", ring: null, stale: false, message: "" });
   const lastGood = useRef({ id: null, ring: null });
@@ -34,7 +34,7 @@ export function useRing(ringId) {
     return () => {
       cancelled = true;
     };
-  }, [ringId, getRing, dataVersion]);
+  }, [ringId, getRing, dataVersion, nonce]);
 
   return s;
 }
@@ -97,4 +97,48 @@ export function useSuccessors(staleRing, active) {
   }, [key, rings.length]);
 
   return found;
+}
+
+/**
+ * The highest-scored accounts among the members of the top flagged rings the API returned. Built only from real
+ * GET /rings/{id} answers; a ring that fails to load is skipped and counted, never replaced.
+ * Resolves to { phase: loading | ready | empty | error, accounts: [{ id, role, score, ring_id, ring_score }], failed }.
+ */
+export function useTopAccounts(ringCount = 5, limit = 20) {
+  const { rings, getRing, loaded, mode, dataVersion } = useData();
+  const [state, setState] = useState({ phase: "loading", accounts: [], failed: 0 });
+  const top = [...rings].sort((a, b) => b.risk - a.risk).slice(0, ringCount);
+  const key = top.map((r) => r.ring_id).join(",") + "|" + dataVersion;
+
+  useEffect(() => {
+    if (!loaded) {
+      setState({ phase: mode === "unreachable" ? "error" : "loading", accounts: [], failed: 0 });
+      return undefined;
+    }
+    if (top.length === 0) {
+      setState({ phase: "empty", accounts: [], failed: 0 });
+      return undefined;
+    }
+    let cancelled = false;
+    Promise.all(top.map((r) => getRing(r.ring_id))).then((results) => {
+      if (cancelled) return;
+      const accounts = [];
+      let failed = 0;
+      results.forEach((res, i) => {
+        if (res.status !== "ok") {
+          failed += 1;
+          return;
+        }
+        for (const m of res.data.members || []) accounts.push({ id: m.id, role: m.role, score: m.score, ring_id: top[i].ring_id, ring_score: top[i].risk });
+      });
+      accounts.sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1));
+      setState({ phase: accounts.length ? "ready" : failed ? "error" : "empty", accounts: accounts.slice(0, limit), failed });
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, loaded]);
+
+  return state;
 }

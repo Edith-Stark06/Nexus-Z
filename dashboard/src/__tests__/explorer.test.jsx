@@ -118,8 +118,13 @@ describe("ring explorer", () => {
     expect(within(inspector).getByText(/Verify the accounts before any action/)).toBeInTheDocument();
     expect(within(inspector).getByText("Money leaves within minutes")).toBeInTheDocument();
     expect(within(inspector).getByText("Receiver: many transfers to itself (absent)")).toBeInTheDocument(); // shown as the API sent it
-    expect(within(inspector).getByText("Not a finding of fraud.")).toBeInTheDocument();
-    expect(within(inspector).getByText(/mixed currencies/i)).toBeInTheDocument();
+    // the ring score is named and shown on its own 0 to 100 scale, never as a probability or a finding
+    expect(within(inspector).getByText("Ring score")).toBeInTheDocument();
+    expect(within(inspector).getByText(/not a probability of fraud and not a finding/)).toBeInTheDocument();
+    // no summed amount: the API reports no currency, so the inspector counts payments and states the amount caveat instead
+    expect(within(inspector).queryByText("Total")).not.toBeInTheDocument();
+    expect(within(inspector).getByText("Payments in ring")).toBeInTheDocument();
+    expect(within(inspector).getByText(/does not report a currency/)).toBeInTheDocument();
     expect(within(inspector).getByText(/Likely victim flagged: ACC-P9 paid ACC-C1/)).toBeInTheDocument(); // related alert, from /alerts
   });
 
@@ -142,9 +147,9 @@ describe("ring explorer", () => {
     open();
     const list = await screen.findByRole("complementary", { name: "Rings" });
     await waitFor(() => expect(within(list).getAllByRole("button", { name: /RNG-/ })).toHaveLength(2));
-    fireEvent.change(within(list).getByLabelText("Minimum ring risk"), { target: { value: "50" } });
+    fireEvent.change(within(list).getByLabelText("Minimum ring score"), { target: { value: "50" } });
     expect(within(list).getAllByRole("button", { name: /RNG-/ })).toHaveLength(1);
-    fireEvent.change(within(list).getByLabelText("Minimum ring risk"), { target: { value: "0" } });
+    fireEvent.change(within(list).getByLabelText("Minimum ring score"), { target: { value: "0" } });
     fireEvent.change(within(list).getByLabelText(/Search rings/), { target: { value: "slow" } });
     expect(within(list).getAllByRole("button", { name: /RNG-/ })[0]).toHaveTextContent("RNG-BBB222");
     fireEvent.change(within(list).getByLabelText(/Search rings/), { target: { value: "zzz" } });

@@ -17,11 +17,11 @@ export const FEATURE_LABELS = {
 // Colour for a ring or account role. Roles are *estimated*: they are guessed from an account's position in the
 // ring's payments (the data has no role labels), so every place that shows one says so. Values match tokens.css.
 export const ROLE_COLORS = {
-  victim: "#7fa6d1",
-  collector: "#d9a66f",
-  mule: "#a3b0c0",
-  cashout: "#cf8fa6",
-  unknown: "#6b7b8c",
+  victim: "#007d79",
+  collector: "#6929c4",
+  mule: "#525252",
+  cashout: "#9f1853",
+  unknown: "#8d8d8d",
 };
 
 export const ROLE_LABELS = {
@@ -36,9 +36,9 @@ export const ROLE_LABELS = {
 export const ROLE_ORDER = ["victim", "collector", "mule", "cashout"];
 
 export const SEVERITY_COLORS = {
-  high: "#e87970",
-  medium: "#e5af62",
-  low: "#64b5c8",
+  high: "#da1e28",
+  medium: "#ba4e00",
+  low: "#8e6a00",
 };
 
 // Ring risk is 0 to 100. The cut-offs are the ones ml/service.py uses for alert severity (HIGH_RISK 50, MEDIUM_RISK 25).

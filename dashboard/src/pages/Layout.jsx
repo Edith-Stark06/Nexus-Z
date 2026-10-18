@@ -1,45 +1,44 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Gauge, Network, ShieldAlert, MessageSquareText, Server, RefreshCw } from "lucide-react";
+import { Menu, RefreshCw, X } from "lucide-react";
 import { useData } from "../state/DataContext";
-import { formatUtc } from "../lib/constants";
+import SystemStatus from "../components/SystemStatus";
+import { sourceLine } from "../lib/provenance";
 import "./Layout.css";
 
 const NAV = [
-  { to: "/overview", label: "Overview", Icon: Gauge, match: (p) => p.startsWith("/overview") },
-  { to: "/rings", label: "Ring explorer", Icon: Network, match: (p) => p.startsWith("/rings") || p.startsWith("/ring/") || p.startsWith("/account/") },
-  { to: "/alerts", label: "Alerts", Icon: ShieldAlert, match: (p) => p.startsWith("/alerts") || p.startsWith("/warning/") },
-  { to: "/assistant", label: "Assistant", Icon: MessageSquareText, match: (p) => p.startsWith("/assistant") },
-  { to: "/platform", label: "Platform", Icon: Server, match: (p) => p.startsWith("/platform") },
+  { to: "/overview", label: "Overview", match: (p) => p.startsWith("/overview") },
+  { to: "/rings", label: "Investigations", match: (p) => p.startsWith("/rings") || p.startsWith("/ring/") },
+  { to: "/alerts", label: "Alerts", match: (p) => p.startsWith("/alerts") || p.startsWith("/warning/") },
+  { to: "/accounts", label: "Accounts", match: (p) => p.startsWith("/account") },
+  { to: "/assistant", label: "Assistant", match: (p) => p.startsWith("/assistant") },
+  { to: "/platform", label: "Platform", match: (p) => p.startsWith("/platform") },
 ];
 
 // Three accounts joined by payments, drawn as the letter Z.
-export function Mark({ size = 28 }) {
+export function Mark({ size = 24 }) {
   return (
     <svg viewBox="0 0 28 28" width={size} height={size} aria-hidden="true" focusable="false">
-      <path d="M6 7h16L6 21h16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      <circle cx="6" cy="7" r="2.6" fill="var(--bg)" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="22" cy="7" r="2.6" fill="currentColor" />
-      <circle cx="6" cy="21" r="2.6" fill="var(--bg)" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="22" cy="21" r="2.6" fill="currentColor" />
+      <path d="M6 7h16L6 21h16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <circle cx="6" cy="7" r="2.8" fill="var(--mark-bg, #161616)" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="22" cy="7" r="2.8" fill="currentColor" />
+      <circle cx="6" cy="21" r="2.8" fill="var(--mark-bg, #161616)" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="22" cy="21" r="2.8" fill="currentColor" />
     </svg>
   );
 }
 
-function clock(d) {
-  return d ? d.toLocaleTimeString([], { hour12: false }) : "—";
-}
-
-// What the connection is, in words. "Connected" is only ever claimed when /health answered on the last poll.
+// What the connection is, in words. Kept for callers that need one short label; the full picture is components/SystemStatus.
 export function connectionSummary(data) {
   const { mode, health, lastOk } = data;
-  const backend = health?.backend;
+  const clock = lastOk ? lastOk.toLocaleTimeString([], { hour12: false }) : "—";
   switch (mode) {
     case "live":
-      return backend === "stub"
+      return health?.backend === "stub"
         ? { tone: "warn", text: "Stub backend", detail: "invented sample data" }
-        : { tone: "ok", text: backend ? `${backend} backend` : "API connected", detail: `health check ${clock(lastOk)}` };
+        : { tone: "ok", text: health?.backend ? `${health.backend} backend` : "API responding", detail: `answered ${clock}` };
     case "stale":
-      return { tone: "warn", text: "API not answering", detail: `showing results from ${clock(lastOk)}` };
+      return { tone: "warn", text: "API not answering", detail: `showing results from ${clock}` };
     case "unreachable":
       return { tone: "danger", text: "API unreachable", detail: "no data yet" };
     case "demo":
@@ -57,11 +56,11 @@ function Banner({ data }) {
     return (
       <div className="notice danger" role="alert">
         <div className="grow">
-          <strong>The NEXUS Z API is not reachable.</strong> {lastError || ""} Nothing is shown because there is no data to show: results are never
-          replaced with sample data automatically.
+          <strong>The NEXUS Z API is not reachable.</strong> {lastError || ""} No results are shown, because results are never replaced with sample data
+          automatically.
           <div className="notice-actions">
             <button className="primary" onClick={retryLive}>
-              <RefreshCw size={14} /> Retry
+              <RefreshCw size={14} aria-hidden="true" /> Retry
             </button>
             <button onClick={useDemo}>Use the demo sample instead (invented data)</button>
           </div>
@@ -76,7 +75,7 @@ function Banner({ data }) {
           <strong>The API stopped answering.</strong> {lastError || ""} The screens show the last results received and may be out of date.
           <div className="notice-actions">
             <button onClick={retryLive}>
-              <RefreshCw size={14} /> Retry now
+              <RefreshCw size={14} aria-hidden="true" /> Retry now
             </button>
           </div>
         </div>
@@ -101,7 +100,7 @@ function Banner({ data }) {
       <div className="notice warn" role="status">
         <div className="grow">
           <strong>The API is running its stub backend.</strong> Rings, accounts and amounts are invented sample data from the server, not model output. Start it
-          with <code>NEXUSZ_BACKEND=model</code> for real results.
+          with <code>NEXUSZ_BACKEND=model</code> for model results.
         </div>
       </div>
     );
@@ -118,65 +117,61 @@ function Banner({ data }) {
   return null;
 }
 
-export function StatusStrip({ data }) {
-  const c = connectionSummary(data);
-  if (!c) return null;
-  const asOf = data.health?.data_as_of;
+/** Title, a sentence on what the page is for, and where its data comes from. `compact` is for the full-bleed workspace. */
+export function PageHeader({ title, description, actions, compact = false, source = true }) {
+  const data = useData();
+  const line = source && data.mode !== "standalone" && data.mode !== "connecting" ? sourceLine(data) : "";
   return (
-    <div className="status" aria-label="Connection status">
-      <span className={`tag ${c.tone === "none" ? "" : c.tone}`}>
-        <span className={`dot ${c.tone === "ok" ? "ok" : c.tone === "danger" ? "danger" : c.tone === "warn" ? "warn" : ""}`} />
-        {c.text}
-      </span>
-      {c.detail && <span className="faint status-detail">{c.detail}</span>}
-      {asOf && (
-        <span className="status-asof" title="The time of the newest payment in the model's current state (from /health)">
-          <span className="eyebrow">Data as of</span> <span className="mono num">{formatUtc(asOf)}</span>
-        </span>
-      )}
-      {data.mode !== "standalone" && (
-        <button className="icon ghost" onClick={data.refresh} aria-label="Refresh now" title="Refresh now">
-          <RefreshCw size={14} />
-        </button>
-      )}
+    <div className={`ph${compact ? " ph-compact" : ""}`}>
+      <div className="ph-text">
+        <h1>{title}</h1>
+        {description && <p className="ph-desc">{description}</p>}
+        {line && <p className="ph-source" data-testid="source-line">{line}</p>}
+      </div>
+      {actions && <div className="ph-actions">{actions}</div>}
     </div>
   );
 }
 
-// `flush` gives the page the whole workspace (no padding, no scrolling), for the explorer. `usingMock` is the old prop; the
-// connection state now comes from the DataProvider.
-export default function Layout({ title, subtitle, actions, flush = false, children }) {
+/**
+ * The one application shell: the header (product, navigation, system status), an optional page header, and the content.
+ * `flush` gives the page the whole workspace (no padding, no scrolling) for the explorer. `bare` skips the page header and the
+ * content width, for the homepage, which lays out its own sections.
+ */
+export default function Layout({ title, subtitle, actions, flush = false, bare = false, children }) {
   const loc = useLocation();
   const data = useData();
+  const [menu, setMenu] = useState(false);
+  useEffect(() => setMenu(false), [loc.pathname]);
+
   return (
     <div className="shell">
-      <nav className="rail" aria-label="Main">
-        <Link to="/" className="rail-brand" aria-label="NEXUS Z home page">
-          <Mark />
+      <a className="skip" href="#main">Skip to content</a>
+      <header className="appbar">
+        <button className="icon appbar-menu" aria-label={menu ? "Close navigation" : "Open navigation"} aria-expanded={menu} aria-controls="appnav" onClick={() => setMenu((m) => !m)}>
+          {menu ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        <Link to="/" className="appbar-brand" aria-label="NEXUS Z home page">
+          <Mark size={22} />
+          <span>NEXUS <b>Z</b></span>
         </Link>
-        {NAV.map(({ to, label, Icon, match }) => (
-          <Link key={to} to={to} className="rail-link" data-label={label} aria-label={label} aria-current={match(loc.pathname) ? "page" : undefined}>
-            <Icon size={19} strokeWidth={1.7} />
-          </Link>
-        ))}
-      </nav>
-      <div className="workspace">
-        <header className="topbar">
-          <div className="topbar-title">
-            <h1>{title || "NEXUS Z"}</h1>
-            {subtitle && <span className="faint topbar-sub">{subtitle}</span>}
+        <nav id="appnav" className={`appnav${menu ? " open" : ""}`} aria-label="Main">
+          {NAV.map(({ to, label, match }) => (
+            <Link key={to} to={to} aria-current={match(loc.pathname) ? "page" : undefined}>{label}</Link>
+          ))}
+        </nav>
+        <div className="appbar-right"><SystemStatus /></div>
+      </header>
+      <Banner data={data} />
+      <main id="main" className={`page${flush ? " page-flush" : ""}${bare ? " page-bare" : ""}`} tabIndex={-1}>
+        {!flush && !bare && title && (
+          <div className="page-in">
+            <PageHeader title={title} description={subtitle} actions={actions} />
+            {children}
           </div>
-          <div className="topbar-right">
-            {actions}
-            <StatusStrip data={data} />
-          </div>
-        </header>
-        <Banner data={data} />
-        <main className={`page${flush ? " page-flush" : ""}`}>{children}</main>
-        <footer className="caveat">
-          Synthetic data. A risk score is an automated signal for review, not a finding of fraud. Roles are estimates. Accuracy is modest and many laundering groups are still missed (docs/ML_RESULTS.md).
-        </footer>
-      </div>
+        )}
+        {(flush || bare || !title) && children}
+      </main>
     </div>
   );
 }

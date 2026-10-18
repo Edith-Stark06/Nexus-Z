@@ -1,51 +1,48 @@
-.gc { position: relative; width: 100%; height: 100%; min-height: 240px; overflow: hidden; background:
-  radial-gradient(circle at 1px 1px, rgba(148, 163, 179, 0.07) 1px, transparent 0) 0 0 / 24px 24px, var(--bg); }
+.gc { position: relative; width: 100%; height: 100%; min-height: 240px; overflow: hidden; background: var(--graph-bg); }
 .gc-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; user-select: none; }
 .gc-svg:active { cursor: grabbing; }
 
-.gc-line { pointer-events: none; fill: none; stroke: #5d7287; stroke-opacity: 0.7; stroke-linecap: round; transition: stroke-opacity var(--dur) var(--ease), stroke var(--dur) var(--ease); }
-.gc-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; }
-.gc-link:hover .gc-line { stroke-opacity: 1; stroke: #8aa2b8; }
-.gc-link.hi .gc-line { stroke: var(--accent-hi); stroke-opacity: 0.95; }
-.gc-link.sel .gc-line { stroke: var(--accent-hi); stroke-opacity: 1; }
-.gc-link.dim { opacity: 0.14; transition: opacity var(--dur) var(--ease); }
-.gc-count { font-family: var(--font-mono); font-size: 10px; fill: var(--accent-hi); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
+/* strokes keep their on-screen width at every zoom, so lines stay thin when zoomed out and never swell when zoomed in */
+.gc-line { pointer-events: none; fill: none; stroke: var(--graph-link); stroke-linecap: round; vector-effect: non-scaling-stroke; transition: stroke var(--dur) var(--ease); }
+.gc-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; vector-effect: non-scaling-stroke; }
+.gc-link:hover .gc-line { stroke: #6f6f6f; }
+.gc-link.hi .gc-line { stroke: var(--graph-link-hi); }
+.gc-link.sel .gc-line { stroke: var(--graph-link-hi); }
+.gc-link.dim { opacity: 0.2; transition: opacity var(--dur) var(--ease); }
+.gc-count { font-family: var(--font-mono); font-size: 10px; fill: var(--accent-hi); paint-order: stroke; stroke: #fff; stroke-width: 3px; }
 
 .gc-node { cursor: pointer; transition: opacity var(--dur) var(--ease); outline: none; }
-.gc-node.dim { opacity: 0.2; }
+.gc-node.dim { opacity: 0.28; }
 .gc-node:focus-visible .gc-halo { opacity: 1; }
-.gc-node:hover circle:not(.gc-halo), .gc-node:hover rect { filter: brightness(1.25); }
-.gc-halo { fill: none; stroke: var(--accent-hi); stroke-width: 1.5; opacity: 0.9; }
-.gc-node.sel .gc-halo { opacity: 1; stroke-width: 2; }
-.gc-label { font-family: var(--font-mono); fill: var(--text); paint-order: stroke; stroke: var(--bg); stroke-linejoin: round; cursor: pointer; user-select: none; }
+.gc-node:hover circle:not(.gc-halo):not(.gc-hitarea), .gc-node:hover rect { filter: brightness(0.85); }
+.gc-halo { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0.95; vector-effect: non-scaling-stroke; }
+.gc-label { font-family: var(--font-mono); fill: var(--text); paint-order: stroke; stroke: #fff; stroke-linejoin: round; cursor: pointer; user-select: none; }
+.gc-node.sel .gc-label { font-weight: 600; fill: var(--accent-hi); }
 .gc-hitarea { fill: transparent; stroke: none; }
 .gc-node.dim .gc-label { fill: var(--text-3); }
 
-.gc-note { position: absolute; font-size: var(--fs-sm); color: var(--text-2); background: var(--surface); border: 1px solid var(--line); padding: 6px 10px; border-radius: var(--radius); }
+.gc-note { position: absolute; font-size: var(--fs-sm); color: var(--text-2); background: var(--surface); border: 1px solid var(--line); padding: 6px 10px; }
 .gc-note strong { color: var(--text); }
 .gc-note-center { left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 320px; }
 .gc-note-bottom { left: 50%; bottom: 14px; transform: translateX(-50%); }
 
-.gc-tip { position: absolute; z-index: 5; pointer-events: none; background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 9px; font-size: var(--fs-sm); line-height: 1.5; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45); }
-.gc-tip-id { color: var(--accent-hi); }
+/* why some names are not drawn */
+.gc-density { position: absolute; left: var(--s3); bottom: var(--s3); max-width: min(440px, calc(100% - 24px)); font-size: var(--fs-xs); color: var(--text-2); background: rgba(255, 255, 255, 0.92); border-left: 2px solid var(--line-strong); padding: 4px 8px; pointer-events: none; line-height: 1.35; }
 
-/* cluster regions: a soft outline around one group of accounts, coloured by the group's risk tone */
-.gc-hullpath { fill: rgba(100, 181, 200, 0.05); stroke: rgba(100, 181, 200, 0.4); stroke-width: 1; stroke-dasharray: 4 4; cursor: pointer; transition: fill var(--dur) var(--ease), stroke var(--dur) var(--ease); }
-.gc-hull.tone-high .gc-hullpath { fill: rgba(232, 121, 112, 0.06); stroke: rgba(232, 121, 112, 0.55); }
-.gc-hull.tone-medium .gc-hullpath { fill: rgba(229, 175, 98, 0.06); stroke: rgba(229, 175, 98, 0.55); }
-.gc-hull:hover .gc-hullpath { fill-opacity: 1; stroke-dasharray: none; }
-.gc-hull.sel .gc-hullpath { stroke-dasharray: none; stroke-width: 1.4; }
-.gc-hull.tone-high.sel .gc-hullpath { fill: rgba(232, 121, 112, 0.12); }
-.gc-hull.tone-medium.sel .gc-hullpath { fill: rgba(229, 175, 98, 0.12); }
-.gc-hull.tone-low.sel .gc-hullpath { fill: rgba(100, 181, 200, 0.1); }
-.gc-hull.dim { opacity: 0.25; }
+.gc-tip { position: absolute; z-index: 5; pointer-events: none; background: var(--shell); color: var(--shell-text); padding: 8px 10px; font-size: var(--fs-sm); line-height: 1.5; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); max-width: 260px; }
+.gc-tip .faint { color: var(--shell-text-2); }
+.gc-tip-id { color: #fff; font-weight: 600; }
+
+/* ring outlines: a neutral dashed boundary around one group of accounts; blue only when selected */
+.gc-hullpath { fill: rgba(141, 141, 141, 0.05); stroke: var(--graph-hull); stroke-width: 1; stroke-dasharray: 5 4; cursor: pointer; vector-effect: non-scaling-stroke; transition: fill var(--dur) var(--ease), stroke var(--dur) var(--ease); }
+.gc-hull:hover .gc-hullpath { fill: rgba(141, 141, 141, 0.1); }
+.gc-hull.sel .gc-hullpath { stroke: var(--accent); stroke-dasharray: none; stroke-width: 1.5; fill: rgba(15, 98, 254, 0.06); }
+.gc-hull.dim { opacity: 0.4; }
 .gc-cluster-label { cursor: pointer; outline: none; }
-.gc-cluster-label text { font-family: var(--font-mono); fill: var(--text-2); paint-order: stroke; stroke: var(--bg); stroke-linejoin: round; letter-spacing: 0.02em; }
-.gc-hull.tone-high .gc-cluster-label text { fill: var(--danger); }
-.gc-hull.tone-medium .gc-cluster-label text { fill: var(--warn); }
-.gc-cluster-label:hover text, .gc-cluster-label:focus-visible text, .gc-hull.sel .gc-cluster-label text { fill: var(--text); }
+.gc-cluster-label text { font-family: var(--font-mono); fill: var(--text-2); paint-order: stroke; stroke: #fff; stroke-linejoin: round; }
+.gc-cluster-label:hover text, .gc-cluster-label:focus-visible text, .gc-hull.sel .gc-cluster-label text { fill: var(--accent-hi); }
 .gc-cluster-label:focus-visible text { text-decoration: underline; }
 
-.gc-soft .gc-node.dim { opacity: 0.42; }
-.gc-soft .gc-link.dim { opacity: 0.3; }
-.gc-soft .gc-hull.dim { opacity: 0.55; }
+.gc-soft .gc-node.dim { opacity: 0.5; }
+.gc-soft .gc-link.dim { opacity: 0.35; }
+.gc-soft .gc-hull.dim { opacity: 0.6; }

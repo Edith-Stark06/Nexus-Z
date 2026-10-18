@@ -2,7 +2,7 @@
 import { HIGH_RISK } from "./constants";
 
 export const RING_SORTS = {
-  risk: { label: "Highest risk", cmp: (a, b) => b.risk - a.risk || b.accounts - a.accounts },
+  risk: { label: "Highest ring score", cmp: (a, b) => b.risk - a.risk || b.accounts - a.accounts },
   size: { label: "Most accounts", cmp: (a, b) => b.accounts - a.accounts || b.risk - a.risk },
   flagged: { label: "Most recently flagged", cmp: (a, b) => new Date(b.flagged_at) - new Date(a.flagged_at) || b.risk - a.risk },
   first_seen: { label: "Earliest first seen", cmp: (a, b) => new Date(a.first_seen) - new Date(b.first_seen) || b.risk - a.risk },

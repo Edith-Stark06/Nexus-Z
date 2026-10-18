@@ -214,7 +214,7 @@ export function mergeRings(details) {
   const edges = [];
   const clusters = [];
   for (const d of details) {
-    clusters.push({ id: d.ring_id, label: `${d.ring_id} · risk ${d.risk}`, risk: d.risk, accounts: d.accounts, headline: d.headline, detail: d });
+    clusters.push({ id: d.ring_id, label: `${d.ring_id} · ring score ${d.risk}`, risk: d.risk, accounts: d.accounts, headline: d.headline, detail: d });
     for (const m of d.members || []) {
       if (seen.has(m.id)) continue;
       seen.add(m.id);
@@ -231,4 +231,44 @@ export function pickFocusAccount(ring) {
   const pool = (ring?.members || []).filter((m) => !first || m.cluster === first);
   const best = (list) => [...list].sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || (a.id < b.id ? -1 : 1))[0];
   return (best(pool.filter((m) => m.role === "collector")) || best(pool) || best(ring?.members || []))?.id ?? null;
+}
+
+/**
+ * Which account labels to draw, so that none lands on another label or on another account.
+ *
+ * Everything is worked out in screen pixels from the current zoom transform `tf`. Accounts are tried in `priority` order
+ * (most important first); `forced` ids (the selected or hovered account) are always drawn. A label is drawn only if its box
+ * does not touch a label already placed or another account's disc. Zooming in spreads the accounts apart, so more labels fit.
+ * Accounts outside the visible area are ignored. Returns the ids to label and how many visible accounts were left unlabelled.
+ */
+export function labelPlan({ nodes, pos, tf, size, radius, priority = [], forced = [], charWidth = 6.5, lineHeight = 14, gap = 4 }) {
+  const rank = new Map();
+  priority.forEach((id, i) => rank.set(id, i));
+  const forcedSet = new Set(forced);
+  const seen = [];
+  for (const n of nodes) {
+    const p = pos.get(n.id);
+    if (!p) continue;
+    const sx = tf.x + p.x * tf.k, sy = tf.y + p.y * tf.k, sr = radius(n) * tf.k;
+    if (sx < -40 || sy < -20 || sx > size.width + 40 || sy > size.height + 20) continue;
+    seen.push({ id: n.id, sx, sy, sr, w: n.id.length * charWidth });
+  }
+  const box = (s) => ({ x0: s.sx + s.sr + 5, x1: s.sx + s.sr + 5 + s.w, y0: s.sy - lineHeight / 2, y1: s.sy + lineHeight / 2 });
+  const hitsBox = (a, b) => a.x0 < b.x1 + gap && a.x1 + gap > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+  const hitsDisc = (b, s) => {
+    const cx = Math.max(b.x0, Math.min(s.sx, b.x1)), cy = Math.max(b.y0, Math.min(s.sy, b.y1));
+    return Math.hypot(s.sx - cx, s.sy - cy) < s.sr + 2;
+  };
+  const order = [...seen].sort((a, b) => (forcedSet.has(b.id) ? 1 : 0) - (forcedSet.has(a.id) ? 1 : 0) || (rank.get(a.id) ?? 1e9) - (rank.get(b.id) ?? 1e9) || (a.id < b.id ? -1 : 1));
+  const placed = [];
+  const shown = new Set();
+  for (const s of order) {
+    const b = box(s);
+    const ok = forcedSet.has(s.id) || (!placed.some((q) => hitsBox(b, q)) && !seen.some((o) => o.id !== s.id && hitsDisc(b, o)));
+    if (ok) {
+      placed.push(b);
+      shown.add(s.id);
+    }
+  }
+  return { shown, hidden: seen.length - shown.size, visible: seen.length };
 }

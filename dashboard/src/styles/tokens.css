@@ -1,50 +1,77 @@
-/* NEXUS Z design tokens. One place for colour, type, spacing and motion.
-   Risk colours (--warn, --danger, --ok) are used only where a risk or health state is being shown. */
+/* NEXUS Z design tokens: a light, neutral, Carbon-inspired set. One place for colour, type, spacing and motion.
+   Blue marks interaction and selection. Red, orange, yellow and green appear only where they state a risk or health condition.
+   No remote fonts: the stack below falls back to whatever the machine has, so the demo works offline. */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* surfaces */
-  --bg: #0b1017;            /* application background */
-  --surface: #111923;       /* workspace panels */
-  --raised: #17212d;        /* elevated: inspector blocks, menus, hover rows */
-  --line: #293746;          /* borders and dividers */
-  --line-soft: #1e2b39;     /* quiet dividers inside a panel */
+  --bg: #f4f4f4;            /* page background */
+  --surface: #ffffff;       /* panels, tables, the graph canvas */
+  --raised: #f4f4f4;        /* hover rows, quiet fills inside a panel */
+  --layer: #e8e8e8;         /* secondary surface: tracks, chips, selected-but-quiet */
+  --line: #e0e0e0;          /* subtle border */
+  --line-soft: #ececec;     /* quiet divider inside a panel */
+  --line-strong: #8d8d8d;   /* input borders, stronger dividers */
 
-  /* text */
-  --text: #e8edf2;
-  --text-2: #94a3b3;
-  --text-3: #7c8da0;        /* muted labels; #68798B from the brief measured 4.2:1 on --bg, this is 5.4:1 */
+  /* text (on --surface: 16.1:1, 7.5:1 and 5.0:1) */
+  --text: #161616;
+  --text-2: #525252;
+  --text-3: #6f6f6f;
+  --text-inverse: #ffffff;
 
   /* interaction */
-  --accent: #64b5c8;
-  --accent-hi: #a5d9e5;
-  --accent-wash: rgba(100, 181, 200, 0.12);
-  --accent-line: rgba(100, 181, 200, 0.45);
+  --accent: #0f62fe;
+  --accent-hi: #0043ce;     /* hover, pressed, link text */
+  --accent-wash: #edf5ff;   /* selected row, pressed toggle */
+  --accent-line: #78a9ff;
+  --focus: #0f62fe;
 
-  /* risk and health */
-  --warn: #e5af62;
-  --danger: #e87970;
-  --ok: #74b99a;
-  --warn-wash: rgba(229, 175, 98, 0.12);
-  --danger-wash: rgba(232, 121, 112, 0.12);
-  --ok-wash: rgba(116, 185, 154, 0.12);
+  /* the one dark element: the application header (Carbon's shell header) */
+  --shell: #161616;
+  --shell-2: #262626;
+  --shell-text: #f4f4f4;
+  --shell-text-2: #c6c6c6;
 
-  /* estimated roles: muted hues plus a different shape each, so colour is never the only cue */
-  --role-victim: #7fa6d1;
-  --role-collector: #d9a66f;
-  --role-mule: #a3b0c0;
-  --role-cashout: #cf8fa6;
-  --role-unknown: #6b7b8c;
+  /* risk and health: used only when a state is being stated */
+  --danger: #da1e28;
+  --danger-text: #a2191f;
+  --danger-wash: #fff1f1;
+  --warn: #ff832b;
+  --warn-text: #8a3800;
+  --warn-wash: #fff2e8;
+  --caution: #f1c21b;
+  --caution-text: #6e5600;
+  --caution-wash: #fcf4d6;
+  --ok: #198038;
+  --ok-text: #0e6027;
+  /* the brief's orange and yellow are 2.5:1 and 1.7:1 on white, below the 3:1 a graphic needs, so dots and bars use darker marks of the same hues */
+  --warn-mark: #ba4e00;
+  --caution-mark: #8e6a00;
+  --ok-wash: #defbe6;
+  --info-wash: #edf5ff;
 
-  /* type */
-  --font-ui: "IBM Plex Sans", "Inter", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* estimated roles: restrained hues plus a different shape each, so colour is never the only cue */
+  --role-victim: #007d79;
+  --role-collector: #6929c4;
+  --role-mule: #525252;
+  --role-cashout: #9f1853;
+  --role-unknown: #8d8d8d;
+
+  /* graph */
+  --graph-bg: #ffffff;
+  --graph-link: #8d8d8d;
+  --graph-link-hi: #0f62fe;
+  --graph-hull: #8d8d8d;
+
+  /* type: local system stack. Monospace is for identifiers, timestamps and diagnostics only. */
+  --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Roboto, Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", "SF Mono", Consolas, "Liberation Mono", monospace;
-  --fs-xs: 11px;
-  --fs-sm: 12px;
-  --fs-md: 13px;
-  --fs-lg: 15px;
-  --fs-xl: 19px;
-  --fs-2xl: 26px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 28px;
 
   /* spacing scale (4px base) */
   --s1: 4px;
@@ -53,24 +80,27 @@
   --s4: 16px;
   --s5: 24px;
   --s6: 32px;
+  --s7: 48px;
 
-  --radius: 3px;
-  --radius-lg: 5px;
-  --rail-w: 56px;
-  --header-h: 44px;
+  --radius: 2px;
+  --radius-lg: 2px;
+  --header-h: 48px;
+  --control-h: 32px;
+  --rail-w: 0px;
 
   /* motion */
-  --dur: 120ms;
-  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur: 110ms;
+  --ease: cubic-bezier(0.2, 0, 0.38, 0.9);
 
-  /* legacy names still used by the assistant panel styles */
+  /* names older component styles still use */
   --border: var(--line);
   --border-soft: var(--line-soft);
   --panel: var(--surface);
   --bg-elev: var(--raised);
-  --bg-elev-2: var(--raised);
+  --bg-elev-2: var(--layer);
   --text-dim: var(--text-2);
   --text-faint: var(--text-3);
+  --warn-line: #ff832b;
 }
 
 @media (prefers-reduced-motion: reduce) {
