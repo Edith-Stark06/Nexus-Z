@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { startPolling } from "../services/api";
+import { getRing, startPolling } from "../services/api";
 import { formatDateTime, relativeTime } from "../lib/constants";
 import { D3Graph } from "../components/D3Graph";
 import { SHAPPanel } from "../components/SHAPPanel";
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [rings, setRings] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [selectedRing, setSelectedRing] = useState(null);
   const [usingMock, setUsingMock] = useState(true);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
@@ -30,6 +31,15 @@ export default function Dashboard() {
     });
     return stop;
   }, []);
+
+  // The graph needs the ring's members and payments, which the list does not carry.
+  useEffect(() => {
+    if (!selected) { setSelectedRing(null); return undefined; }
+    let stop = false;
+    setSelectedRing(null);
+    getRing(selected.ring_id).then((res) => { if (!stop) setSelectedRing(res.data); }).catch(() => { if (!stop) setSelectedRing(null); });
+    return () => { stop = true; };
+  }, [selected && selected.ring_id]);
 
   const filtered = rings.filter((r) =>
     r.ring_id.toLowerCase().includes(search.trim().toLowerCase())
@@ -148,7 +158,7 @@ export default function Dashboard() {
               <div className="detail-grid">
                 <div className="detail-col">
                   <h3>Flow graph</h3>
-                  <D3Graph ringId={selected.ring_id} />
+                  <D3Graph ringId={selected.ring_id} ring={selectedRing} />
                 </div>
                 <div className="detail-col">
                   <h3>Why flagged</h3>
