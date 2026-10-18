@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getAccount } from "../services/api";
-import { ROLE_COLORS } from "../lib/constants";
+import { ShieldAlert, HelpCircle } from "lucide-react";
 import Layout from "./Layout";
+import ReasonList from "../components/ReasonList";
+import RoleGlyph from "../components/RoleGlyph";
+import { useAccountRecord } from "../state/hooks";
+import { ROLE_LABELS, riskTone } from "../lib/constants";
 import "./WarningScreen.css";
 
 // Friendly, jargon-free copy for an account we have no data on.
@@ -12,54 +15,72 @@ const UNKNOWN_MESSAGE =
   "about to send money, please double-check the recipient before " +
   "proceeding.";
 
+const ROLE_COPY = {
+  collector: "an account that receives payments from several others and passes them on",
+  mule: "an account that passes money along between others",
+  cashout: "an account where the ring's money appears to leave",
+  victim: "an account at the start of the ring's payment flow",
+  unknown: "an account under review",
+};
+
+function Prototype() {
+  return (
+    <div className="notice info ws-proto" role="note">
+      <div className="grow">
+        <strong>Prototype of a customer screen.</strong> It shows what a bank's app could display before a payment, using the real <span className="mono">GET /accounts/&#123;id&#125;</span>{" "}
+        lookup. It is not connected to any payment flow, and no warning is sent to anyone.
+      </div>
+    </div>
+  );
+}
+
+function BankContact() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button className="ghost" onClick={() => setOpen((o) => !o)} aria-expanded={open}>Talk to my bank</button>
+      {open && <p className="ws-bank" role="status">Contact your bank using the number on the back of your card.</p>}
+    </>
+  );
+}
+
 export default function WarningScreen() {
   const { accountId } = useParams();
-  const [account, setAccount] = useState(null);
-  const [usingMock, setUsingMock] = useState(true);
+  const rec = useAccountRecord(accountId);
+  const account = rec.account;
 
-  useEffect(() => {
-    let stopped = false;
-    async function load() {
-      const res = await getAccount(accountId);
-      if (!stopped) {
-        setAccount(res.data);
-        setUsingMock(res.usingMock);
-      }
-    }
-    load();
-    return () => { stopped = true };
-  }, [accountId]);
-
-  // No account record at all — unknown ID. The mock loader returns null
-  // when there is no bundled example for the requested account, and the API
-  // returns a 404. Either way we show the friendly "not found" copy.
-  if (!account) {
+  // No account record at all: the API answered 404 (or there is no sample for this id).
+  if (rec.state === "notfound" || rec.state === "error") {
     return (
-      <Layout usingMock={usingMock}>
-        <div className="warning warning-unknown">
-          <div className="warning-icon" style={{ color: "var(--warn)" }}>
-            ?
-          </div>
-          <h2>Account not found</h2>
-          <p className="warning-sub">
-            We could not look up <b>{accountId}</b>.
-          </p>
-          <div className="warning-message">
-            <span className="wm-label">Message shown to the customer</span>
-            <p>{UNKNOWN_MESSAGE}</p>
-          </div>
-          <div className="warning-actions">
-            <Link to="/" className="ghost">
-              Cancel payment
-            </Link>
-            <a href="tel:0" className="ghost">
-              Talk to my bank
-            </a>
-            <Link to="/" className="primary">
-              I understand the risk, continue
-            </Link>
+      <Layout title="Payment pre-check" subtitle="Customer screen prototype">
+        <div className="ws">
+          <Prototype />
+          <div className="ws-card ws-unknown">
+            <HelpCircle size={26} className="ws-icon" style={{ color: "var(--warn)" }} aria-hidden="true" />
+            <h2>Account not found</h2>
+            <p className="ws-sub">
+              We could not look up <b className="mono">{accountId}</b>.
+            </p>
+            {rec.state === "error" && <p className="field-error">The lookup failed: {rec.message}</p>}
+            <div className="ws-message">
+              <span className="eyebrow">Message shown to the customer</span>
+              <p>{UNKNOWN_MESSAGE}</p>
+            </div>
+            <div className="ws-actions">
+              <Link to="/rings" className="btnlink">Cancel payment</Link>
+              <BankContact />
+              <Link to="/rings" className="btnlink">I understand the risk, continue</Link>
+            </div>
           </div>
         </div>
+      </Layout>
+    );
+  }
+
+  if (!account) {
+    return (
+      <Layout title="Payment pre-check" subtitle="Customer screen prototype">
+        <div className="ws"><div className="ws-loading"><div className="skel" style={{ width: 220 }} /><div className="skel" /></div></div>
       </Layout>
     );
   }
@@ -67,84 +88,56 @@ export default function WarningScreen() {
   const role = account.role || "unknown";
   const ringId = account.ring_id;
   const riskPct = Math.round((account.risk ?? 0) * 100);
-
-  const roleCopy = {
-    collector:
-      "an account that collects payments from many people and forwards them quickly",
-    mule: "an account that moves money on behalf of others",
-    cashout: "an account that moves money out to an external destination",
-    victim: "your own account — recent payments from it are under review",
-    unknown: "an account under review",
-  }[role] || "an account under review";
-
-  const message =
-    `Payment to this account is high risk (${riskPct}%). ` +
-    `It is linked to ${ringId || "a flagged ring"}, ${roleCopy}. ` +
-    `If you have not already done so, verify the recipient before sending.`;
+  const tone = riskTone(riskPct);
+  const message = ringId
+    ? `This payment would go to an account that is flagged for review (risk signal ${riskPct}%). ` +
+      `It is linked to ${ringId}, ${ROLE_COPY[role] || ROLE_COPY.unknown}. ` +
+      `This is not proof of wrongdoing, but please verify the recipient before sending.`
+    : `This account is not currently linked to a flagged ring (risk signal ${riskPct}%). That does not guarantee it is safe: verify the recipient before sending.`;
 
   return (
-    <Layout usingMock={usingMock}>
-      <div className="warning">
-        <div className="crumb">
-          <Link to="/">Rings</Link>
-          {ringId ? (
-            <> / <Link to={`/ring/${ringId}`}>{ringId}</Link></>
-          ) : null}
-          {" / "}
-          <Link to={`/account/${account.account_id}`}>{account.account_id}</Link>
-          {" / "}
-          <span>Warning</span>
-        </div>
+    <Layout title="Payment pre-check" subtitle="Customer screen prototype">
+      <div className="ws">
+        <Prototype />
+        <div className="ws-cols">
+          <div className="ws-card">
+            <ShieldAlert size={28} className="ws-icon" style={{ color: tone === "high" ? "var(--danger)" : "var(--warn)" }} aria-hidden="true" />
+            <h2>Check before you send</h2>
+            <p className="ws-sub">{ringId ? "This account is flagged as part of a ring under review." : "This account is not in a flagged ring right now."}</p>
 
-        <div className="warning-card">
-          <div
-            className="warning-icon"
-            style={{ color: ROLE_COLORS[role] }}
-          >
-            ⚠
-          </div>
-          <h2>Check before you send</h2>
-          <p className="warning-sub">
-            This account is flagged as part of a fraud ring.
-          </p>
+            <dl className="ws-meta">
+              <div><dt>Account</dt><dd className="mono">{account.account_id}</dd></div>
+              <div><dt>Estimated role</dt><dd><RoleGlyph role={role} label /></dd></div>
+              {ringId && <div><dt>Ring</dt><dd className="mono">{ringId}</dd></div>}
+              <div><dt>Risk signal</dt><dd className="num">{riskPct}%</dd></div>
+            </dl>
 
-          <div className="warning-meta">
-            <div className="wm-row">
-              <span>Account</span>
-              <b>{account.account_id}</b>
+            <div className="ws-message">
+              <span className="eyebrow">Message shown to the customer</span>
+              <p>{message}</p>
             </div>
-            <div className="wm-row">
-              <span>Estimated role</span>
-              <b style={{ color: ROLE_COLORS[role] }}>{role}</b>
-            </div>
-            {ringId && (
-              <div className="wm-row">
-                <span>Ring</span>
-                <b>{ringId}</b>
-              </div>
-            )}
-            <div className="wm-row">
-              <span>Risk score</span>
-              <b>{riskPct}%</b>
+
+            <div className="ws-actions">
+              <Link to="/rings" className="btnlink">Cancel payment</Link>
+              <BankContact />
+              <Link to={`/account/${account.account_id}`} className="btnlink">I understand the risk, continue</Link>
             </div>
           </div>
 
-          <div className="warning-message">
-            <span className="wm-label">Message shown to the customer</span>
-            <p>{message}</p>
-          </div>
-
-          <div className="warning-actions">
-            <Link to="/" className="ghost">
-              Cancel payment
-            </Link>
-            <a href="tel:0" className="ghost">
-              Talk to my bank
-            </a>
-            <Link to={`/account/${account.account_id}`} className="primary">
-              I understand the risk, continue
-            </Link>
-          </div>
+          <aside className="ws-notes">
+            <h3 className="eyebrow">For the analyst: what this screen is built from</h3>
+            <p className="faint ws-n">Real response of <span className="mono">GET /accounts/{account.account_id}</span>. The wording is a fixed template; no model writes it.</p>
+            <div className="ws-n-block"><div className="eyebrow">Why the account scores this way</div><ReasonList reasons={account.reasons} limit={3} /></div>
+            <ul className="ws-points faint">
+              <li>The risk signal is automated and has not been evaluated as a payment-blocking rule.</li>
+              <li>The role ({ROLE_LABELS[role]}) is guessed from the ring's payments.</li>
+              <li>An unknown account is shown as "cannot confirm it is safe", never as safe.</li>
+            </ul>
+            <div className="ws-links">
+              <Link to={`/account/${account.account_id}`}>Open account page</Link>
+              {ringId && <Link to={`/ring/${ringId}?account=${encodeURIComponent(account.account_id)}`}>Show in ring graph</Link>}
+            </div>
+          </aside>
         </div>
       </div>
     </Layout>

@@ -55,9 +55,11 @@ describe("WarningScreen", () => {
       ).toBeInTheDocument();
     });
 
+    // "Talk to my bank" is a button that shows guidance, not a tel: link (there is no number to dial).
     expect(
-      screen.getByRole("link", { name: /Talk to my bank/i })
+      screen.getByRole("button", { name: /Talk to my bank/i })
     ).toBeInTheDocument();
+    expect(document.querySelector('a[href^="tel:"]')).toBeNull();
     expect(
       screen.getByRole("link", { name: /I understand the risk, continue/i })
     ).toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import "./PaymentTable.css";
 
 // Time-ordered list of payments inside a ring.
 //

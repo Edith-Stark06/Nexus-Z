@@ -1,0 +1,21 @@
+.gt { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: var(--s2) var(--s3); background: var(--surface); border-bottom: 1px solid var(--line); flex: none; }
+.gt-group { display: inline-flex; align-items: center; gap: 6px; }
+.gz { position: absolute; top: var(--s3); right: var(--s3); z-index: 4; display: grid; gap: 4px; }
+.gz button { background: rgba(17, 25, 35, 0.92); }
+.gt select { font-size: var(--fs-sm); padding: 3px 4px; }
+.gt-find { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 8px; background: var(--bg); position: relative; }
+.gt-find:focus-within { border-color: var(--accent-line); }
+.gt-find svg { color: var(--text-3); }
+.gt-find input { border: 0; background: transparent; padding: 4px 0; width: 150px; outline: none !important; font-size: var(--fs-sm); }
+.gt-miss { position: absolute; top: calc(100% + 4px); left: 0; white-space: nowrap; font-size: var(--fs-xs); color: var(--warn); background: var(--raised); border: 1px solid var(--line); padding: 2px 6px; border-radius: var(--radius); z-index: 6; }
+
+.gl { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: 4px var(--s3); background: var(--surface); border-bottom: 1px solid var(--line-soft); flex: none; position: relative; }
+.gl ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px; }
+.gl-role { display: inline-flex; align-items: center; gap: 7px; border: 0; padding: 3px 8px; font-size: var(--fs-sm); }
+.gl-role:hover:not(:disabled) { background: var(--raised); }
+.gl-role[aria-pressed="false"] { opacity: 0.85; }
+.gl-off { text-decoration: line-through; color: var(--text-3); }
+.gl-help { margin-left: auto; font-size: var(--fs-sm); }
+.gl-help summary { cursor: pointer; color: var(--accent); list-style: none; user-select: none; }
+.gl-help summary::-webkit-details-marker { display: none; }
+.gl-help[open] .gl-key { position: absolute; right: var(--s3); top: calc(100% + 4px); width: 340px; z-index: 8; background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s3); display: grid; gap: 6px; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-2); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); }

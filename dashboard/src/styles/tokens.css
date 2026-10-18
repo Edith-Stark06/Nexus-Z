@@ -1,0 +1,84 @@
+/* NEXUS Z design tokens. One place for colour, type, spacing and motion.
+   Risk colours (--warn, --danger, --ok) are used only where a risk or health state is being shown. */
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bg: #0b1017;            /* application background */
+  --surface: #111923;       /* workspace panels */
+  --raised: #17212d;        /* elevated: inspector blocks, menus, hover rows */
+  --line: #293746;          /* borders and dividers */
+  --line-soft: #1e2b39;     /* quiet dividers inside a panel */
+
+  /* text */
+  --text: #e8edf2;
+  --text-2: #94a3b3;
+  --text-3: #7c8da0;        /* muted labels; #68798B from the brief measured 4.2:1 on --bg, this is 5.4:1 */
+
+  /* interaction */
+  --accent: #64b5c8;
+  --accent-hi: #a5d9e5;
+  --accent-wash: rgba(100, 181, 200, 0.12);
+  --accent-line: rgba(100, 181, 200, 0.45);
+
+  /* risk and health */
+  --warn: #e5af62;
+  --danger: #e87970;
+  --ok: #74b99a;
+  --warn-wash: rgba(229, 175, 98, 0.12);
+  --danger-wash: rgba(232, 121, 112, 0.12);
+  --ok-wash: rgba(116, 185, 154, 0.12);
+
+  /* estimated roles: muted hues plus a different shape each, so colour is never the only cue */
+  --role-victim: #7fa6d1;
+  --role-collector: #d9a66f;
+  --role-mule: #a3b0c0;
+  --role-cashout: #cf8fa6;
+  --role-unknown: #6b7b8c;
+
+  /* type */
+  --font-ui: "IBM Plex Sans", "Inter", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", "SF Mono", Consolas, "Liberation Mono", monospace;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-lg: 15px;
+  --fs-xl: 19px;
+  --fs-2xl: 26px;
+
+  /* spacing scale (4px base) */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  --radius: 3px;
+  --radius-lg: 5px;
+  --rail-w: 56px;
+  --header-h: 44px;
+
+  /* motion */
+  --dur: 120ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* legacy names still used by the assistant panel styles */
+  --border: var(--line);
+  --border-soft: var(--line-soft);
+  --panel: var(--surface);
+  --bg-elev: var(--raised);
+  --bg-elev-2: var(--raised);
+  --text-dim: var(--text-2);
+  --text-faint: var(--text-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,62 +1,10 @@
-.pay-table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border-soft);
-  border-radius: 8px;
-  background: var(--bg);
-}
-
-.pay-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  font-family: ui-monospace, monospace;
-}
-
-.pay-table th,
-.pay-table td {
-  text-align: left;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-soft);
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.pay-table th {
-  color: var(--text-dim);
-  font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  position: sticky;
-  top: 0;
-  background: var(--bg-elev);
-  z-index: 2;
-}
-
-.pay-table tr:last-child td {
-  border-bottom: none;
-}
-
-.pay-table tr:hover td {
-  background: var(--bg-elev-2);
-}
-
-.pay-time {
-  color: var(--text-dim);
-}
-
-.pay-id {
-  color: var(--accent);
-}
-
-.pay-amt {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.pay-empty {
-  color: var(--text-faint);
-  font-size: 13px;
-  padding: 16px;
-  text-align: center;
-}
+.pay-table-wrap { overflow-x: auto; border: 1px solid var(--line-soft); background: var(--bg); max-height: 320px; overflow-y: auto; }
+.pay-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); font-family: var(--font-mono); }
+.pay-table th, .pay-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line-soft); color: var(--text); white-space: nowrap; }
+.pay-table th { color: var(--text-3); font-family: var(--font-ui); font-weight: 600; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.05em; position: sticky; top: 0; background: var(--surface); z-index: 2; }
+.pay-table tr:last-child td { border-bottom: none; }
+.pay-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+.pay-time { color: var(--text-2); }
+.pay-id { color: var(--accent); }
+.pay-amt { color: var(--text); text-align: right; }
+.pay-empty { color: var(--text-3); font-size: var(--fs-sm); padding: var(--s3) 0; }

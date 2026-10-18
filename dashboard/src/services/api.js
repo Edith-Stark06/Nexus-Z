@@ -152,4 +152,57 @@ export function startPolling(onTick, limit = 50) {
   };
 }
 
+
+// ---------------------------------------------------------------------------------------------------------------
+// Live-only calls. Unlike the functions above they never fall back to sample data, and they say *why* a call failed:
+// `network` (the API could not be reached) or an HTTP `status` (404 = unknown id, 503 = backend not available, ...).
+// The DataProvider uses these, so the screen can tell "this ring changed" apart from "the API is down".
+// ---------------------------------------------------------------------------------------------------------------
+export class ApiError extends Error {
+  constructor(message, { status = 0, network = false } = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.network = network;
+  }
+}
+
+async function request(path, init) {
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, init);
+  } catch (e) {
+    throw new ApiError("Could not reach the API.", { network: true });
+  }
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const body = await res.json();
+      if (typeof body?.detail === "string") detail = body.detail;
+      else if (Array.isArray(body?.detail)) detail = body.detail.map((d) => `${(d.loc || []).filter((x) => x !== "body").join(".")}: ${d.msg}`).join("; ");
+    } catch {
+      /* the body is not JSON; the status is enough */
+    }
+    throw new ApiError(detail || `HTTP ${res.status} on ${path}`, { status: res.status });
+  }
+  return res.json();
+}
+
+export const live = {
+  health: () => request("/health"),
+  rings: () => request("/rings"),
+  ring: (id) => request(`/rings/${encodeURIComponent(id)}`),
+  account: (id) => request(`/accounts/${encodeURIComponent(id)}`),
+  alerts: (limit = 200) => request(`/alerts?limit=${limit}`),
+};
+
+// POST /transactions: one transaction or a list. Resolves with { accepted, backend }.
+export function submitTransactions(payload) {
+  return request("/transactions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
 export { API_BASE };
