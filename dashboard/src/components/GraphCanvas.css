@@ -9,7 +9,6 @@
 .gc-link.hi .gc-line { stroke: var(--accent-hi); stroke-opacity: 0.95; }
 .gc-link.sel .gc-line { stroke: var(--accent-hi); stroke-opacity: 1; }
 .gc-link.dim { opacity: 0.14; transition: opacity var(--dur) var(--ease); }
-.gc-link.dim .gc-hit { pointer-events: none; }
 .gc-count { font-family: var(--font-mono); font-size: 10px; fill: var(--accent-hi); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
 
 .gc-node { cursor: pointer; transition: opacity var(--dur) var(--ease); outline: none; }
@@ -29,3 +28,24 @@
 
 .gc-tip { position: absolute; z-index: 5; pointer-events: none; background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 9px; font-size: var(--fs-sm); line-height: 1.5; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45); }
 .gc-tip-id { color: var(--accent-hi); }
+
+/* cluster regions: a soft outline around one group of accounts, coloured by the group's risk tone */
+.gc-hullpath { fill: rgba(100, 181, 200, 0.05); stroke: rgba(100, 181, 200, 0.4); stroke-width: 1; stroke-dasharray: 4 4; cursor: pointer; transition: fill var(--dur) var(--ease), stroke var(--dur) var(--ease); }
+.gc-hull.tone-high .gc-hullpath { fill: rgba(232, 121, 112, 0.06); stroke: rgba(232, 121, 112, 0.55); }
+.gc-hull.tone-medium .gc-hullpath { fill: rgba(229, 175, 98, 0.06); stroke: rgba(229, 175, 98, 0.55); }
+.gc-hull:hover .gc-hullpath { fill-opacity: 1; stroke-dasharray: none; }
+.gc-hull.sel .gc-hullpath { stroke-dasharray: none; stroke-width: 1.4; }
+.gc-hull.tone-high.sel .gc-hullpath { fill: rgba(232, 121, 112, 0.12); }
+.gc-hull.tone-medium.sel .gc-hullpath { fill: rgba(229, 175, 98, 0.12); }
+.gc-hull.tone-low.sel .gc-hullpath { fill: rgba(100, 181, 200, 0.1); }
+.gc-hull.dim { opacity: 0.25; }
+.gc-cluster-label { cursor: pointer; outline: none; }
+.gc-cluster-label text { font-family: var(--font-mono); fill: var(--text-2); paint-order: stroke; stroke: var(--bg); stroke-linejoin: round; letter-spacing: 0.02em; }
+.gc-hull.tone-high .gc-cluster-label text { fill: var(--danger); }
+.gc-hull.tone-medium .gc-cluster-label text { fill: var(--warn); }
+.gc-cluster-label:hover text, .gc-cluster-label:focus-visible text, .gc-hull.sel .gc-cluster-label text { fill: var(--text); }
+.gc-cluster-label:focus-visible text { text-decoration: underline; }
+
+.gc-soft .gc-node.dim { opacity: 0.42; }
+.gc-soft .gc-link.dim { opacity: 0.3; }
+.gc-soft .gc-hull.dim { opacity: 0.55; }

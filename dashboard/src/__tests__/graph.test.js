@@ -169,3 +169,89 @@ describe("linkPath", () => {
     expect(linkPath({ x: 5, y: 5 }, { x: 5, y: 5 }, 8, 8).d).not.toContain("NaN");
   });
 });
+
+// ---- clusters (the homepage draws several rings in one picture)
+import { clusterAnchors, hullGeometry, clusterFocus, mergeRings, pickFocusAccount } from "../lib/graph";
+
+describe("cluster helpers", () => {
+  it("anchors one cluster at the centre and a few in a staggered row", () => {
+    expect(clusterAnchors(["a"]).get("a")).toEqual({ x: 0, y: 0 });
+    const three = clusterAnchors(["a", "b", "c"], 100);
+    expect(three.get("a").x).toBeLessThan(three.get("b").x);
+    expect(three.get("b").x).toBeLessThan(three.get("c").x);
+    expect(three.get("a").y).toBeLessThan(three.get("b").y); // staggered, not a straight line
+    expect([...clusterAnchors(["a", "b", "c"], 100)]).toEqual([...three]); // deterministic
+  });
+
+  it("puts many clusters round an ellipse", () => {
+    const six = clusterAnchors(["a", "b", "c", "d", "e", "f"], 100);
+    expect(new Set([...six.values()].map((p) => `${Math.round(p.x)},${Math.round(p.y)}`)).size).toBe(6);
+  });
+
+  it("outlines a group of nodes, with the label above the outline", () => {
+    const h = hullGeometry([{ x: 0, y: 0, r: 8 }, { x: 100, y: 0, r: 8 }, { x: 50, y: 80, r: 8 }]);
+    expect(h.d).toMatch(/^M/);
+    expect(h.d).not.toContain("NaN");
+    expect(h.label.y).toBeLessThan(-8); // above the top node
+    expect(hullGeometry([])).toBeNull();
+    expect(hullGeometry([{ x: 5, y: 5, r: 8 }]).d).toMatch(/^M/); // a single node still gets an outline
+  });
+
+  it("returns the nodes and links inside one cluster", () => {
+    const merged = mergeRings([
+      { ring_id: "R1", risk: 80, accounts: 2, headline: "a", members: [{ id: "A", role: "victim", score: 0.2 }, { id: "B", role: "collector", score: 0.9 }], edges: [{ src: "A", dst: "B", amount: 1, ts: "2022-09-01T10:00:00Z" }] },
+      { ring_id: "R2", risk: 40, accounts: 2, headline: "b", members: [{ id: "C", role: "mule", score: 0.5 }, { id: "D", role: "cashout", score: 0.6 }], edges: [{ src: "C", dst: "D", amount: 1, ts: "2022-09-01T11:00:00Z" }] },
+    ]);
+    const f = clusterFocus(buildGraph(merged), "R2");
+    expect([...f.nodeIds].sort()).toEqual(["C", "D"]);
+    expect([...f.linkIds]).toEqual(["C>D"]);
+  });
+});
+
+describe("mergeRings", () => {
+  const d = (id, ids) => ({ ring_id: id, risk: 70, accounts: ids.length, headline: id, members: ids.map((x) => ({ id: x, role: "mule", score: 0.5 })), edges: [] });
+
+  it("tags each account with its ring and builds one cluster per ring", () => {
+    const m = mergeRings([d("R1", ["A", "B"]), d("R2", ["C"])]);
+    expect(m.members.map((x) => [x.id, x.cluster])).toEqual([["A", "R1"], ["B", "R1"], ["C", "R2"]]);
+    expect(m.clusters.map((c) => c.id)).toEqual(["R1", "R2"]);
+    expect(m.clusters[0].label).toBe("R1 · risk 70");
+    expect(m.ring_id).toBe("merged:R1+R2");
+  });
+
+  it("keeps an account that two rings list in the first ring only", () => {
+    const m = mergeRings([d("R1", ["A", "B"]), d("R2", ["B", "C"])]);
+    expect(m.members.filter((x) => x.id === "B")).toHaveLength(1);
+    expect(m.members.find((x) => x.id === "B").cluster).toBe("R1");
+  });
+
+  it("handles no rings", () => {
+    expect(mergeRings([]).members).toEqual([]);
+  });
+});
+
+describe("pickFocusAccount", () => {
+  it("starts on the highest-scored collector of the first ring", () => {
+    const ring = { clusters: [{ id: "R1" }, { id: "R2" }], members: [
+      { id: "m", role: "mule", score: 0.99, cluster: "R1" },
+      { id: "c1", role: "collector", score: 0.6, cluster: "R1" },
+      { id: "c2", role: "collector", score: 0.8, cluster: "R1" },
+      { id: "z", role: "collector", score: 0.99, cluster: "R2" },
+    ] };
+    expect(pickFocusAccount(ring)).toBe("c2");
+  });
+
+  it("falls back to the best-scored account when there is no collector, and to null when empty", () => {
+    expect(pickFocusAccount({ clusters: [{ id: "R1" }], members: [{ id: "a", role: "mule", score: 0.2, cluster: "R1" }, { id: "b", role: "victim", score: 0.7, cluster: "R1" }] })).toBe("b");
+    expect(pickFocusAccount({ clusters: [], members: [] })).toBeNull();
+    expect(pickFocusAccount(null)).toBeNull();
+  });
+});
+
+describe("fitTransform with headroom for labels", () => {
+  it("reserves space at the top for cluster labels", () => {
+    const pts = [{ x: 0, y: 0 }, { x: 100, y: 100 }];
+    const t = fitTransform(pts, { width: 800, height: 600 }, { pad: 40, padTop: 120 });
+    expect(0 * t.k + t.y).toBeGreaterThanOrEqual(120 - 1e-6);
+  });
+});

@@ -5,6 +5,7 @@
  * src, dst, amount, ts). The graph shows members as nodes and *pairs* as links: all payments from A to B are
  * folded into one link that keeps the individual payments, so a busy pair is one clear arrow, not a pile of lines.
  */
+import { polygonHull, line as d3line, curveCatmullRomClosed } from "d3";
 import { edgesUpTo } from "./replay";
 import { ROLE_ORDER } from "./constants";
 
@@ -57,6 +58,7 @@ export function buildGraph(ring, { cutoff = null, hiddenRoles = new Set() } = {}
     id: m.id,
     role: m.role || "unknown",
     score: typeof m.score === "number" ? m.score : null,
+    cluster: m.cluster ?? null,
     paymentsIn: degIn.get(m.id) || 0,
     paymentsOut: degOut.get(m.id) || 0,
   }));
@@ -130,17 +132,17 @@ export function flowLayout(nodes, { width, height, pad = 56 } = DEFAULT_SIZE) {
 }
 
 // Zoom/pan that frames all points inside the viewport. `padRight` leaves room for the account labels that sit to the right
-// of each node; `maxK` stops a small ring from being blown up to fill the screen.
-export function fitTransform(points, { width, height }, { pad = 56, padRight = pad, maxK = 1.7, minK = 0.2 } = {}) {
+// of each node, `padTop` for cluster labels above the outlines; `maxK` stops a small ring from being blown up to fill the screen.
+export function fitTransform(points, { width, height }, { pad = 56, padRight = pad, padTop = pad, maxK = 1.7, minK = 0.2 } = {}) {
   if (!points.length) return { k: 1, x: width / 2, y: height / 2 };
   const xs = points.map((p) => p.x);
   const ys = points.map((p) => p.y);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
   const w = Math.max(1, x1 - x0), h = Math.max(1, y1 - y0);
   const availW = Math.max(40, width - pad - padRight);
-  const availH = Math.max(40, height - 2 * pad);
+  const availH = Math.max(40, height - padTop - pad);
   const k = Math.max(minK, Math.min(maxK, availW / w, availH / h));
-  return { k, x: pad + availW / 2 - (k * (x0 + x1)) / 2, y: height / 2 - (k * (y0 + y1)) / 2 };
+  return { k, x: pad + availW / 2 - (k * (x0 + x1)) / 2, y: padTop + availH / 2 - (k * (y0 + y1)) / 2 };
 }
 
 // Path for one link, shortened so the arrowhead ends at the edge of the target node. When the reverse link also
@@ -160,4 +162,73 @@ export function linkPath(a, b, rs, rt, { curved = false, gap = 3 } = {}) {
 
 export function hasReverse(link, linkIds) {
   return linkIds.has(linkId(link.target, link.source));
+}
+
+// ---- clusters: several rings drawn in one picture, each kept in its own region -----------------------------------------
+
+// Where each cluster is pulled to by the force layout. A few clusters sit in a staggered row (the graph frame is wide);
+// more than four go round an ellipse.
+export function clusterAnchors(ids, radius = 150) {
+  const out = new Map();
+  const n = ids.length;
+  ids.forEach((id, i) => {
+    if (n === 1) out.set(id, { x: 0, y: 0 });
+    else if (n <= 4) out.set(id, { x: (i - (n - 1) / 2) * radius * 1.55, y: (i % 2 === 0 ? -1 : 1) * radius * 0.3 });
+    else {
+      const a = -Math.PI / 2 + (2 * Math.PI * i) / n;
+      out.set(id, { x: radius * 1.3 * Math.cos(a), y: radius * Math.sin(a) });
+    }
+  });
+  return out;
+}
+
+// A smooth outline around a group of nodes ({ x, y, r } each). Returns the SVG path, the label position (above the
+// outline) and its size, or null when there is nothing to outline.
+export function hullGeometry(items, pad = 16) {
+  if (!items.length) return null;
+  const pts = [];
+  for (const it of items) {
+    for (let k = 0; k < 10; k++) {
+      const a = (2 * Math.PI * k) / 10;
+      pts.push([it.x + (it.r + pad) * Math.cos(a), it.y + (it.r + pad) * Math.sin(a)]);
+    }
+  }
+  const hull = polygonHull(pts);
+  if (!hull) return null;
+  const d = d3line().curve(curveCatmullRomClosed.alpha(0.6))(hull);
+  const top = hull.reduce((m, p) => (p[1] < m[1] ? p : m), hull[0]);
+  return { d, label: { x: items.reduce((t, i) => t + i.x, 0) / items.length, y: top[1] - 7 } };
+}
+
+// The nodes of one cluster and the links inside it.
+export function clusterFocus(graph, clusterId) {
+  const nodeIds = new Set(graph.nodes.filter((n) => n.cluster === clusterId).map((n) => n.id));
+  const linkIds = new Set(graph.links.filter((l) => nodeIds.has(l.source) && nodeIds.has(l.target)).map((l) => l.id));
+  return { nodeIds, linkIds };
+}
+
+// Several ring details (GET /rings/{id}) as one picture: every ring is a cluster, an account belongs to the first ring that lists it.
+export function mergeRings(details) {
+  const seen = new Set();
+  const members = [];
+  const edges = [];
+  const clusters = [];
+  for (const d of details) {
+    clusters.push({ id: d.ring_id, label: `${d.ring_id} · risk ${d.risk}`, risk: d.risk, accounts: d.accounts, headline: d.headline, detail: d });
+    for (const m of d.members || []) {
+      if (seen.has(m.id)) continue;
+      seen.add(m.id);
+      members.push({ ...m, cluster: d.ring_id });
+    }
+    for (const e of d.edges || []) edges.push(e);
+  }
+  return { ring_id: `merged:${details.map((d) => d.ring_id).join("+")}`, members, edges, clusters };
+}
+
+// The account to start on: the highest model score in the first ring, preferring a collector (the account money gathers at).
+export function pickFocusAccount(ring) {
+  const first = ring?.clusters?.[0]?.id;
+  const pool = (ring?.members || []).filter((m) => !first || m.cluster === first);
+  const best = (list) => [...list].sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || (a.id < b.id ? -1 : 1))[0];
+  return (best(pool.filter((m) => m.role === "collector")) || best(pool) || best(ring?.members || []))?.id ?? null;
 }
