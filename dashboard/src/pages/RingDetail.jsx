@@ -5,13 +5,15 @@ import { D3Graph } from "../components/D3Graph";
 import { SHAPPanel } from "../components/SHAPPanel";
 import PaymentTable from "../components/PaymentTable";
 import ReplaySlider from "../components/ReplaySlider";
-import { ROLE_COLORS } from "../lib/constants";
+import { CaseSummary, RoleLegend } from "../components/CaseSummary";
+import { ROLE_COLORS, formatUtc } from "../lib/constants";
 import Layout from "./Layout";
 import "./RingDetail.css";
 
 export default function RingDetail() {
   const { ringId } = useParams();
   const [ring, setRing] = useState(null);
+  const [gone, setGone] = useState(false); // the API said 404: the ring was rebuilt under a new id, or never existed
   const [usingMock, setUsingMock] = useState(true);
   const [cutoff, setCutoff] = useState(null);
   const [playing, setPlaying] = useState(false);
@@ -22,6 +24,7 @@ export default function RingDetail() {
       const res = await getRing(ringId);
       if (!stopped) {
         setRing(res.data);
+        setGone(Boolean(res.notFound));
         setUsingMock(res.usingMock);
         // Start the replay at the ring's first seen moment.
         setCutoff(res.data ? res.data.first_seen : null);
@@ -30,6 +33,18 @@ export default function RingDetail() {
     load();
     return () => { stopped = true };
   }, [ringId]);
+
+  if (!ring && gone) {
+    // Ring ids are a hash of the members, so a ring that grew or split in the last refresh has a new id.
+    return (
+      <Layout usingMock={usingMock}>
+        <div className="empty">
+          This ring changed after the last refresh, or no longer exists. <Link to="/">Back to the list of rings</Link> to
+          find it again.
+        </div>
+      </Layout>
+    );
+  }
 
   if (!ring) {
     return (
@@ -56,17 +71,19 @@ export default function RingDetail() {
           <div>
             <div className="detail-id">{ring.ring_id}</div>
             <div className="detail-meta">
-              Risk {ring.risk} · {ring.accounts} members · {ring.victims} victims ·{" "}
-              {ring.total_amount != null ? `${ring.total_amount.toLocaleString()}` : ""}
+              Risk {ring.risk} · {ring.accounts} members · {ring.victims} {ring.victims === 1 ? "victim" : "victims"} (estimated)
+              {ring.total_amount != null ? ` · total ${ring.total_amount.toLocaleString()} (mixed currencies)` : ""}
             </div>
           </div>
           <div className="detail-times">
-            <div>First seen {ring.first_seen}</div>
-            <div>Flagged {ring.flagged_at}</div>
+            <div>First seen {formatUtc(ring.first_seen)}</div>
+            <div>Flagged {formatUtc(ring.flagged_at)}</div>
           </div>
         </div>
 
         <p className="detail-headline">{ring.headline}</p>
+
+        <CaseSummary summary={ring.summary} />
 
         <div className="stat-row">
           <div className="stat"><b>{collectors.length}</b><span>collectors (estimated role)</span></div>
@@ -86,6 +103,7 @@ export default function RingDetail() {
               playing={playing}
               onPlay={setPlaying}
             />
+            <RoleLegend colors={ROLE_COLORS} />
           </div>
           <div className="detail-col">
             <h3>Why flagged</h3>
@@ -99,7 +117,7 @@ export default function RingDetail() {
         </div>
 
         <div className="detail-foot">
-          <span className="badge">{victims.length} victim warnings sent</span>
+          <span className="badge">{victims.length} likely {victims.length === 1 ? "victim" : "victims"} in this ring (estimated)</span>
           <span className="footer-note">
             Roles are estimated by the model. A victim is a recent payer into the ring.
           </span>

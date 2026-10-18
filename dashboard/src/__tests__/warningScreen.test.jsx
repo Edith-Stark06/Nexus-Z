@@ -56,7 +56,7 @@ describe("WarningScreen", () => {
     });
 
     expect(
-      screen.getByRole("link", { name: /Talk to my bank/i })
+      screen.getByRole("button", { name: /Talk to my bank/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /I understand the risk, continue/i })

@@ -39,6 +39,7 @@ DASH_NAME="${NEXUSZ_DASHBOARD_CONTAINER:-nexusz-dashboard}"
 DASH_DIST="${NEXUSZ_DASHBOARD_DIST:-$HOME/nexusz-dashboard-dist}"
 DASH_PORT="${NEXUSZ_DASHBOARD_PORT:-3000}"
 CHAT_SECRET="${NEXUSZ_CHAT_SECRET:-nexusz_hf_token}"
+WATSONX_SECRET="${NEXUSZ_WATSONX_SECRET:-nexusz_watsonx_key}"   # IBM Cloud API key for watsonx.ai (infra/set_watsonx_key.sh)
 INTENT_DIR="${NEXUSZ_INTENT_DIR:-$DATA_DIR/granite-embedding-30m-english}"   # IBM Granite Embedding 30M, from infra/prepare_granite_embedding.sh
 PY=/opt/venv/bin/python      # the platform image's interpreter (the default `python` is the system one, without the packages)
 USERNS="--userns=keep-id:uid=1000,gid=1000"   # the image's own user, as in ml/LINUXONE.md
@@ -60,6 +61,8 @@ case "${1:-}" in
     # Without it the assistant answers from its built-in rules. The token is never an environment variable, so `podman inspect` cannot show it.
     SECRET_ARGS=""
     if podman secret exists "$CHAT_SECRET" 2>/dev/null; then SECRET_ARGS="--secret $CHAT_SECRET,type=mount,uid=1000,gid=1000,mode=0400"; fi
+    # watsonx.ai: the API key is a second podman secret; the region URL and the project id are not secret and come from the environment.
+    if podman secret exists "$WATSONX_SECRET" 2>/dev/null; then SECRET_ARGS="$SECRET_ARGS --secret $WATSONX_SECRET,type=mount,uid=1000,gid=1000,mode=0400"; fi
     # IBM Granite Embedding runs inside the API container and picks the topic of a question. Read-only, offline, no token needed.
     INTENT_ARGS=""
     if [ -f "$INTENT_DIR/config.json" ] && [ "${NEXUSZ_CHAT_INTENT:-on}" != off ]; then
@@ -75,6 +78,8 @@ case "${1:-}" in
       -e NEXUSZ_HISTORY_HOURS="${NEXUSZ_HISTORY_HOURS:-24}" -e NEXUSZ_ACTIVE_HOURS="${NEXUSZ_ACTIVE_HOURS:-24}" \
       -e NEXUSZ_MIN_REFRESH_SECONDS="${NEXUSZ_MIN_REFRESH_SECONDS:-5}" -e NEXUSZ_CORS_ORIGINS="${NEXUSZ_CORS_ORIGINS:-}" \
       -e NEXUSZ_CHAT="${NEXUSZ_CHAT:-auto}" -e NEXUSZ_CHAT_MODELS="${NEXUSZ_CHAT_MODELS:-}" \
+      -e NEXUSZ_CHAT_BASE_URL="${NEXUSZ_CHAT_BASE_URL:-https://router.huggingface.co/v1}" -e NEXUSZ_CHAT_REASONING_EFFORT="${NEXUSZ_CHAT_REASONING_EFFORT-low}" \
+      -e NEXUSZ_WATSONX_URL="${NEXUSZ_WATSONX_URL:-}" -e NEXUSZ_WATSONX_PROJECT_ID="${NEXUSZ_WATSONX_PROJECT_ID:-}" -e NEXUSZ_WATSONX_MODELS="${NEXUSZ_WATSONX_MODELS:-}" \
       -w /srv/nexusz/repo "$IMAGE" \
       "$PY" -m uvicorn api.main:app --host 0.0.0.0 --port 8000 >/dev/null     # 0.0.0.0 is inside the container only
     echo "started $NAME; wait about 30 s (model mode builds its first state), then: curl -fsS http://127.0.0.1:$PORT/health"
@@ -102,7 +107,8 @@ case "${1:-}" in
     done
     echo "== assistant (never prints the token)"
     if podman secret exists "$CHAT_SECRET" 2>/dev/null; then echo "token secret: stored, mounted read-only for the container user"; else echo "token secret: none (no hosted model; Granite Embedding or the rules answer)"; fi
-    podman exec "$NAME" sh -c 'ls -l /run/secrets/nexusz_hf_token 2>/dev/null || echo "not mounted in the container"'
+    if podman secret exists "$WATSONX_SECRET" 2>/dev/null; then echo "watsonx key secret: stored"; else echo "watsonx key secret: none"; fi
+    podman exec "$NAME" sh -c 'ls -l /run/secrets/ 2>/dev/null || echo "no secrets mounted in the container"'
     if [ -f "$INTENT_DIR/config.json" ]; then echo "Granite Embedding: $INTENT_DIR (mounted read-only, offline)"; else echo "Granite Embedding: not downloaded (run infra/prepare_granite_embedding.sh)"; fi
     curl -fsS "http://127.0.0.1:$PORT/chat/status" || echo "chat status unavailable"
     echo

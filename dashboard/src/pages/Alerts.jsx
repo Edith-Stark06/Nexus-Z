@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { startPolling } from '../services/api'
-import { formatDateTime, relativeTime, SEVERITY_COLORS } from '../lib/constants'
+import { formatUtc, SEVERITY_COLORS } from '../lib/constants'
 import Layout from './Layout'
 import './Alerts.css'
 
@@ -44,7 +44,7 @@ export default function Alerts() {
               <tbody>
                 {rings.map((a) => (
                   <tr key={a.alert_id}>
-                    <td className="time">{relativeTime(a.ts)}</td>
+                    <td className="time">{formatUtc(a.ts)}</td>
                     <td>
                       <Link to={`/ring/${a.ring_id}`}>{a.ring_id}</Link>
                     </td>
@@ -68,17 +68,18 @@ export default function Alerts() {
 
         <section className="panel">
           <div className="panel-head">
-            <h2>Victim warnings</h2>
-            <span className="badge">{victims.length} sent</span>
+            <h2>Likely victims</h2>
+            <span className="badge">{victims.length} flagged</span>
           </div>
           {victims.length === 0 ? (
-            <div className="empty">No victim warnings sent yet.</div>
+            <div className="empty">No likely victims flagged yet.</div>
           ) : (
             <table className="alert-table">
               <thead>
                 <tr>
                   <th>Time</th>
-                  <th>Account</th>
+                  <th>Payer</th>
+                  <th>Paid account</th>
                   <th>Ring</th>
                   <th>Severity</th>
                   <th>Message</th>
@@ -88,9 +89,12 @@ export default function Alerts() {
               <tbody>
                 {victims.map((a) => (
                   <tr key={a.alert_id}>
-                    <td className="time">{relativeTime(a.ts)}</td>
+                    <td className="time">{formatUtc(a.ts)}</td>
                     <td>
                       <Link to={`/account/${a.account_id}`}>{a.account_id}</Link>
+                    </td>
+                    <td>
+                      {a.recipient_id ? <Link to={`/account/${a.recipient_id}`}>{a.recipient_id}</Link> : "—"}
                     </td>
                     <td>
                       <Link to={`/ring/${a.ring_id}`}>{a.ring_id}</Link>
@@ -104,7 +108,8 @@ export default function Alerts() {
                     </td>
                     <td>{a.message}</td>
                     <td>
-                      <Link to={`/warning/${a.account_id}`}>Preview</Link>
+                      {/* the pre-payment warning is about the account being paid, not the payer */}
+                      <Link to={`/warning/${a.recipient_id || a.account_id}`}>Preview</Link>
                     </td>
                   </tr>
                 ))}
