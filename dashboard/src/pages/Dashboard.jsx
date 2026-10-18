@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { startPolling, getRing } from "../services/api";
+import { getRing, startPolling } from "../services/api";
 import { formatUtc } from "../lib/constants";
 import { D3Graph } from "../components/D3Graph";
 import { SHAPPanel } from "../components/SHAPPanel";
 import Layout from "./Layout";
 import "./Dashboard.css";
+import InfoTip from "../components/InfoTip";
 
 function riskColor(r) {
   if (r == null) return "var(--text-faint)";
@@ -53,10 +54,17 @@ export default function Dashboard() {
 
   return (
     <Layout usingMock={usingMock}>
+      <div className="dash-kpis">
+        <div className="kpi-row" aria-label="Summary">
+          <div className="kpi"><div className="kpi-n">{rings.length}</div><div className="kpi-l">Rings flagged <InfoTip k="kpiRings" /></div></div>
+          <div className="kpi"><div className="kpi-n rose">{rings.length ? `${Math.min(...rings.map((r) => r.risk))}-${Math.max(...rings.map((r) => r.risk))}` : "n/a"}</div><div className="kpi-l">Ring risk range (lowest to highest) <InfoTip k="kpiRisk" /></div></div>
+          <div className="kpi"><div className="kpi-n">{victimAlerts.length}</div><div className="kpi-l">Recent payers flagged for review <InfoTip k="kpiVictims" /></div></div>
+        </div>
+      </div>
       <div className="dash">
         <section className="panel">
           <div className="panel-head">
-            <h2>Flagged rings</h2>
+            <h2>Rings <InfoTip k="rings" /></h2>
             <input
               className="search"
               placeholder="Search ring id…"
@@ -66,7 +74,8 @@ export default function Dashboard() {
           </div>
           <div className="sample-note">
             Synthetic data: IBM AML transactions with simulated pig-butchering
-            rings. Accuracy is modest; many laundering groups are still missed.
+            rings made by our own team (data/rings.py). Results on those rings are
+            optimistic, and most laundering groups in IBM's own data are still missed.
           </div>
           {filtered.length === 0 ? (
             <div className="empty">No rings match that search.</div>
@@ -107,7 +116,7 @@ export default function Dashboard() {
                   <div className="ring-foot">
                     <span className="badge">
                       {victimAlerts.filter((a) => a.ring_id === r.ring_id).length}{" "}
-                      likely victims flagged
+                      likely-victim flags
                     </span>
                     <Link
                       to={`/ring/${r.ring_id}`}
@@ -124,7 +133,7 @@ export default function Dashboard() {
 
         <section className="panel">
           <div className="panel-head">
-            <h2>Ring detail</h2>
+            <h2>Ring detail <InfoTip k="ringDetail" /></h2>
             {selected && (
               <button onClick={() => navigate(`/ring/${selected.ring_id}`)}>
                 Open full ring
@@ -152,7 +161,7 @@ export default function Dashboard() {
 
               <div className="detail-grid">
                 <div className="detail-col">
-                  <h3>Flow graph</h3>
+                  <h3>Flow graph <InfoTip k="flowGraph" /></h3>
                   {detail === null ? (
                     <div className="empty">This ring changed after the last refresh. Pick it again from the list.</div>
                   ) : (
@@ -160,7 +169,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div className="detail-col">
-                  <h3>Why flagged</h3>
+                  <h3>Why flagged <InfoTip k="whyFlagged" /></h3>
                   {detail === undefined ? (
                     <div className="empty">Loading…</div>
                   ) : (
@@ -172,7 +181,7 @@ export default function Dashboard() {
               <div className="detail-foot">
                 <span className="badge">
                   {victimAlerts.filter((a) => a.ring_id === selected.ring_id).length}{" "}
-                  likely victims flagged
+                  likely-victim flags
                 </span>
                 <span className="footer-note">
                   Roles are estimated by the model. SHAP contributions are
